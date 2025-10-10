@@ -4,15 +4,22 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
 
+> 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions now implemented! See [Complete Achievement Manager Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/AchievementManager.md)
+
 ## 🎯 Features
 
+- **Complete Achievement API**: 100% coverage of Steam Achievement functionality (20/20 functions)
+  - ✅ Core operations (get, unlock, clear, check status)
+  - ✅ Visual features (icons, progress notifications)
+  - ✅ Progress tracking (get limits for progress bars)
+  - ✅ Friend comparisons (see friend achievements)
+  - ✅ Global statistics (unlock percentages, popularity sorting)
+  - ✅ Testing tools (reset stats/achievements)
 - **Real Steam Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Batteries Included**: All Steamworks redistributables bundled - no SDK download needed!
 - **Electron Ready**: Perfect for Electron applications
-- **Production Ready**: Full Steam client connection and API access
 - **TypeScript Support**: Complete TypeScript definitions included
-- **Achievement System**: Full CRUD operations for Steam achievements
 - **No C++ Compilation**: Uses Koffi FFI for seamless installation
 
 ## 🚀 Quick Start
@@ -91,67 +98,12 @@ For immediate testing, use Spacewar (App ID 480):
 - Add to Steam library: `steam://install/480` or search "Spacewar" in Steam
 - Launch it once, then you can test with App ID 480
 
-## 📚 API Reference
+## 📚 API Documentation
 
-### Steam Class
+### Documentation
 
-#### `Steam.getInstance()`
-Get the singleton Steam instance.
-
-#### `init(options: SteamInitOptions): boolean`
-Initialize the Steam API.
-- `options.appId`: Your Steam Application ID
-
-#### `shutdown(): void`
-Shutdown the Steam API and cleanup resources.
-
-#### `getStatus(): SteamStatus`
-Get current Steam status information.
-
-### Achievement Methods
-
-#### `getAllAchievements(): Promise<SteamAchievement[]>`
-Get all available achievements for the app.
-
-#### `unlockAchievement(apiName: string): Promise<boolean>`
-Unlock a specific achievement.
-
-#### `clearAchievement(apiName: string): Promise<boolean>`
-Clear/reset an achievement (for testing).
-
-#### `isAchievementUnlocked(apiName: string): Promise<boolean>`
-Check if an achievement is unlocked.
-
-#### `getAchievement(apiName: string): Promise<SteamAchievement | null>`
-Get details for a specific achievement.
-
-#### `getTotalCount(): Promise<number>`
-Get total number of achievements.
-
-#### `getUnlockedCount(): Promise<number>`
-Get number of unlocked achievements.
-
-### Types
-
-```typescript
-interface SteamAchievement {
-  apiName: string;        // Internal achievement ID
-  displayName: string;    // User-friendly name
-  description: string;    // Achievement description
-  unlocked: boolean;      // Whether it's unlocked
-  unlockTime: number;     // Unix timestamp of unlock (0 if locked)
-}
-
-interface SteamInitOptions {
-  appId: number;          // Your Steam Application ID
-}
-
-interface SteamStatus {
-  initialized: boolean;   // Whether Steam API is initialized
-  appId: number;         // Current app ID
-  steamId: string;       // Current user's Steam ID
-}
-```
+- **[SteamAPICore Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SteamAPICore.md)** - Initialization, lifecycle management, callbacks
+- **[Achievement Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/AchievementManager.md)** - Complete achievement functionality (20 functions)
 
 ## 🎮 Real Steam Integration
 
@@ -245,4 +197,4 @@ MIT License - see LICENSE file for details.
 This package includes redistributable binaries from the Steamworks SDK (© Valve Corporation).
 These are distributed under the Steamworks SDK Access Agreement in accordance with Section 1.1(b).
 
-See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for full details.
+See [THIRD_PARTY_LICENSES.md](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/THIRD_PARTY_LICENSES.md) for full details.
