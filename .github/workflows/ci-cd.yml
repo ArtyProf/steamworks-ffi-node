@@ -33,10 +33,15 @@ jobs:
       run: npm run build
     
     - name: Check build output
+      shell: bash
       run: |
-        ls -la dist/
-        test -f dist/index.js
-        test -f dist/index.d.ts
+        if [ -f "dist/index.js" ] && [ -f "dist/index.d.ts" ]; then
+          echo "✅ Build files exist"
+          ls dist/ 2>/dev/null || dir dist\ || echo "Listing not available"
+        else
+          echo "❌ Required build files missing"
+          exit 1
+        fi
     
     - name: Verify package can be required
       run: node -e "const steam = require('./dist/index.js'); console.log('✅ Package loads successfully');"
@@ -131,13 +136,21 @@ jobs:
       run: npm run build
     
     - name: Verify build
+      shell: bash
       run: |
         echo "Checking build output..."
-        ls -la dist/
-        test -f dist/index.js || exit 1
-        test -f dist/index.d.ts || exit 1
-        test -f dist/steam.js || exit 1
-        test -f dist/types.js || exit 1
+        
+        # Check required files exist
+        FILES=("dist/index.js" "dist/index.d.ts" "dist/steam.js" "dist/types.js")
+        for file in "${FILES[@]}"; do
+          if [ -f "$file" ]; then
+            echo "✅ $file exists"
+          else
+            echo "❌ $file missing"
+            exit 1
+          fi
+        done
+        
         echo "✅ All required files present"
     
     - name: Test package
