@@ -173,23 +173,56 @@ jobs:
     
     - name: Generate release notes
       id: release_notes
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         VERSION="v${{ needs.check-version.outputs.version }}"
         
-        # Get commit messages since last tag
+        # Get last tag
         LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
         
         if [ -z "$LAST_TAG" ]; then
-          COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          echo "📝 Generating release notes from all history..."
+          RANGE=""
+          SINCE_DATE=$(git log --reverse --format=%ci | head -1)
         else
-          COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          echo "📝 Generating release notes from ${LAST_TAG}...HEAD"
+          RANGE="${LAST_TAG}..HEAD"
+          SINCE_DATE=$(git log -1 --format=%ci ${LAST_TAG})
         fi
         
-        # Create release notes
-        cat > release_notes.md << EOF
-        ## 🚀 What's Changed
+        # Get merged pull requests with GitHub CLI
+        echo "### 🔀 Merged Pull Requests" > release_notes.md
+        echo "" >> release_notes.md
         
-        ${COMMITS}
+        if command -v gh &> /dev/null; then
+          if [ -z "$LAST_TAG" ]; then
+            gh pr list --state merged --limit 20 --json number,title,author --jq '.[] | "- #\(.number): \(.title) by @\(.author.login)"' >> release_notes.md || echo "_No pull requests found_" >> release_notes.md
+          else
+            gh pr list --state merged --search "merged:>=$(date -d "$SINCE_DATE" +%Y-%m-%d 2>/dev/null || date -j -f "%Y-%m-%d %H:%M:%S" "$SINCE_DATE" +%Y-%m-%d)" --limit 20 --json number,title,author --jq '.[] | "- #\(.number): \(.title) by @\(.author.login)"' >> release_notes.md || echo "_No pull requests found_" >> release_notes.md
+          fi
+        else
+          # Fallback: Extract PR numbers from merge commits
+          if [ -n "$RANGE" ]; then
+            git log ${RANGE} --pretty=format:"%s" --grep="Merge pull request" | \
+              sed -n 's/.*#\([0-9]*\).*/- PR #\1/p' | head -20 >> release_notes.md
+          fi
+          [ -s release_notes.md ] || echo "_No pull requests found_" >> release_notes.md
+        fi
+        
+        echo "" >> release_notes.md
+        echo "### 📝 Commits" >> release_notes.md
+        echo "" >> release_notes.md
+        
+        # Get commit messages
+        if [ -z "$RANGE" ]; then
+          git log --pretty=format:"- %s (%h)" --no-merges | head -30 >> release_notes.md
+        else
+          git log ${RANGE} --pretty=format:"- %s (%h)" --no-merges | head -30 >> release_notes.md
+        fi
+        
+        # Add installation and links
+        cat >> release_notes.md << EOF
         
         ## 📦 Installation
         
@@ -197,23 +230,25 @@ jobs:
         npm install steamworks-ffi-node
         \`\`\`
         
-        Or update to this version:
+        Or install this specific version:
         
         \`\`\`bash
         npm install steamworks-ffi-node@${{ needs.check-version.outputs.version }}
         \`\`\`
         
-        ## 📚 Documentation
+        ## 📚 Links
         
         - [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)
         - [npm Package](https://www.npmjs.com/package/steamworks-ffi-node)
+        - [Documentation](https://github.com/ArtyProf/steamworks-ffi-node#readme)
         
         ---
         
         **Full Changelog**: https://github.com/ArtyProf/steamworks-ffi-node/compare/${LAST_TAG}...${VERSION}
         EOF
         
-        echo "Release notes created"
+        echo "✅ Release notes created"
+        cat release_notes.md
     
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1

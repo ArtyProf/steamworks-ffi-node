@@ -21,7 +21,8 @@
     "dist/**/*",
     "steamworks_sdk/redistributable_bin/**/*",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "THIRD_PARTY_LICENSES.md"
   ],
   "keywords": [
     "steam",

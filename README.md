@@ -8,35 +8,35 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 - **Real Steam Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
+- **Batteries Included**: All Steamworks redistributables bundled - no SDK download needed!
 - **Electron Ready**: Perfect for Electron applications
 - **Production Ready**: Full Steam client connection and API access
 - **TypeScript Support**: Complete TypeScript definitions included
 - **Achievement System**: Full CRUD operations for Steam achievements
+- **No C++ Compilation**: Uses Koffi FFI for seamless installation
 
 ## 🚀 Quick Start
-
-### Prerequisites
-
-**Before using, you need:**
-
-1. **Steamworks SDK**: Download from [Steam Partner Portal](https://partner.steamgames.com/) and place in `steamworks_sdk/` directory
-
-2. **Steam Client**: Must be running and logged in for real integration
 
 ### Installation
 
 ```bash
-# Install dependencies (using Koffi FFI - no C++ compilation required!)
-npm install
-
-# Build TypeScript
-npm run build
+# Install the package - includes all Steam redistributables!
+npm install steamworks-ffi-node
 ```
+
+### Setup
+
+1. **Create `steam_appid.txt`** in your project root:
+   ```bash
+   echo "480" > steam_appid.txt  # Use 480 for testing, or your Steam App ID
+   ```
+
+2. **Make sure Steam is running** and you're logged in
 
 ### Basic Usage
 
 ```typescript
-import Steam from 'steamworks-ffi';
+import Steam from 'steamworks-ffi-node';
 
 // Initialize real Steam connection
 const steam = Steam.getInstance();
@@ -62,7 +62,7 @@ steam.shutdown();
 ### JavaScript (CommonJS)
 
 ```javascript
-const Steam = require('steamworks-ffi').default;
+const Steam = require('steamworks-ffi-node').default;
 
 async function example() {
   const steam = Steam.getInstance();
@@ -83,6 +83,13 @@ async function example() {
 
 example();
 ```
+
+### Testing with Spacewar
+
+For immediate testing, use Spacewar (App ID 480):
+- Free Steam app for testing Steamworks features
+- Add to Steam library: `steam://install/480` or search "Spacewar" in Steam
+- Launch it once, then you can test with App ID 480
 
 ## 📚 API Reference
 
@@ -173,12 +180,12 @@ await steam.unlockAchievement('YOUR_ACHIEVEMENT');
 
 ## 🖥️ Electron Integration
 
-For Electron applications, just use it in your main process:
+For Electron applications, use it in your main process:
 
 ```typescript
 // main.ts
 import { app } from 'electron';
-import Steam from 'steamworks-ffi';
+import Steam from 'steamworks-ffi-node';
 
 app.whenReady().then(() => {
   const steam = Steam.getInstance();
@@ -196,71 +203,46 @@ app.on('before-quit', () => {
 });
 ```
 
-## 🏗️ Production Setup
-
-### Steamworks SDK Setup
-
-1. **Download SDK**: Get from [Steam Partner Portal](https://partner.steamgames.com/)
-2. **Extract to project**:
-   ```
-   steamworks_sdk/
-   ├── public/steam/           # Header files
-   └── redistributable_bin/    # Native libraries
-       ├── win64/steam_api64.dll
-       ├── osx/libsteam_api.dylib
-       └── linux64/libsteam_api.so
-   ```
-3. **Get Steam App ID**: Register your game on Steamworks
-4. **Create steam_appid.txt**: File with your App ID in project root
-
-### Testing Setup
-
-For immediate testing, use Spacewar (App ID 480):
-- Free Steam app for testing
-- Add to Steam library: steam://install/480
-- Requires Steam client running and logged in
-
 ## 🔧 Requirements
 
-### Development
 - **Node.js**: 18+ 
-- **TypeScript**: 5.0+ (optional)
-- **Visual Studio Build Tools**: C++ workload required
-- **Python**: For native module compilation
-
-### Runtime
 - **Steam Client**: Must be running and logged in
-- **Steamworks SDK**: Redistributable binaries required
-- **Valid Steam App ID**: From registered Steam application
+- **Steam App ID**: Get yours at [Steamworks Partner](https://partner.steamgames.com/)
+- **steam_appid.txt**: Create in your project root with your App ID
 
 ### Platform Support
-- ✅ **Windows**: steam_api64.dll / steam_api.dll
-- ✅ **macOS**: libsteam_api.dylib  
-- ✅ **Linux**: libsteam_api.so
+- ✅ **Windows**: Included (steam_api64.dll / steam_api.dll)
+- ✅ **macOS**: Included (libsteam_api.dylib)
+- ✅ **Linux**: Included (libsteam_api.so)
 
-## 🚀 Quick Start
-
-```bash
-# 1. Setup environment
-npm run setup
-
-# 2. Install dependencies
-npm install  
-
-# 3. Build TypeScript
-npm run build
-
-# 4. Test with Steam
-npm start
-```
+All redistributable binaries are included in the package - no manual SDK download required!
 
 ## 🔧 Troubleshooting
 
-**"Library not found"**: Install Steamworks SDK to `steamworks_sdk/`  
-**"SteamAPI_Init failed"**: Make sure Steam client is running  
-**Build errors**: Install Visual Studio C++ Build Tools  
-**"Missing VC++ toolset"**: Add C++ workload in VS Installer  
+### "SteamAPI_Init failed"
+- ❌ Steam client not running → **Solution**: Start Steam and log in
+- ❌ `steam_appid.txt` missing → **Solution**: Create file in project root with your App ID
+- ❌ Invalid App ID → **Solution**: Use 480 for testing, or your registered App ID
+
+### "Cannot find module 'steamworks-ffi-node'"
+- ❌ Package not installed → **Solution**: Run `npm install steamworks-ffi-node`
+
+### Achievement operations not working
+- ❌ Not initialized → **Solution**: Call `steam.init({ appId })` first
+- ❌ No achievements configured → **Solution**: Configure achievements in Steamworks Partner site
+- ❌ Using Spacewar → **Note**: Spacewar may not have achievements, use your own App ID
+
+### Electron-specific issues
+- ❌ Initialized in renderer → **Solution**: Only initialize in main process
+- ❌ Not cleaning up → **Solution**: Call `shutdown()` in `before-quit` event  
 
 ## 📄 License
 
 MIT License - see LICENSE file for details.
+
+### Steamworks SDK Redistributables
+
+This package includes redistributable binaries from the Steamworks SDK (© Valve Corporation).
+These are distributed under the Steamworks SDK Access Agreement in accordance with Section 1.1(b).
+
+See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for full details.
