@@ -211,30 +211,75 @@ jobs:
         echo "### 🔀 Merged Pull Requests" > release_notes.md
         echo "" >> release_notes.md
         
-        if command -v gh &> /dev/null; then
-          if [ -z "$LAST_TAG" ]; then
-            gh pr list --state merged --limit 20 --json number,title,author --jq '.[] | "- #\(.number): \(.title) by @\(.author.login)"' >> release_notes.md || echo "_No pull requests found_" >> release_notes.md
+        if command -v gh &> /dev/null && [ -n "$RANGE" ]; then
+          # Get PR numbers from commits in the range (both merge commits and PR references)
+          PR_NUMBERS=$(git log ${RANGE} --pretty=format:"%s" | \
+            grep -o '#[0-9]\+' | sed 's/#//' | sort -u)
+          
+          if [ -n "$PR_NUMBERS" ]; then
+            echo "Found PRs in range ${RANGE}: $(echo $PR_NUMBERS | tr '\n' ' ')"
+            for pr_num in $PR_NUMBERS; do
+              # Get PR details using GitHub CLI
+              gh pr view $pr_num --json number,title,author --jq '"- #\(.number): \(.title) by @\(.author.login)"' 2>/dev/null >> release_notes.md || \
+                echo "- #$pr_num: (PR details unavailable)" >> release_notes.md
+            done
           else
-            gh pr list --state merged --search "merged:>=$(date -d "$SINCE_DATE" +%Y-%m-%d 2>/dev/null || date -j -f "%Y-%m-%d %H:%M:%S" "$SINCE_DATE" +%Y-%m-%d)" --limit 20 --json number,title,author --jq '.[] | "- #\(.number): \(.title) by @\(.author.login)"' >> release_notes.md || echo "_No pull requests found_" >> release_notes.md
+            echo "_No pull requests found in range ${RANGE}_" >> release_notes.md
+          fi
+        elif command -v gh &> /dev/null && [ -z "$LAST_TAG" ]; then
+          # For first release, get all PRs from history up to HEAD
+          echo "No previous tag found, showing all PRs in repository history..."
+          PR_NUMBERS=$(git log --pretty=format:"%s" | \
+            grep -o '#[0-9]\+' | sed 's/#//' | sort -u)
+          
+          if [ -n "$PR_NUMBERS" ]; then
+            for pr_num in $PR_NUMBERS; do
+              # Get PR details using GitHub CLI
+              gh pr view $pr_num --json number,title,author --jq '"- #\(.number): \(.title) by @\(.author.login)"' 2>/dev/null >> release_notes.md || \
+                echo "- #$pr_num: (PR details unavailable)" >> release_notes.md
+            done
+          else
+            echo "_No pull requests found_" >> release_notes.md
           fi
         else
-          # Fallback: Extract PR numbers from merge commits
+          # Fallback: Extract PR numbers from commits without GitHub CLI
           if [ -n "$RANGE" ]; then
-            git log ${RANGE} --pretty=format:"%s" --grep="Merge pull request" | \
-              sed -n 's/.*#\([0-9]*\).*/- PR #\1/p' | head -20 >> release_notes.md
+            PR_NUMBERS=$(git log ${RANGE} --pretty=format:"%s" | \
+              grep -o '#[0-9]\+' | sed 's/#//' | sort -u)
+            
+            if [ -n "$PR_NUMBERS" ]; then
+              for pr_num in $PR_NUMBERS; do
+                echo "- PR #$pr_num" >> release_notes.md
+              done
+            else
+              echo "_No pull requests found in range ${RANGE}_" >> release_notes.md
+            fi
+          else
+            # For first release, get all PR references from all commits
+            PR_NUMBERS=$(git log --pretty=format:"%s" | \
+              grep -o '#[0-9]\+' | sed 's/#//' | sort -u)
+            
+            if [ -n "$PR_NUMBERS" ]; then
+              for pr_num in $PR_NUMBERS; do
+                echo "- PR #$pr_num" >> release_notes.md
+              done
+            else
+              echo "_No pull requests found_" >> release_notes.md
+            fi
           fi
-          [ -s release_notes.md ] || echo "_No pull requests found_" >> release_notes.md
         fi
         
         echo "" >> release_notes.md
-        echo "### 📝 Commits" >> release_notes.md
-        echo "" >> release_notes.md
-        
-        # Get commit messages
-        if [ -z "$RANGE" ]; then
-          git log --pretty=format:"- %s (%h)" --no-merges | head -30 >> release_notes.md
+        if [ -n "$LAST_TAG" ]; then
+          echo "### 📝 Commits (${LAST_TAG}..HEAD)" >> release_notes.md
+          echo "" >> release_notes.md
+          # Only commits in the range between tags
+          git log ${RANGE} --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
         else
-          git log ${RANGE} --pretty=format:"- %s (%h)" --no-merges | head -30 >> release_notes.md
+          echo "### 📝 All Commits" >> release_notes.md
+          echo "" >> release_notes.md
+          # All commits for first release
+          git log --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
         fi
         
         # Add installation and links
