@@ -1,0 +1,49 @@
+{
+  "name": "steamworks-napi",
+  "version": "0.1.0",
+  "description": "TypeScript package with N-API bindings to Steamworks SDK - Achievements API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prebuild": "prebuildify --napi --strip",
+    "prebuild-all": "prebuildify --napi --strip --target node@16.0.0 --target node@18.0.0 --target node@20.0.0",
+    "install": "node-gyp-build",
+    "test": "node test/test.js"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.0.0",
+    "node-gyp-build": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "prebuildify": "^6.0.0",
+    "node-gyp": "^10.0.0",
+    "electron-rebuild": "^3.2.0"
+  },
+  "gypfile": true,
+  "files": [
+    "dist/**/*",
+    "src/**/*",
+    "binding.gyp",
+    "prebuilds/**/*"
+  ],
+  "keywords": [
+    "steam",
+    "steamworks",
+    "napi",
+    "typescript",
+    "achievements",
+    "gaming"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArtyProf/steamworks-napi.git"
+  },
+  "author": "ArtyProf",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
