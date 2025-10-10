@@ -166,10 +166,20 @@ jobs:
       run: |
         VERSION="v${{ needs.check-version.outputs.version }}"
         echo "Creating tag: $VERSION"
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git tag -a "$VERSION" -m "Release $VERSION"
-        git push origin "$VERSION"
+        
+        # Fetch existing tags first
+        git fetch --tags 2>/dev/null || true
+        
+        # Check if tag already exists
+        if git tag -l | grep -q "^${VERSION}$"; then
+          echo "⚠️ Tag $VERSION already exists, skipping creation"
+        else
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"
+          echo "✅ Tag $VERSION created and pushed"
+        fi
     
     - name: Generate release notes
       id: release_notes
@@ -178,17 +188,23 @@ jobs:
       run: |
         VERSION="v${{ needs.check-version.outputs.version }}"
         
-        # Get last tag
-        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        # Get all tags sorted by version, excluding the current one if it exists
+        git fetch --tags 2>/dev/null || true
+        
+        # Get the previous tag (second most recent)
+        LAST_TAG=$(git tag -l --sort=-version:refname | grep -v "^${VERSION}$" | head -1)
         
         if [ -z "$LAST_TAG" ]; then
-          echo "📝 Generating release notes from all history..."
+          echo "📝 No previous tag found, generating release notes from all history..."
           RANGE=""
           SINCE_DATE=$(git log --reverse --format=%ci | head -1)
+          echo "Since: $SINCE_DATE"
         else
           echo "📝 Generating release notes from ${LAST_TAG}...HEAD"
           RANGE="${LAST_TAG}..HEAD"
           SINCE_DATE=$(git log -1 --format=%ci ${LAST_TAG})
+          echo "Previous tag: $LAST_TAG"
+          echo "Since: $SINCE_DATE"
         fi
         
         # Get merged pull requests with GitHub CLI
@@ -243,9 +259,14 @@ jobs:
         - [Documentation](https://github.com/ArtyProf/steamworks-ffi-node#readme)
         
         ---
-        
-        **Full Changelog**: https://github.com/ArtyProf/steamworks-ffi-node/compare/${LAST_TAG}...${VERSION}
         EOF
+        
+        # Add changelog link
+        if [ -n "$LAST_TAG" ]; then
+          echo "**Full Changelog**: https://github.com/ArtyProf/steamworks-ffi-node/compare/${LAST_TAG}...${VERSION}" >> release_notes.md
+        else
+          echo "**Full Changelog**: https://github.com/ArtyProf/steamworks-ffi-node/commits/${VERSION}" >> release_notes.md
+        fi
         
         echo "✅ Release notes created"
         cat release_notes.md
