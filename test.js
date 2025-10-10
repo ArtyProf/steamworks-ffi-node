@@ -108,7 +108,7 @@ async function testRealSteam() {
       console.log('   2. Verify SDK directory structure matches README');
     } else if (error.message.includes('SteamAPI_Init')) {
       console.log('   1. Make sure Steam client is running');
-      console.log('   2. Make sure you\'re logged into Steam');
+      console.log(`   2. Make sure you're logged into Steam`);
       console.log('   3. Add Spacewar (free) to your Steam library if using App ID 480');
     } else {
       console.log('   1. Check that Visual Studio C++ Build Tools are installed');
