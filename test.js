@@ -31,7 +31,7 @@ async function testRealSteam() {
       console.log('   - Steam client is running');
       console.log('   - You are logged into Steam');
       console.log('   - Steamworks SDK is properly installed');
-      console.log('   - You have Spacewar in your Steam library (it\'s free)');
+      console.log(`   - You have Spacewar in your Steam library (it's free)`);
       return;
     }
     
