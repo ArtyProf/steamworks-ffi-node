@@ -1,4 +1,12 @@
-import { SteamAchievement, SteamInitOptions, SteamStatus } from './types';
+import { 
+  SteamAchievement, 
+  SteamInitOptions, 
+  SteamStatus,
+  AchievementProgressLimits,
+  UserAchievement,
+  AchievementGlobalStats,
+  AchievementWithIcon
+} from './types';
 import { SteamLibraryLoader } from './internal/SteamLibraryLoader';
 import { SteamAPICore } from './internal/SteamAPICore';
 import { SteamAchievementManager } from './internal/SteamAchievementManager';
@@ -116,6 +124,135 @@ class SteamworksSDK {
    */
   isSteamRunning(): boolean {
     return this.apiCore.isSteamRunning();
+  }
+
+  // ===== VISUAL & UI FEATURES =====
+
+  /**
+   * Get achievement icon handle for use with ISteamUtils::GetImageRGBA()
+   */
+  async getAchievementIcon(achievementName: string): Promise<number> {
+    return this.achievementManager.getAchievementIcon(achievementName);
+  }
+
+  /**
+   * Show achievement progress notification in Steam overlay
+   */
+  async indicateAchievementProgress(
+    achievementName: string,
+    currentProgress: number,
+    maxProgress: number
+  ): Promise<boolean> {
+    return this.achievementManager.indicateAchievementProgress(achievementName, currentProgress, maxProgress);
+  }
+
+  /**
+   * Get all achievements with icon handles
+   */
+  async getAllAchievementsWithIcons(): Promise<AchievementWithIcon[]> {
+    return this.achievementManager.getAllAchievementsWithIcons();
+  }
+
+  // ===== PROGRESS TRACKING =====
+
+  /**
+   * Get achievement progress limits (integer-based)
+   */
+  async getAchievementProgressLimitsInt(achievementName: string): Promise<AchievementProgressLimits | null> {
+    return this.achievementManager.getAchievementProgressLimitsInt(achievementName);
+  }
+
+  /**
+   * Get achievement progress limits (float-based)
+   */
+  async getAchievementProgressLimitsFloat(achievementName: string): Promise<AchievementProgressLimits | null> {
+    return this.achievementManager.getAchievementProgressLimitsFloat(achievementName);
+  }
+
+  // ===== FRIEND/USER ACHIEVEMENTS =====
+
+  /**
+   * Request achievement stats for another user (friend)
+   * This is async - wait for callback before calling getUserAchievement()
+   */
+  async requestUserStats(steamId: string): Promise<boolean> {
+    return this.achievementManager.requestUserStats(steamId);
+  }
+
+  /**
+   * Get achievement status for another user (friend)
+   * Must call requestUserStats() first and wait for callback
+   */
+  async getUserAchievement(steamId: string, achievementName: string): Promise<UserAchievement | null> {
+    return this.achievementManager.getUserAchievement(steamId, achievementName);
+  }
+
+  // ===== GLOBAL STATISTICS =====
+
+  /**
+   * Request global achievement percentages from Steam
+   * This is async - wait for callback before calling other global stats methods
+   */
+  async requestGlobalAchievementPercentages(): Promise<boolean> {
+    return this.achievementManager.requestGlobalAchievementPercentages();
+  }
+
+  /**
+   * Get percentage of users who unlocked a specific achievement
+   * Must call requestGlobalAchievementPercentages() first
+   */
+  async getAchievementAchievedPercent(achievementName: string): Promise<number | null> {
+    return this.achievementManager.getAchievementAchievedPercent(achievementName);
+  }
+
+  /**
+   * Get all achievements with global unlock percentages
+   * Must call requestGlobalAchievementPercentages() first
+   */
+  async getAllAchievementsWithGlobalStats(): Promise<AchievementGlobalStats[]> {
+    return this.achievementManager.getAllAchievementsWithGlobalStats();
+  }
+
+  /**
+   * Get most achieved achievement
+   */
+  async getMostAchievedAchievementInfo(): Promise<{ 
+    apiName: string; 
+    percent: number; 
+    unlocked: boolean; 
+    iterator: number 
+  } | null> {
+    return this.achievementManager.getMostAchievedAchievementInfo();
+  }
+
+  /**
+   * Get next most achieved achievement (iterate by popularity)
+   */
+  async getNextMostAchievedAchievementInfo(previousIterator: number): Promise<{ 
+    apiName: string; 
+    percent: number; 
+    unlocked: boolean; 
+    iterator: number 
+  } | null> {
+    return this.achievementManager.getNextMostAchievedAchievementInfo(previousIterator);
+  }
+
+  /**
+   * Get all achievements sorted by global popularity (most achieved first)
+   * Must call requestGlobalAchievementPercentages() first
+   */
+  async getAllAchievementsSortedByPopularity(): Promise<AchievementGlobalStats[]> {
+    return this.achievementManager.getAllAchievementsSortedByPopularity();
+  }
+
+  // ===== TESTING & DEVELOPMENT =====
+
+  /**
+   * Reset all stats and optionally achievements
+   * WARNING: This clears ALL user stats and achievements!
+   */
+  async resetAllStats(includeAchievements: boolean = false): Promise<boolean> {
+    return this.achievementManager.resetAllStats(includeAchievements);
   }
 }
 
