@@ -1,6 +1,6 @@
 # SteamAPICore Documentation
 
-The `SteamAPICore` module manages the Steam API lifecycle, including initialization, shutdown, and callback processing.
+The `SteamAPICore` module manages the Steam API lifecycle, including initialization, shutdown, and callback processing. It serves as the foundation for all Steam operations in the modular steamworks-ffi-node architecture.
 
 ## Overview
 
@@ -15,9 +15,15 @@ The `SteamAPICore` module manages the Steam API lifecycle, including initializat
 
 ```
 SteamAPICore
-├── Depends on: SteamLibraryLoader (FFI bindings)
-└── Used by: SteamAchievementManager, Main API
+├── Depends on: SteamLibraryLoader (Koffi FFI bindings)
+└── Used by: SteamAchievementManager, SteamworksSDK
 ```
+
+**Implementation Details:**
+- Uses Koffi FFI for native Steamworks SDK integration
+- No C++ compilation required (pure JavaScript FFI)
+- Manages Steam API lifecycle and interface pointers
+- Handles automatic `steam_appid.txt` file creation
 
 ## API Reference
 
@@ -26,10 +32,11 @@ SteamAPICore
 Initialize the Steam API and connect to the Steam client.
 
 **Steamworks SDK Functions:**
-- `SteamAPI_InitSafe()` - Initialize Steam API
-- `SteamAPI_SteamUserStats_v013()` - Get UserStats interface
+- `SteamAPI_Init()` - Initialize Steam API
+- `SteamAPI_SteamUserStats_v013()` - Get UserStats interface  
 - `SteamAPI_SteamUser_v023()` - Get User interface
-- `SteamAPI_ISteamUserStats_RequestUserStats()` - Request current stats
+- `SteamAPI_ISteamUserStats_RequestCurrentStats()` - Request current stats
+- `SteamAPI_IsSteamRunning()` - Check Steam client status
 - `SteamAPI_ISteamUser_GetSteamID()` - Get user's Steam ID
 
 **Parameters:**
@@ -43,7 +50,9 @@ interface SteamInitOptions {
 
 **Example:**
 ```typescript
-const steam = SteamworksSDK.getInstance();
+import Steam from 'steamworks-ffi-node';
+
+const steam = Steam.getInstance();
 const success = steam.init({ appId: 480 });
 
 if (success) {
@@ -54,11 +63,12 @@ if (success) {
 ```
 
 **What it does:**
-1. Sets up the `steam_appid.txt` file with your App ID
-2. Loads the Steamworks SDK library
+1. Sets `SteamAppId` environment variable and creates `steam_appid.txt` file
+2. Loads the Steamworks SDK library via FFI
 3. Calls `SteamAPI_Init()` to connect to Steam client
 4. Retrieves interface handles for UserStats and User
-5. Requests current stats from Steam servers
+5. Requests current stats from Steam servers via `RequestCurrentStats()`
+6. Processes initial Steam callbacks
 
 **Requirements:**
 - Steam client must be running
@@ -244,13 +254,22 @@ if (userInterface) {
 
 ### steam_appid.txt
 
-The Steam API requires a `steam_appid.txt` file in your application directory. The `init()` method creates this automatically, but you can also create it manually:
+The Steam API requires a `steam_appid.txt` file in your application directory. The `init()` method creates this automatically in the current working directory, and also sets the `SteamAppId` environment variable.
 
+**Automatic Creation:**
+```typescript
+// When you call init(), it automatically:
+// 1. Sets process.env.SteamAppId = "480"  
+// 2. Creates steam_appid.txt in process.cwd()
+steam.init({ appId: 480 });
+```
+
+**Manual Creation (optional):**
 ```bash
 echo "480" > steam_appid.txt
 ```
 
-**Location:** Must be in the same directory as your application executable or in the current working directory.
+**Location:** Current working directory (`process.cwd()`)
 
 ---
 
@@ -303,10 +322,10 @@ if (!status.initialized) {
 ## Complete Example
 
 ```typescript
-import SteamworksSDK from 'steamworks-ffi-node';
+import Steam from 'steamworks-ffi-node';
 
 async function steamExample() {
-  const steam = SteamworksSDK.getInstance();
+  const steam = Steam.getInstance();
   
   // Check if Steam is running
   if (!steam.isSteamRunning()) {
@@ -345,7 +364,7 @@ async function steamExample() {
 
 // Handle cleanup on exit
 process.on('SIGINT', () => {
-  const steam = SteamworksSDK.getInstance();
+  const steam = Steam.getInstance();
   steam.shutdown();
   process.exit(0);
 });
@@ -360,12 +379,12 @@ steamExample();
 ### 1. Initialize Once
 ```typescript
 // ✅ Good - Singleton pattern
-const steam = SteamworksSDK.getInstance();
+const steam = Steam.getInstance();
 steam.init({ appId: 480 });
 
 // ❌ Bad - Don't create multiple instances
-const steam1 = SteamworksSDK.getInstance();
-const steam2 = SteamworksSDK.getInstance(); // Same instance
+const steam1 = Steam.getInstance();
+const steam2 = Steam.getInstance(); // Same instance
 ```
 
 ### 2. Always Shutdown
@@ -453,16 +472,19 @@ if (!initialized) {
    - Check for error messages from Steam
 
 4. **Verify redistributables:**
-   - Ensure `steamworks_sdk/redistributable_bin/` exists
-   - Check platform-specific library is present
+   - Ensure `steamworks_sdk/redistributable_bin/` exists in package
+   - Check platform-specific library is present:
+     - Windows: `steam_api64.dll` or `steam_api.dll`
+     - macOS: `libsteam_api.dylib`
+     - Linux: `libsteam_api.so`
 
 ---
 
 ## Related Documentation
 
-- [Achievement Manager API](./AchievementManager.md)
-- [Complete Achievement API](../ACHIEVEMENT_API_COMPLETE.md)
-- [Implementation Summary](../IMPLEMENTATION_SUMMARY.md)
+- [Achievement Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/AchievementManager.md)
+- [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)
+- [NPM Package](https://www.npmjs.com/package/steamworks-ffi-node)
 
 ---
 

@@ -81,8 +81,8 @@ export class SteamAPICore {
       console.error('[Steamworks] ERROR: Failed to initialize Steam API:', (error as Error).message);
       console.error('[Steamworks] Make sure:');
       console.error('   1. Steam client is running and you\'re logged in');
-      console.error('   2. Steamworks SDK is in steamworks_sdk/ directory');
-      console.error('   3. You have Visual Studio C++ Redistributable installed');
+      console.error('   2. Steamworks redistributable binaries are available');
+      console.error('   3. App ID is valid and game is in your library');
       return false;
     }
   }

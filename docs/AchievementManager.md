@@ -4,39 +4,15 @@ Complete reference for all achievement-related functionality in Steamworks FFI.
 
 ## Overview
 
-The `SteamAchievementManager` provides **100% coverage** of t### `getTotalAchievementCount()`
+The `SteamAchievementManager` provides **100% coverage** of the Steamworks Achievement API with 21 functions organized into logical categories.
 
-Get total number of achievements for the game.
+**Architecture**: The Achievement Manager is part of a modular architecture:
+- `SteamLibraryLoader`: Handles FFI library loading and function binding
+- `SteamAPICore`: Manages Steam API lifecycle (init, shutdown, callbacks)  
+- `SteamAchievementManager`: Handles all achievement operations (this module)
+- `SteamworksSDK`: Main class that composes all modules and exposes the public API
 
-**Steamworks SDK Functions:**
--### `indicateAchievementProgress(achievementName, curre### `getAchievementProgressLimitsInt(achievementName### `getAchievementProgressLimitsFloat(achievementName)`
-
-Get float-based progress limits for an achievement.
-
-**Steamworks SDK Functions:**
-- `SteamAPI_ISteamUserStats_GetAchievementProgressLimitsFloat()` - Get float progress bounds
-
-**Parameters:**
-- `achievementName: string` - The achievement API namet integer-based progress limits for an achievement.
-
-**Steamworks SDK Functions:**
-- `SteamAPI_ISteamUserStats_GetAchievementProgressLimitsInt32()` - Get int32 progress bounds
-
-**Parameters:**
-- `achievementName: string` - The achievement API nameress, maxProgress)`
-
-Show a progress notification in the Steam overlay.
-
-**Steamworks SDK Functions:**
-- `SteamAPI_ISteamUserStats_IndicateAchievementProgress()` - Show progress notification
-- `SteamAPI_RunCallbacks()` - Process the notification
-
-**Parameters:**
-- `achievementName: string` - The achievement API name
-- `currentProgress: number` - Current progress value
-- `maxProgress: number` - Maximum progress valuePI_ISteamUserStats_GetNumAchievements()` - Get achievement count
-
-**Returns:** `Promise<number>`eamworks Achievement API with 20 functions organized into logical categories.
+All functions are accessed through the main `SteamworksSDK` class using composition pattern.
 
 ## Quick Reference
 
@@ -46,7 +22,7 @@ Show a progress notification in the Steam overlay.
 | [Visual & UI](#visual--ui-features) | 3 | Icons, progress notifications |
 | [Progress Tracking](#progress-tracking) | 2 | Get progress limits for achievements |
 | [Friend/Social](#friendsocial-features) | 2 | Compare achievements with friends |
-| [Global Statistics](#global-statistics) | 5 | Unlock percentages, popularity |
+| [Global Statistics](#global-statistics) | 6 | Unlock percentages, popularity |
 | [Testing/Dev](#testingdevelopment) | 1 | Reset stats and achievements |
 
 ---
@@ -81,6 +57,9 @@ interface SteamAchievement {
 
 **Example:**
 ```typescript
+import Steam from 'steamworks-ffi-node';
+
+const steam = Steam.getInstance();
 const achievements = await steam.getAllAchievements();
 
 console.log(`Found ${achievements.length} achievements`);
@@ -811,10 +790,10 @@ await steam.resetAllStats(true);
 ## Complete Usage Example
 
 ```typescript
-import SteamworksSDK from 'steamworks-ffi-node';
+import Steam from 'steamworks-ffi-node';
 
 async function comprehensiveExample() {
-  const steam = SteamworksSDK.getInstance();
+  const steam = Steam.getInstance();
   
   // Initialize
   if (!steam.init({ appId: 480 })) {
@@ -950,11 +929,11 @@ console.log(achievement.displayName); // Might crash
 
 ## Related Documentation
 
-- [SteamAPICore Documentation](./SteamAPICore.md)
-- [Complete Achievement API](../ACHIEVEMENT_API_COMPLETE.md)
-- [Implementation Summary](../IMPLEMENTATION_SUMMARY.md)
+- [SteamAPICore Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SteamAPICore.md)
+- [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)
+- [NPM Package](https://www.npmjs.com/package/steamworks-ffi-node)
 
 ---
 
 **Last Updated:** October 10, 2025  
-**Coverage:** 100% of Steamworks Achievement API (20/20 functions)
+**Coverage:** 100% of Steamworks Achievement API (21/21 functions)
