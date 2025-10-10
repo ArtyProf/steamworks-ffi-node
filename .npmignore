@@ -1,0 +1,48 @@
+# Source files (only ship compiled dist/)
+src/
+tsconfig.json
+
+# Tests
+test.js
+*.test.js
+*.spec.js
+
+# Development files
+.github/
+.git/
+.gitignore
+
+# SDK files - exclude everything except redistributables
+steamworks_sdk/public/
+steamworks_sdk/README.md
+steamworks_sdk/Readme.txt
+steamworks_sdk/*.txt
+
+# Node modules
+node_modules/
+
+# Build artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+*.tmp
+tmp/
+temp/
