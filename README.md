@@ -4,7 +4,7 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
 
-> 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions now implemented! See [Complete API Documentation](./ACHIEVEMENT_API_COMPLETE.md)
+> 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions now implemented! See [Complete Achievement Manager Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/AchievementManager.md)
 
 ## 🎯 Features
 
@@ -19,7 +19,6 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Batteries Included**: All Steamworks redistributables bundled - no SDK download needed!
 - **Electron Ready**: Perfect for Electron applications
-- **Production Ready**: Full Steam client connection and API access
 - **TypeScript Support**: Complete TypeScript definitions included
 - **No C++ Compilation**: Uses Koffi FFI for seamless installation
 
@@ -103,8 +102,8 @@ For immediate testing, use Spacewar (App ID 480):
 
 ### Documentation
 
-- **[SteamAPICore Documentation](./docs/SteamAPICore.md)** - Initialization, lifecycle management, callbacks
-- **[Achievement Manager API](./docs/AchievementManager.md)** - Complete achievement functionality (20 functions)
+- **[SteamAPICore Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SteamAPICore.md)** - Initialization, lifecycle management, callbacks
+- **[Achievement Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/AchievementManager.md)** - Complete achievement functionality (20 functions)
 
 ## 🎮 Real Steam Integration
 
@@ -198,4 +197,4 @@ MIT License - see LICENSE file for details.
 This package includes redistributable binaries from the Steamworks SDK (© Valve Corporation).
 These are distributed under the Steamworks SDK Access Agreement in accordance with Section 1.1(b).
 
-See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for full details.
+See [THIRD_PARTY_LICENSES.md](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/THIRD_PARTY_LICENSES.md) for full details.
