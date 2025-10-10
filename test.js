@@ -10,8 +10,7 @@ async function testRealSteam() {
   console.log('⚠️  IMPORTANT: This test requires:');
   console.log('   1. Steam client running and logged in');
   console.log('   2. Steamworks SDK in steamworks_sdk/ directory');
-  console.log('   3. Visual Studio C++ Build Tools installed');
-  console.log('   4. Valid Steam App ID (using 480 - Spacewar for testing)');
+  console.log('   3. Valid Steam App ID (using 480 - Spacewar for testing)');
   console.log('');
   
   try {
@@ -45,6 +44,20 @@ async function testRealSteam() {
     console.log(`   Steam ID: ${status.steamId}`);
     console.log(`   Steam Running: ${steam.isSteamRunning()}`);
     
+    // Helper function to display achievement status
+    const displayAchievements = async (title) => {
+      console.log(`\n${title}`);
+      const achs = await steam.getAllAchievements();
+      achs.forEach((ach, index) => {
+        const status = ach.unlocked ? '✅' : '⭕';
+        console.log(`   ${index + 1}. ${status} ${ach.displayName} (${ach.apiName})`);
+      });
+      const total = await steam.getTotalAchievementCount();
+      const unlocked = await steam.getUnlockedAchievementCount();
+      console.log(`   📈 Progress: ${unlocked}/${total} achievements unlocked`);
+      return achs;
+    };
+    
     // Get achievements from real Steam
     console.log('\n4. 🏆 Getting achievements from Steam...');
     const achievements = await steam.getAllAchievements();
@@ -62,33 +75,82 @@ async function testRealSteam() {
       });
       
       // Get achievement statistics
-      const total = await steam.getTotalCount();
-      const unlocked = await steam.getUnlockedCount();
+      const total = await steam.getTotalAchievementCount();
+      const unlocked = await steam.getUnlockedAchievementCount();
       console.log(`\n   📈 Progress: ${unlocked}/${total} achievements unlocked`);
       
-      // Test unlocking an achievement (if any locked achievements exist)
-      const lockedAchievement = achievements.find(a => !a.unlocked);
-      if (lockedAchievement) {
-        console.log(`\n5. 🔓 Testing achievement unlock: ${lockedAchievement.apiName}`);
-        console.log('   ⚠️  This will actually unlock the achievement in Steam!');
-        
-        const unlockResult = await steam.unlockAchievement(lockedAchievement.apiName);
-        if (unlockResult) {
-          console.log('   ✅ Achievement unlocked successfully!');
-          
-          // Verify it's now unlocked
-          const isNowUnlocked = await steam.isAchievementUnlocked(lockedAchievement.apiName);
-          console.log(`   🔍 Verification: ${isNowUnlocked ? 'Confirmed unlocked' : 'Still locked'}`);
-        } else {
-          console.log('   ❌ Failed to unlock achievement');
+      // STEP 1: Clear ALL achievements
+      console.log('\n5. 🔒 STEP 1: Clearing ALL achievements...');
+      console.log('   ⚠️  This will clear all achievements in Steam (for testing)!');
+      
+      let clearedCount = 0;
+      for (const ach of achievements) {
+        if (ach.unlocked) {
+          const cleared = await steam.clearAchievement(ach.apiName);
+          if (cleared) {
+            clearedCount++;
+          }
         }
-      } else {
-        console.log('\n5. 🏆 All achievements are already unlocked!');
       }
+      console.log(`   ✅ Cleared ${clearedCount} achievements`);
+      
+      // Show status after clearing all
+      const afterClearAll = await displayAchievements('   📋 Achievement status after clearing all:');
+      
+      // STEP 2: Unlock ONE achievement
+      console.log('\n6. 🔓 STEP 2: Unlocking ONE achievement...');
+      const firstAchievement = achievements[0];
+      console.log(`   Target: ${firstAchievement.displayName} (${firstAchievement.apiName})`);
+      
+      const unlockResult = await steam.unlockAchievement(firstAchievement.apiName);
+      if (unlockResult) {
+        console.log('   ✅ Achievement unlocked successfully!');
+        
+        // Verify it's unlocked
+        const isUnlocked = await steam.isAchievementUnlocked(firstAchievement.apiName);
+        console.log(`   🔍 Verification: ${isUnlocked ? 'Confirmed unlocked' : 'Failed'}`);
+      }
+      
+      // Show status after unlocking one
+      await displayAchievements('   📋 Achievement status after unlocking one:');
+      
+      // STEP 3: Clear ALL achievements again
+      console.log('\n7. 🔒 STEP 3: Clearing ALL achievements again...');
+      
+      let clearedCount2 = 0;
+      const currentAchievements = await steam.getAllAchievements();
+      for (const ach of currentAchievements) {
+        if (ach.unlocked) {
+          const cleared = await steam.clearAchievement(ach.apiName);
+          if (cleared) {
+            clearedCount2++;
+          }
+        }
+      }
+      console.log(`   ✅ Cleared ${clearedCount2} achievement(s)`);
+      
+      // Show final status
+      await displayAchievements('   📋 Final achievement status (all cleared):');
+      
+      // Restore all achievements to original state
+      console.log('\n8. 🔄 Restoring all achievements to original state...');
+      let restoredCount = 0;
+      for (const originalAch of achievements) {
+        if (originalAch.unlocked) {
+          const restored = await steam.unlockAchievement(originalAch.apiName);
+          if (restored) {
+            restoredCount++;
+          }
+        }
+      }
+      console.log(`   ✅ Restored ${restoredCount} achievements`);
+      
+      // Show restored status
+      await displayAchievements('   📋 Achievement status after restoration:');
     }
     
     // Test Steam callbacks
-    console.log('\n6. 🔄 Processing Steam callbacks...');
+    console.log('\n9. 🔄 Processing Steam callbacks...');
     steam.runCallbacks();
     console.log('   ✅ Steam callbacks processed');
     
