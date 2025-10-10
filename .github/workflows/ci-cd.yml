@@ -200,8 +200,9 @@ jobs:
           SINCE_DATE=$(git log --reverse --format=%ci | head -1)
           echo "Since: $SINCE_DATE"
         else
-          echo "📝 Generating release notes from ${LAST_TAG}...HEAD"
+          echo "📝 Generating release notes from ${LAST_TAG}...${VERSION}"
           RANGE="${LAST_TAG}..HEAD"
+          RANGE_DISPLAY="${LAST_TAG}..${VERSION}"
           SINCE_DATE=$(git log -1 --format=%ci ${LAST_TAG})
           echo "Previous tag: $LAST_TAG"
           echo "Since: $SINCE_DATE"
@@ -224,7 +225,7 @@ jobs:
                 echo "- #$pr_num: (PR details unavailable)" >> release_notes.md
             done
           else
-            echo "_No pull requests found in range ${RANGE}_" >> release_notes.md
+            echo "_No pull requests found_" >> release_notes.md
           fi
         elif command -v gh &> /dev/null && [ -z "$LAST_TAG" ]; then
           # For first release, get all PRs from history up to HEAD
@@ -252,7 +253,7 @@ jobs:
                 echo "- PR #$pr_num" >> release_notes.md
               done
             else
-              echo "_No pull requests found in range ${RANGE}_" >> release_notes.md
+              echo "_No pull requests found_" >> release_notes.md
             fi
           else
             # For first release, get all PR references from all commits
@@ -271,7 +272,7 @@ jobs:
         
         echo "" >> release_notes.md
         if [ -n "$LAST_TAG" ]; then
-          echo "### 📝 Commits (${LAST_TAG}..HEAD)" >> release_notes.md
+          echo "### 📝 Commits (${RANGE_DISPLAY})" >> release_notes.md
           echo "" >> release_notes.md
           # Only commits in the range between tags
           git log ${RANGE} --pretty=format:"- %s (%h)" --no-merges >> release_notes.md
