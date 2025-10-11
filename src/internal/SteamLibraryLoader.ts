@@ -78,25 +78,38 @@ export class SteamLibraryLoader {
     const arch = process.arch;
     
     let libPath: string;
+    let basePath = __dirname;
+    
+    // Handle ASAR archives in Electron
+    // When packaged in .asar, native modules need to be in .asar.unpacked
+    if (basePath.includes('.asar')) {
+      // Replace .asar with .asar.unpacked
+      basePath = basePath.replace(/\.asar([/\\])/, '.asar.unpacked$1');
+      console.log(`[Steamworks] Detected ASAR archive, using unpacked path`);
+    }
     
     if (platform === 'win32') {
       if (arch === 'x64') {
-        libPath = path.join(__dirname, '../../steamworks_sdk/redistributable_bin/win64/steam_api64.dll');
+        libPath = path.join(basePath, '../../steamworks_sdk/redistributable_bin/win64/steam_api64.dll');
       } else {
-        libPath = path.join(__dirname, '../../steamworks_sdk/redistributable_bin/steam_api.dll');
+        libPath = path.join(basePath, '../../steamworks_sdk/redistributable_bin/steam_api.dll');
       }
     } else if (platform === 'darwin') {
-      libPath = path.join(__dirname, '../../steamworks_sdk/redistributable_bin/osx/libsteam_api.dylib');
+      libPath = path.join(basePath, '../../steamworks_sdk/redistributable_bin/osx/libsteam_api.dylib');
     } else if (platform === 'linux') {
-      libPath = path.join(__dirname, '../../steamworks_sdk/redistributable_bin/linux64/libsteam_api.so');
+      libPath = path.join(basePath, '../../steamworks_sdk/redistributable_bin/linux64/libsteam_api.so');
     } else {
       throw new Error(`Unsupported platform: ${platform}`);
     }
     
+    // Resolve to absolute path
+    libPath = path.resolve(libPath);
+    
     // Check if the library exists
     if (!fs.existsSync(libPath)) {
       throw new Error(`Steamworks SDK library not found at: ${libPath}\n` +
-        'Please download Steamworks SDK and place it in the steamworks_sdk/ directory.');
+        'Please download Steamworks SDK and place it in the steamworks_sdk/ directory.\n' +
+        'For Electron apps, make sure native modules are in the .asar.unpacked directory.');
     }
     
     return libPath;

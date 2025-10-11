@@ -5,11 +5,7 @@ import {
   AchievementProgressLimits,
   UserAchievement,
   AchievementGlobalStats,
-  AchievementWithIcon,
-  SteamStat,
-  GlobalStat,
-  GlobalStatHistory,
-  UserStat
+  AchievementWithIcon
 } from './types';
 import { SteamLibraryLoader } from './internal/SteamLibraryLoader';
 import { SteamAPICore } from './internal/SteamAPICore';

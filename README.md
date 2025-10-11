@@ -174,6 +174,45 @@ app.on('before-quit', () => {
 });
 ```
 
+### 📦 Packaging with ASAR
+
+When packaging your Electron app with ASAR archives, **native modules must be unpacked**. The library automatically detects ASAR and looks for files in `.asar.unpacked`.
+
+#### electron-builder Configuration
+
+Add to your `package.json` or `electron-builder.yml`:
+
+```json
+{
+  "build": {
+    "asarUnpack": [
+      "node_modules/steamworks-ffi-node/**/*"
+    ]
+  }
+}
+```
+
+#### electron-forge Configuration
+
+Add to your `forge.config.js`:
+
+```javascript
+module.exports = {
+  packagerConfig: {
+    asar: {
+      unpack: "**/{node_modules/steamworks-ffi-node}/**/*"
+    }
+  }
+};
+```
+
+The library will automatically:
+1. Detect if running inside an ASAR archive
+2. Replace `.asar` with `.asar.unpacked` in the library path
+3. Load the Steamworks SDK from the unpacked directory
+
+This ensures native libraries work correctly in packaged Electron apps!
+
 ## 🔧 Requirements
 
 - **Node.js**: 18+ 
@@ -205,7 +244,9 @@ All redistributable binaries are included in the package - no manual SDK downloa
 
 ### Electron-specific issues
 - ❌ Initialized in renderer → **Solution**: Only initialize in main process
-- ❌ Not cleaning up → **Solution**: Call `shutdown()` in `before-quit` event  
+- ❌ Not cleaning up → **Solution**: Call `shutdown()` in `before-quit` event
+- ❌ "cannot open shared object file: Not a directory" (Linux) → **Solution**: Add `asarUnpack` configuration (see Electron Integration section above)
+- ❌ Native module errors in packaged app → **Solution**: Ensure `steamworks-ffi-node` is in `asarUnpack` list
 
 ## 📄 License
 
