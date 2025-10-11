@@ -6,6 +6,10 @@ import {
   UserAchievement,
   AchievementGlobalStats,
   AchievementWithIcon,
+  SteamStat,
+  GlobalStat,
+  GlobalStatHistory,
+  UserStat,
   LeaderboardSortMethod,
   LeaderboardDisplayType,
   LeaderboardDataRequest,
@@ -278,14 +282,14 @@ class SteamworksSDK {
   /**
    * Get an integer stat value
    */
-  async getStatInt(statName: string): Promise<number | null> {
+  async getStatInt(statName: string): Promise<SteamStat | null> {
     return this.statsManager.getStatInt(statName);
   }
 
   /**
    * Get a float stat value
    */
-  async getStatFloat(statName: string): Promise<number | null> {
+  async getStatFloat(statName: string): Promise<SteamStat | null> {
     return this.statsManager.getStatFloat(statName);
   }
 
@@ -324,7 +328,7 @@ class SteamworksSDK {
    * Get an integer stat value for another user (friend)
    * Must call requestUserStatsForStats() first and wait for callback
    */
-  async getUserStatInt(steamId: string | bigint, statName: string): Promise<number | null> {
+  async getUserStatInt(steamId: string | bigint, statName: string): Promise<UserStat | null> {
     return this.statsManager.getUserStatInt(steamId, statName);
   }
 
@@ -332,7 +336,7 @@ class SteamworksSDK {
    * Get a float stat value for another user (friend)
    * Must call requestUserStatsForStats() first and wait for callback
    */
-  async getUserStatFloat(steamId: string | bigint, statName: string): Promise<number | null> {
+  async getUserStatFloat(steamId: string | bigint, statName: string): Promise<UserStat | null> {
     return this.statsManager.getUserStatFloat(steamId, statName);
   }
 
@@ -351,7 +355,7 @@ class SteamworksSDK {
    * Get a global stat value (int64)
    * Must call requestGlobalStats() first and wait for callback
    */
-  async getGlobalStatInt(statName: string): Promise<bigint | null> {
+  async getGlobalStatInt(statName: string): Promise<GlobalStat | null> {
     return this.statsManager.getGlobalStatInt(statName);
   }
 
@@ -359,7 +363,7 @@ class SteamworksSDK {
    * Get a global stat value (double)
    * Must call requestGlobalStats() first and wait for callback
    */
-  async getGlobalStatDouble(statName: string): Promise<number | null> {
+  async getGlobalStatDouble(statName: string): Promise<GlobalStat | null> {
     return this.statsManager.getGlobalStatDouble(statName);
   }
 
@@ -368,7 +372,7 @@ class SteamworksSDK {
    * Returns daily values for the stat, with [0] being today, [1] yesterday, etc.
    * @param days - Number of days of history to retrieve (max 60)
    */
-  async getGlobalStatHistoryInt(statName: string, days: number = 7): Promise<bigint[] | null> {
+  async getGlobalStatHistoryInt(statName: string, days: number = 7): Promise<GlobalStatHistory | null> {
     return this.statsManager.getGlobalStatHistoryInt(statName, days);
   }
 
@@ -377,7 +381,7 @@ class SteamworksSDK {
    * Returns daily values for the stat, with [0] being today, [1] yesterday, etc.
    * @param days - Number of days of history to retrieve (max 60)
    */
-  async getGlobalStatHistoryDouble(statName: string, days: number = 7): Promise<number[] | null> {
+  async getGlobalStatHistoryDouble(statName: string, days: number = 7): Promise<GlobalStatHistory | null> {
     return this.statsManager.getGlobalStatHistoryDouble(statName, days);
   }
 

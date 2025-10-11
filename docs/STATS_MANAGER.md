@@ -30,7 +30,16 @@ Get an integer stat value for the current user.
 **Parameters:**
 - `statName: string` - Name of the stat to retrieve
 
-**Returns:** `Promise<number | null>` - The stat value, or null if not found
+**Returns:** `Promise<SteamStat | null>` - SteamStat object with `{name, value, type}`, or null if not found
+
+**SteamStat Interface:**
+```typescript
+interface SteamStat {
+  name: string;        // Stat name
+  value: number;       // Stat value
+  type: 'int' | 'float';  // Data type
+}
+```
 
 **Example:**
 ```typescript
@@ -39,9 +48,10 @@ import Steam from 'steamworks-ffi-node';
 const steam = Steam.getInstance();
 steam.init({ appId: YOUR_APP_ID });
 
-const kills = await steam.getStatInt('total_kills');
-if (kills !== null) {
-  console.log(`Total kills: ${kills}`);
+const killsStat = await steam.getStatInt('total_kills');
+if (killsStat) {
+  console.log(`${killsStat.name}: ${killsStat.value}`);
+  // Access value: killsStat.value
 }
 
 steam.shutdown();
@@ -59,13 +69,13 @@ Get a float stat value for the current user.
 **Parameters:**
 - `statName: string` - Name of the stat to retrieve
 
-**Returns:** `Promise<number | null>` - The stat value, or null if not found
+**Returns:** `Promise<SteamStat | null>` - SteamStat object with `{name, value, type}`, or null if not found
 
 **Example:**
 ```typescript
-const distance = await steam.getStatFloat('total_distance');
-if (distance !== null) {
-  console.log(`Total distance: ${distance.toFixed(2)} km`);
+const distanceStat = await steam.getStatFloat('total_distance');
+if (distanceStat) {
+  console.log(`${distanceStat.name}: ${distanceStat.value.toFixed(2)} km`);
 }
 ```
 
@@ -219,7 +229,17 @@ Get an integer stat value for another user (friend). Must call `requestUserStats
 - `steamId: string | bigint` - Steam ID of the user
 - `statName: string` - Name of the stat to retrieve
 
-**Returns:** `Promise<number | null>` - The stat value, or null if not found
+**Returns:** `Promise<UserStat | null>` - UserStat object with `{steamId, name, value, type}`, or null if not found
+
+**UserStat Interface:**
+```typescript
+interface UserStat {
+  steamId: string;     // User's Steam ID
+  name: string;        // Stat name
+  value: number;       // Stat value
+  type: 'int' | 'float';  // Data type
+}
+```
 
 **Example:**
 ```typescript
@@ -228,21 +248,23 @@ async function compareWithFriend(friendSteamId: string) {
   steam.init({ appId: YOUR_APP_ID });
   
   // Get your stats
-  const myKills = await steam.getStatInt('total_kills') || 0;
-  const myGames = await steam.getStatInt('games_played') || 0;
+  const myKillsStat = await steam.getStatInt('total_kills');
+  const myGamesStat = await steam.getStatInt('games_played');
   
   // Get friend's stats
   await steam.requestUserStatsForStats(friendSteamId);
   await new Promise(resolve => setTimeout(resolve, 2000));
   steam.runCallbacks();
   
-  const friendKills = await steam.getUserStatInt(friendSteamId, 'total_kills') || 0;
-  const friendGames = await steam.getUserStatInt(friendSteamId, 'games_played') || 0;
+  const friendKills = await steam.getUserStatInt(friendSteamId, 'total_kills');
+  const friendGames = await steam.getUserStatInt(friendSteamId, 'games_played');
   
-  console.log('Comparison:');
-  console.log(`You: ${myKills} kills in ${myGames} games`);
-  console.log(`Friend: ${friendKills} kills in ${friendGames} games`);
-  console.log(`Difference: ${myKills - friendKills} kills`);
+  if (myKillsStat && myGamesStat && friendKills && friendGames) {
+    console.log('Comparison:');
+    console.log(`You: ${myKillsStat.value} kills in ${myGamesStat.value} games`);
+    console.log(`Friend: ${friendKills.value} kills in ${friendGames.value} games`);
+    console.log(`Difference: ${myKillsStat.value - friendKills.value} kills`);
+  }
   
   steam.shutdown();
 }
@@ -261,18 +283,18 @@ Get a float stat value for another user (friend). Must call `requestUserStatsFor
 - `steamId: string | bigint` - Steam ID of the user
 - `statName: string` - Name of the stat to retrieve
 
-**Returns:** `Promise<number | null>` - The stat value, or null if not found
+**Returns:** `Promise<UserStat | null>` - UserStat object with `{steamId, name, value, type}`, or null if not found
 
 **Example:**
 ```typescript
 const friendDistance = await steam.getUserStatFloat(friendSteamId, 'total_distance');
-if (friendDistance !== null) {
-  console.log(`Friend traveled: ${friendDistance.toFixed(2)} km`);
+if (friendDistance) {
+  console.log(`${friendDistance.name}: ${friendDistance.value.toFixed(2)} km`);
 }
 
 const friendAccuracy = await steam.getUserStatFloat(friendSteamId, 'accuracy');
-if (friendAccuracy !== null) {
-  console.log(`Friend accuracy: ${friendAccuracy.toFixed(1)}%`);
+if (friendAccuracy) {
+  console.log(`${friendAccuracy.name}: ${friendAccuracy.value.toFixed(1)}%`);
 }
 ```
 
@@ -326,7 +348,16 @@ Get a global stat value (int64). Must call `requestGlobalStats()` first.
 **Parameters:**
 - `statName: string` - Name of the global stat
 
-**Returns:** `Promise<bigint | null>` - The stat value, or null if not found
+**Returns:** `Promise<GlobalStat | null>` - GlobalStat object with `{name, value, type: 'int64'}`, or null if not found
+
+**GlobalStat Interface:**
+```typescript
+interface GlobalStat {
+  name: string;      // Name of the stat
+  value: number;     // Stat value (converted from BigInt)
+  type: 'int64' | 'double';  // Data type
+}
+```
 
 **Example:**
 ```typescript
@@ -346,11 +377,11 @@ async function viewGlobalStats() {
   
   if (totalPlayers && totalKills && totalGames) {
     console.log('🌍 Global Statistics:');
-    console.log(`Total Players: ${totalPlayers.toLocaleString()}`);
-    console.log(`Total Kills: ${totalKills.toLocaleString()}`);
-    console.log(`Total Games: ${totalGames.toLocaleString()}`);
+    console.log(`Total Players: ${totalPlayers.value}`);
+    console.log(`Total Kills: ${totalKills.value}`);
+    console.log(`Total Games: ${totalGames.value}`);
     
-    const avgKillsPerPlayer = Number(totalKills) / Number(totalPlayers);
+    const avgKillsPerPlayer = totalKills.value / totalPlayers.value;
     console.log(`Average Kills per Player: ${avgKillsPerPlayer.toFixed(2)}`);
   }
   
@@ -370,18 +401,18 @@ Get a global stat value (double). Must call `requestGlobalStats()` first.
 **Parameters:**
 - `statName: string` - Name of the global stat
 
-**Returns:** `Promise<number | null>` - The stat value, or null if not found
+**Returns:** `Promise<GlobalStat | null>` - GlobalStat object with `{name, value, type: 'double'}`, or null if not found
 
 **Example:**
 ```typescript
 const totalDistance = await steam.getGlobalStatDouble('global.total_distance');
-if (totalDistance !== null) {
-  console.log(`Total distance traveled by all players: ${totalDistance.toLocaleString()} km`);
+if (totalDistance) {
+  console.log(`Total distance traveled by all players: ${totalDistance.value} km`);
 }
 
 const avgAccuracy = await steam.getGlobalStatDouble('global.average_accuracy');
-if (avgAccuracy !== null) {
-  console.log(`Global average accuracy: ${avgAccuracy.toFixed(2)}%`);
+if (avgAccuracy) {
+  console.log(`Global average accuracy: ${avgAccuracy.value.toFixed(2)}%`);
 }
 ```
 
@@ -398,25 +429,34 @@ Get historical data for a global stat (int64). Returns daily values.
 - `statName: string` - Name of the global stat
 - `days: number` (optional) - Number of days of history (1-60, default: 7)
 
-**Returns:** `Promise<bigint[] | null>` - Array of daily values ([0] = today, [1] = yesterday, etc.)
+**Returns:** `Promise<GlobalStatHistory | null>` - GlobalStatHistory object with `{name, history, type: 'int64'}`, or null if not found
+
+**GlobalStatHistory Interface:**
+```typescript
+interface GlobalStatHistory {
+  name: string;      // Name of the stat
+  history: number[]; // Array of daily values (converted from BigInt)
+  type: 'int64' | 'double';  // Data type
+}
+```
 
 **Example:**
 ```typescript
-const history = await steam.getGlobalStatHistoryInt('global.daily_kills', 7);
+const historyData = await steam.getGlobalStatHistoryInt('global.daily_kills', 7);
 
-if (history) {
+if (historyData) {
   console.log('Last 7 days of global kills:');
-  history.forEach((kills, index) => {
+  historyData.history.forEach((kills, index) => {
     const label = index === 0 ? 'Today' : 
                   index === 1 ? 'Yesterday' : 
                   `${index} days ago`;
-    console.log(`${label}: ${kills.toLocaleString()} kills`);
+    console.log(`${label}: ${kills} kills`);
   });
   
   // Calculate trend
-  const total = history.reduce((sum, val) => sum + Number(val), 0);
-  const average = total / history.length;
-  console.log(`7-day average: ${average.toLocaleString()} kills/day`);
+  const total = historyData.history.reduce((sum, val) => sum + val, 0);
+  const average = total / historyData.history.length;
+  console.log(`7-day average: ${average.toFixed(2)} kills/day`);
 }
 ```
 
@@ -433,24 +473,24 @@ Get historical data for a global stat (double). Returns daily values.
 - `statName: string` - Name of the global stat
 - `days: number` (optional) - Number of days of history (1-60, default: 7)
 
-**Returns:** `Promise<number[] | null>` - Array of daily values ([0] = today, [1] = yesterday, etc.)
+**Returns:** `Promise<GlobalStatHistory | null>` - GlobalStatHistory object with `{name, history, type: 'double'}`, or null if not found
 
 **Example:**
 ```typescript
-const playtimeHistory = await steam.getGlobalStatHistoryDouble('global.daily_playtime', 30);
+const playtimeData = await steam.getGlobalStatHistoryDouble('global.daily_playtime', 30);
 
-if (playtimeHistory) {
+if (playtimeData) {
   console.log('Last 30 days of global playtime:');
   
-  const totalHours = playtimeHistory.reduce((sum, hours) => sum + hours, 0);
-  const avgHoursPerDay = totalHours / playtimeHistory.length;
+  const totalHours = playtimeData.history.reduce((sum, hours) => sum + hours, 0);
+  const avgHoursPerDay = totalHours / playtimeData.history.length;
   
-  console.log(`Total: ${totalHours.toLocaleString()} hours`);
+  console.log(`Total: ${totalHours} hours`);
   console.log(`Average: ${avgHoursPerDay.toFixed(2)} hours/day`);
   
   // Find peak day
-  const maxHours = Math.max(...playtimeHistory);
-  const peakIndex = playtimeHistory.indexOf(maxHours);
+  const maxHours = Math.max(...playtimeData.history);
+  const peakIndex = playtimeData.history.indexOf(maxHours);
   console.log(`Peak day: ${peakIndex} days ago with ${maxHours.toFixed(2)} hours`);
 }
 ```
@@ -534,9 +574,13 @@ async function trackGameSession() {
   const sessionStart = Date.now();
   
   // Get current stats
-  const gamesPlayed = await steam.getStatInt('games_played') || 0;
-  const totalKills = await steam.getStatInt('total_kills') || 0;
-  const totalDistance = await steam.getStatFloat('total_distance') || 0;
+  const gamesPlayedStat = await steam.getStatInt('games_played');
+  const totalKillsStat = await steam.getStatInt('total_kills');
+  const totalDistanceStat = await steam.getStatFloat('total_distance');
+  
+  const gamesPlayed = gamesPlayedStat ? gamesPlayedStat.value : 0;
+  const totalKills = totalKillsStat ? totalKillsStat.value : 0;
+  const totalDistance = totalDistanceStat ? totalDistanceStat.value : 0;
   
   // Simulate gameplay
   const sessionKills = 15;
@@ -570,8 +614,11 @@ async function createLeaderboard(friendSteamIds: string[]) {
   steam.init({ appId: YOUR_APP_ID });
   
   // Get your stats
-  const myKills = await steam.getStatInt('total_kills') || 0;
-  const myGames = await steam.getStatInt('games_played') || 0;
+  const myKillsStat = await steam.getStatInt('total_kills');
+  const myGamesStat = await steam.getStatInt('games_played');
+  
+  const myKills = myKillsStat ? myKillsStat.value : 0;
+  const myGames = myGamesStat ? myGamesStat.value : 0;
   const myKDR = myGames > 0 ? myKills / myGames : 0;
   
   const leaderboard = [
@@ -584,8 +631,11 @@ async function createLeaderboard(friendSteamIds: string[]) {
     await new Promise(resolve => setTimeout(resolve, 2000));
     steam.runCallbacks();
     
-    const friendKills = await steam.getUserStatInt(friendId, 'total_kills') || 0;
-    const friendGames = await steam.getUserStatInt(friendId, 'games_played') || 0;
+    const friendKillsStat = await steam.getUserStatInt(friendId, 'total_kills');
+    const friendGamesStat = await steam.getUserStatInt(friendId, 'games_played');
+    
+    const friendKills = friendKillsStat ? friendKillsStat.value : 0;
+    const friendGames = friendGamesStat ? friendGamesStat.value : 0;
     const friendKDR = friendGames > 0 ? friendKills / friendGames : 0;
     
     leaderboard.push({
@@ -633,20 +683,20 @@ async function showGlobalDashboard() {
   
   if (totalPlayers && totalKills && totalGames) {
     console.log('📊 Overall Statistics:');
-    console.log(`Players: ${Number(totalPlayers).toLocaleString()}`);
-    console.log(`Total Kills: ${Number(totalKills).toLocaleString()}`);
-    console.log(`Total Games: ${Number(totalGames).toLocaleString()}`);
-    console.log(`Avg Kills/Player: ${(Number(totalKills) / Number(totalPlayers)).toFixed(2)}\n`);
+    console.log(`Players: ${totalPlayers.value}`);
+    console.log(`Total Kills: ${totalKills.value}`);
+    console.log(`Total Games: ${totalGames.value}`);
+    console.log(`Avg Kills/Player: ${(totalKills.value / totalPlayers.value).toFixed(2)}\n`);
   }
   
   // Historical trends
-  const killHistory = await steam.getGlobalStatHistoryInt('global.daily_kills', 7);
-  if (killHistory) {
+  const killHistoryData = await steam.getGlobalStatHistoryInt('global.daily_kills', 7);
+  if (killHistoryData) {
     console.log('📈 Last 7 Days Trend:');
-    killHistory.forEach((kills, index) => {
+    killHistoryData.history.forEach((kills, index) => {
       const day = index === 0 ? 'Today' : index === 1 ? 'Yesterday' : `${index}d ago`;
-      const bar = '█'.repeat(Math.floor(Number(kills) / 10000));
-      console.log(`${day.padEnd(10)} ${Number(kills).toLocaleString().padStart(10)} ${bar}`);
+      const bar = '█'.repeat(Math.floor(kills / 10000));
+      console.log(`${day.padEnd(10)} ${kills.toString().padStart(10)} ${bar}`);
     });
   }
   
@@ -663,9 +713,9 @@ async function showGlobalDashboard() {
 Stats may not be configured or available:
 
 ```typescript
-const kills = await steam.getStatInt('total_kills');
-if (kills !== null) {
-  console.log(`Kills: ${kills}`);
+const killsStat = await steam.getStatInt('total_kills');
+if (killsStat) {
+  console.log(`Kills: ${killsStat.value}`);
 } else {
   console.log('Stat not configured in Steamworks');
 }
@@ -705,16 +755,19 @@ await steam.setStatFloat('total_distance', totalDistance + sessionDistance);
 await steam.updateAvgRateStat('kills_per_hour', sessionKills, sessionSeconds);
 ```
 
-### 5. Handle BigInt for Global Stats
+### 5. Working with Typed Objects
 
-Global stats return `bigint` for large numbers:
+All getter methods return typed objects with metadata:
 
 ```typescript
-const totalKills = await steam.getGlobalStatInt('global.total_kills');
-if (totalKills) {
-  // Convert to number for calculations
-  const killsNumber = Number(totalKills);
-  console.log(`Total: ${killsNumber.toLocaleString()}`);
+const killsStat = await steam.getGlobalStatInt('global.total_kills');
+if (killsStat) {
+  // Access the value
+  console.log(`Total: ${killsStat.value}`);
+  
+  // Access metadata
+  console.log(`Stat name: ${killsStat.name}`);
+  console.log(`Data type: ${killsStat.type}`); // 'int64'
 }
 ```
 
