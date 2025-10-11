@@ -43,6 +43,9 @@ export class SteamAPICore {
   
   /** Pointer to the ISteamUser interface */
   private userInterface: any = null;
+  
+  /** Pointer to the ISteamUtils interface */
+  private utilsInterface: any = null;
 
   /**
    * Creates a new SteamAPICore instance
@@ -129,6 +132,12 @@ export class SteamAPICore {
 
       // Get User interface
       this.userInterface = this.libraryLoader.SteamAPI_SteamUser_v023();
+      
+      // Get Utils interface
+      this.utilsInterface = this.libraryLoader.SteamAPI_SteamUtils_v010();
+      if (!this.utilsInterface || this.utilsInterface === null) {
+        console.warn('[Steamworks] WARNING: Failed to get SteamUtils interface');
+      }
 
       // Request current stats from Steam servers
       console.log('[Steamworks] Requesting current stats from Steam...');
@@ -186,6 +195,7 @@ export class SteamAPICore {
       this.initialized = false;
       this.userStatsInterface = null;
       this.userInterface = null;
+      this.utilsInterface = null;
       console.log('[Steamworks] Steam API shutdown complete');
     }
   }
@@ -364,5 +374,29 @@ export class SteamAPICore {
    */
   getUserInterface(): any {
     return this.userInterface;
+  }
+  
+  /**
+   * Get the ISteamUtils interface pointer
+   * 
+   * Returns the native pointer to the ISteamUtils interface, which is used
+   * for utility operations including API call result checking.
+   * 
+   * @returns Pointer to ISteamUtils interface, or null if not initialized
+   * 
+   * @example
+   * ```typescript
+   * const utils = apiCore.getUtilsInterface();
+   * if (utils) {
+   *   // Use interface for utility operations
+   * }
+   * ```
+   * 
+   * @remarks
+   * - Returns null if Steam API is not initialized
+   * - This is a native pointer for use with FFI calls
+   */
+  getUtilsInterface(): any {
+    return this.utilsInterface;
   }
 }

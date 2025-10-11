@@ -142,3 +142,59 @@ export interface LeaderboardScoreUploadResult {
   globalRankNew: number;
   globalRankPrevious: number;
 }
+
+// ========================================
+// Callback Result Types (for internal FFI polling)
+// ========================================
+
+/**
+ * LeaderboardFindResult_t - Result of FindOrCreateLeaderboard/FindLeaderboard
+ * Callback ID: k_iSteamUserStatsCallbacks + 4 = 1104
+ */
+export interface LeaderboardFindResultType {
+  m_hSteamLeaderboard: bigint;
+  m_bLeaderboardFound: number;
+}
+
+/**
+ * LeaderboardScoreUploaded_t - Result of UploadLeaderboardScore
+ * Callback ID: k_iSteamUserStatsCallbacks + 6 = 1106
+ */
+export interface LeaderboardScoreUploadedType {
+  m_bSuccess: number;
+  m_hSteamLeaderboard: bigint;
+  m_nScore: number;
+  m_bScoreChanged: number;
+  m_nGlobalRankNew: number;
+  m_nGlobalRankPrevious: number;
+}
+
+/**
+ * LeaderboardScoresDownloaded_t - Result of DownloadLeaderboardEntries
+ * Callback ID: k_iSteamUserStatsCallbacks + 5 = 1105
+ */
+export interface LeaderboardScoresDownloadedType {
+  m_hSteamLeaderboard: bigint;
+  m_hSteamLeaderboardEntries: bigint;
+  m_cEntryCount: number;
+}
+
+/**
+ * LeaderboardUGCSet_t - Result of AttachLeaderboardUGC
+ * Callback ID: k_iSteamUserStatsCallbacks + 11 = 1111
+ */
+export interface LeaderboardUGCSetType {
+  m_eResult: number;
+  m_hSteamLeaderboard: bigint;
+}
+
+/**
+ * LeaderboardEntry_t - Individual leaderboard entry data (from Steam)
+ */
+export interface LeaderboardEntryType {
+  m_steamIDUser: bigint;
+  m_nGlobalRank: number;
+  m_nScore: number;
+  m_cDetails: number;
+  m_hUGC: bigint;
+}
