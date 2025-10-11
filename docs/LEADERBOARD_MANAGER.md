@@ -2,6 +2,22 @@
 
 Complete reference for all leaderboard-related functionality in Steamworks FFI.
 
+## ⚠️ IMPORTANT - Known Limitation
+
+**The leaderboard API currently has a callback handling limitation that prevents it from returning results.**
+
+The Steamworks Flat API used via FFI does not expose callback registration functions. This means async operations like finding leaderboards, uploading scores, and downloading entries cannot return their callback results to JavaScript.
+
+**Impact:**
+- `findLeaderboard()` and `findOrCreateLeaderboard()` return `null`
+- `uploadScore()` returns `null`
+- `downloadLeaderboardEntries()` returns `[]` (empty array)
+- `attachLeaderboardUGC()` cannot confirm success
+
+**Current Status**: The functions execute on Steam servers but cannot retrieve callback data.
+
+---
+
 ## Overview
 
 The `SteamLeaderboardManager` provides **100% coverage** of the Steamworks Leaderboard API with 7 functions organized into logical categories. Leaderboards allow you to rank players globally, display scores, and attach user-generated content to entries.

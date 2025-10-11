@@ -24,6 +24,22 @@ import {
  * players to compete globally or with friends. Each entry can include a score
  * and up to 64 int32 detail values for additional game-specific data.
  * 
+ * ⚠️ IMPORTANT - Callback Limitation:
+ * The Steamworks flat API (steam_api_flat.h) used via FFI does not expose
+ * callback registration functions. This means async operations like FindLeaderboard
+ * cannot directly return their results. The current implementation:
+ * 
+ * 1. Initiates the async operation (returns SteamAPICall_t handle)
+ * 2. Waits with timeout for Steam to process
+ * 3. Calls runCallbacks() to process pending callbacks internally
+ * 4. Cannot access the callback result data (LeaderboardFindResult_t, etc.)
+ * 
+ * Workarounds:
+ * - Use leaderboard names consistently (Steam caches handles internally)
+ * - Pre-create leaderboards in Steamworks Partner dashboard
+ * - Allow sufficient wait time (2-3 seconds) for async operations
+ * - For production use, consider implementing a C++ addon for proper callback support
+ * 
  * @example
  * ```typescript
  * const leaderboardManager = new SteamLeaderboardManager(libraryLoader, apiCore);
@@ -158,11 +174,25 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 2000));
       this.apiCore.runCallbacks();
 
-      // Try to get leaderboard handle from cache (would be set by callback in real implementation)
-      // For now, we'll use a simplified approach
+      // LIMITATION: Cannot access LeaderboardFindResult_t callback data from Node.js FFI
+      // The Steamworks flat API doesn't expose callback registration functions.
+      // When the callback fires, it contains:
+      //   - m_hSteamLeaderboard (the actual leaderboard handle we need)
+      //   - m_bLeaderboardFound (whether it was found/created)
+      // 
+      // Without callback access, we cannot:
+      //   1. Get the leaderboard handle to cache
+      //   2. Confirm the operation succeeded
+      //   3. Return proper LeaderboardInfo
+      //
+      // Possible solutions:
+      //   - Implement C++ addon for proper callback handling
+      //   - Use alternative API if available
+      //   - Accept this limitation and document it
       console.log(`[Steamworks] Leaderboard request sent: ${name}`);
+      console.warn('[Steamworks] Callback handling not implemented - cannot return leaderboard info');
       
-      return null; // TODO: Implement proper callback handling
+      return null;
     } catch (error: any) {
       console.error(`[Steamworks] Error finding/creating leaderboard "${name}":`, error.message);
       return null;
@@ -231,9 +261,12 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 2000));
       this.apiCore.runCallbacks();
 
+      // LIMITATION: Same callback handling issue as findOrCreateLeaderboard()
+      // Cannot access LeaderboardFindResult_t data from FFI
       console.log(`[Steamworks] Leaderboard request sent: ${name}`);
+      console.warn('[Steamworks] Callback handling not implemented - cannot return leaderboard info');
       
-      return null; // TODO: Implement proper callback handling
+      return null;
     } catch (error: any) {
       console.error(`[Steamworks] Error finding leaderboard "${name}":`, error.message);
       return null;
@@ -400,9 +433,20 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 3000));
       this.apiCore.runCallbacks();
 
+      // LIMITATION: Cannot access LeaderboardScoreUploaded_t callback data
+      // The callback contains:
+      //   - m_bSuccess (whether upload succeeded)
+      //   - m_hSteamLeaderboard (leaderboard handle)
+      //   - m_nScore (score that was uploaded)
+      //   - m_bScoreChanged (whether the score changed)
+      //   - m_nGlobalRankNew (new global rank)
+      //   - m_nGlobalRankPrevious (previous global rank)
+      //
+      // Without callback access, we cannot confirm success or get rank information
       console.log(`[Steamworks] Score upload request sent`);
+      console.warn('[Steamworks] Callback handling not implemented - cannot return upload result');
       
-      return null; // TODO: Implement proper callback handling
+      return null;
     } catch (error: any) {
       console.error(`[Steamworks] Error uploading score:`, error.message);
       return null;
@@ -500,9 +544,22 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 3000));
       this.apiCore.runCallbacks();
 
+      // LIMITATION: Cannot access LeaderboardScoresDownloaded_t callback data
+      // The callback contains:
+      //   - m_hSteamLeaderboard (leaderboard handle)
+      //   - m_hSteamLeaderboardEntries (entries handle for GetDownloadedLeaderboardEntry)
+      //   - m_cEntryCount (number of entries downloaded)
+      //
+      // We would need to:
+      //   1. Access the callback to get m_hSteamLeaderboardEntries handle
+      //   2. Call GetDownloadedLeaderboardEntry() for each entry with the handle
+      //   3. Parse LeaderboardEntry_t struct for each entry
+      //
+      // Without callback access, we cannot retrieve any entry data
       console.log(`[Steamworks] Entry download request sent`);
+      console.warn('[Steamworks] Callback handling not implemented - cannot return entries');
       
-      return []; // TODO: Implement proper callback handling and entry parsing
+      return [];
     } catch (error: any) {
       console.error(`[Steamworks] Error downloading entries:`, error.message);
       return [];
@@ -584,9 +641,12 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 3000));
       this.apiCore.runCallbacks();
 
+      // LIMITATION: Same as downloadLeaderboardEntries()
+      // Cannot access LeaderboardScoresDownloaded_t callback data
       console.log(`[Steamworks] User entry download request sent`);
+      console.warn('[Steamworks] Callback handling not implemented - cannot return entries');
       
-      return []; // TODO: Implement proper callback handling
+      return [];
     } catch (error: any) {
       console.error(`[Steamworks] Error downloading user entries:`, error.message);
       return [];
@@ -668,9 +728,17 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 3000));
       this.apiCore.runCallbacks();
 
+      // LIMITATION: Cannot access LeaderboardUGCSet_t callback data
+      // The callback contains:
+      //   - m_eResult (result code)
+      //   - m_hSteamLeaderboard (leaderboard handle)
+      //
+      // Without callback access, we cannot confirm if UGC attachment succeeded
       console.log(`[Steamworks] UGC attachment request sent`);
+      console.warn('[Steamworks] Callback handling not implemented - cannot confirm success');
       
-      return true; // TODO: Implement proper callback handling for actual result
+      // Returning true is optimistic - actual result unknown
+      return true;
     } catch (error: any) {
       console.error(`[Steamworks] Error attaching UGC:`, error.message);
       return false;
