@@ -22,7 +22,7 @@ import { SteamLibraryLoader } from './SteamLibraryLoader';
  * 
  * const success = apiCore.init({ appId: 480 });
  * if (success) {
- *   console.log('Steam API initialized!');
+ *   console.log('[Steamworks] Steam API initialized!');
  *   // Use Steam features...
  *   apiCore.shutdown();
  * }
@@ -67,9 +67,9 @@ export class SteamAPICore {
    * ```typescript
    * const success = apiCore.init({ appId: 480 });
    * if (success) {
-   *   console.log('Connected to Steam for App ID:', 480);
+   *   console.log('[Steamworks] Connected to Steam for App ID:', 480);
    * } else {
-   *   console.error('Failed to initialize Steam API');
+   *   console.error('[Steamworks] Failed to initialize Steam API');
    * }
    * ```
    * 
@@ -150,9 +150,9 @@ export class SteamAPICore {
     } catch (error) {
       console.error('[Steamworks] ERROR: Failed to initialize Steam API:', (error as Error).message);
       console.error('[Steamworks] Make sure:');
-      console.error('   1. Steam client is running and you\'re logged in');
-      console.error('   2. Steamworks redistributable binaries are available');
-      console.error('   3. App ID is valid and game is in your library');
+      console.error('[Steamworks]    1. Steam client is running and you\'re logged in');
+      console.error('[Steamworks]    2. Steamworks redistributable binaries are available');
+      console.error('[Steamworks]    3. App ID is valid and game is in your library');
       return false;
     }
   }
@@ -201,9 +201,9 @@ export class SteamAPICore {
    * @example
    * ```typescript
    * const status = apiCore.getStatus();
-   * console.log(`Initialized: ${status.initialized}`);
-   * console.log(`App ID: ${status.appId}`);
-   * console.log(`Steam ID: ${status.steamId}`);
+   * console.log(`[Steamworks] Initialized: ${status.initialized}`);
+   * console.log(`[Steamworks] App ID: ${status.appId}`);
+   * console.log(`[Steamworks] Steam ID: ${status.steamId}`);
    * ```
    * 
    * @remarks
@@ -221,7 +221,7 @@ export class SteamAPICore {
         const steamIdNum = this.libraryLoader.SteamAPI_ISteamUser_GetSteamID(this.userInterface);
         steamId = steamIdNum.toString();
       } catch (error) {
-        console.warn('Failed to get Steam ID:', (error as Error).message);
+        console.warn('[Steamworks] Failed to get Steam ID:', (error as Error).message);
       }
     }
 
@@ -259,7 +259,7 @@ export class SteamAPICore {
       try {
         this.libraryLoader.SteamAPI_RunCallbacks();
       } catch (error) {
-        console.warn('Warning: Error running Steam callbacks:', (error as Error).message);
+        console.warn('[Steamworks] Warning: Error running Steam callbacks:', (error as Error).message);
       }
     }
   }
@@ -274,9 +274,9 @@ export class SteamAPICore {
    * @example
    * ```typescript
    * if (apiCore.isSteamRunning()) {
-   *   console.log('Steam client is active');
+   *   console.log('[Steamworks] Steam client is active');
    * } else {
-   *   console.warn('Steam client is not running');
+   *   console.warn('[Steamworks] Steam client is not running');
    * }
    * ```
    * 
@@ -292,7 +292,7 @@ export class SteamAPICore {
       try {
         return this.libraryLoader.SteamAPI_IsSteamRunning();
       } catch (error) {
-        console.warn('Warning: Error checking if Steam is running:', (error as Error).message);
+        console.warn('[Steamworks] Warning: Error checking if Steam is running:', (error as Error).message);
         return false;
       }
     }
@@ -309,7 +309,7 @@ export class SteamAPICore {
    * @example
    * ```typescript
    * if (!apiCore.isInitialized()) {
-   *   console.error('Cannot perform Steam operations - not initialized');
+   *   console.error('[Steamworks] Cannot perform Steam operations - not initialized');
    *   return;
    * }
    * ```

@@ -64,7 +64,7 @@ export class SteamStatsManager {
    * ```typescript
    * const totalKills = await statsManager.getStatInt('total_kills');
    * if (totalKills !== null) {
-   *   console.log(`Total kills: ${totalKills}`);
+   *   console.log(`[Steamworks] Total kills: ${totalKills}`);
    * }
    * ```
    * 
@@ -78,7 +78,7 @@ export class SteamStatsManager {
    */
   async getStatInt(statName: string): Promise<number | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -94,14 +94,14 @@ export class SteamStatsManager {
 
       if (success) {
         const value = koffi.decode(valueOut, 'int32');
-        console.log(`📊 Got stat "${statName}": ${value}`);
+        console.log(`[Steamworks] Got stat "${statName}": ${value}`);
         return value;
       } else {
-        console.warn(`⚠️ Failed to get stat: ${statName}`);
+        console.warn(`[Steamworks] Failed to get stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`❌ Error getting stat "${statName}":`, error.message);
+      console.error(`[Steamworks] Error getting stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -119,7 +119,7 @@ export class SteamStatsManager {
    * ```typescript
    * const accuracy = await statsManager.getStatFloat('shooting_accuracy');
    * if (accuracy !== null) {
-   *   console.log(`Accuracy: ${(accuracy * 100).toFixed(2)}%`);
+   *   console.log(`[Steamworks] Accuracy: ${(accuracy * 100).toFixed(2)}%`);
    * }
    * ```
    * 
@@ -132,7 +132,7 @@ export class SteamStatsManager {
    */
   async getStatFloat(statName: string): Promise<number | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -148,14 +148,14 @@ export class SteamStatsManager {
 
       if (success) {
         const value = koffi.decode(valueOut, 'float');
-        console.log(`📊 Got stat "${statName}": ${value}`);
+        console.log(`[Steamworks] Got stat "${statName}": ${value}`);
         return value;
       } else {
-        console.warn(`⚠️ Failed to get stat: ${statName}`);
+        console.warn(`[Steamworks] Failed to get stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`❌ Error getting stat "${statName}":`, error.message);
+      console.error(`[Steamworks] Error getting stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -176,7 +176,7 @@ export class SteamStatsManager {
    * const currentKills = await statsManager.getStatInt('total_kills') || 0;
    * const success = await statsManager.setStatInt('total_kills', currentKills + 1);
    * if (success) {
-   *   console.log('Kill count updated!');
+   *   console.log('[Steamworks] Kill count updated!');
    * }
    * ```
    * 
@@ -193,7 +193,7 @@ export class SteamStatsManager {
    */
   async setStatInt(statName: string, value: number): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
@@ -210,20 +210,20 @@ export class SteamStatsManager {
         // Store the stats to Steam servers
         const stored = this.libraryLoader.SteamAPI_ISteamUserStats_StoreStats(userStatsInterface);
         if (stored) {
-          console.log(`✅ Set stat "${statName}" to ${value}`);
+          console.log(`[Steamworks] Set stat "${statName}" to ${value}`);
           // Process callbacks
           this.libraryLoader.SteamAPI_RunCallbacks();
           return true;
         } else {
-          console.warn(`⚠️ Failed to store stat: ${statName}`);
+          console.warn(`[Steamworks] Failed to store stat: ${statName}`);
           return false;
         }
       } else {
-        console.warn(`⚠️ Failed to set stat: ${statName}`);
+        console.warn(`[Steamworks] Failed to set stat: ${statName}`);
         return false;
       }
     } catch (error: any) {
-      console.error(`❌ Error setting stat "${statName}":`, error.message);
+      console.error(`[Steamworks] Error setting stat "${statName}":`, error.message);
       return false;
     }
   }
@@ -259,7 +259,7 @@ export class SteamStatsManager {
    */
   async setStatFloat(statName: string, value: number): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
@@ -276,20 +276,20 @@ export class SteamStatsManager {
         // Store the stats to Steam servers
         const stored = this.libraryLoader.SteamAPI_ISteamUserStats_StoreStats(userStatsInterface);
         if (stored) {
-          console.log(`✅ Set stat "${statName}" to ${value}`);
+          console.log(`[Steamworks] Set stat "${statName}" to ${value}`);
           // Process callbacks
           this.libraryLoader.SteamAPI_RunCallbacks();
           return true;
         } else {
-          console.warn(`⚠️ Failed to store stat: ${statName}`);
+          console.warn(`[Steamworks] Failed to store stat: ${statName}`);
           return false;
         }
       } else {
-        console.warn(`⚠️ Failed to set stat: ${statName}`);
+        console.warn(`[Steamworks] Failed to set stat: ${statName}`);
         return false;
       }
     } catch (error: any) {
-      console.error(`❌ Error setting stat "${statName}":`, error.message);
+      console.error(`[Steamworks] Error setting stat "${statName}":`, error.message);
       return false;
     }
   }
@@ -327,7 +327,7 @@ export class SteamStatsManager {
    */
   async updateAvgRateStat(statName: string, countThisSession: number, sessionLength: number): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
@@ -345,20 +345,20 @@ export class SteamStatsManager {
         // Store the stats to Steam servers
         const stored = this.libraryLoader.SteamAPI_ISteamUserStats_StoreStats(userStatsInterface);
         if (stored) {
-          console.log(`✅ Updated avg rate stat "${statName}": ${countThisSession} over ${sessionLength}s`);
+          console.log(`[Steamworks] Updated avg rate stat "${statName}": ${countThisSession} over ${sessionLength}s`);
           // Process callbacks
           this.libraryLoader.SteamAPI_RunCallbacks();
           return true;
         } else {
-          console.warn(`⚠️ Failed to store stat: ${statName}`);
+          console.warn(`[Steamworks] Failed to store stat: ${statName}`);
           return false;
         }
       } else {
-        console.warn(`⚠️ Failed to update avg rate stat: ${statName}`);
+        console.warn(`[Steamworks] Failed to update avg rate stat: ${statName}`);
         return false;
       }
     } catch (error: any) {
-      console.error(`❌ Error updating avg rate stat "${statName}":`, error.message);
+      console.error(`[Steamworks] Error updating avg rate stat "${statName}":`, error.message);
       return false;
     }
   }
@@ -389,7 +389,7 @@ export class SteamStatsManager {
    *   
    *   // Now get the friend's stats
    *   const friendKills = await statsManager.getUserStatInt(friendSteamId, 'total_kills');
-   *   console.log(`Friend has ${friendKills} kills`);
+   *   console.log(`[Steamworks] Friend has ${friendKills} kills`);
    * }
    * ```
    * 
@@ -404,7 +404,7 @@ export class SteamStatsManager {
    */
   async requestUserStats(steamId: string | bigint): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
@@ -418,14 +418,14 @@ export class SteamStatsManager {
       );
 
       if (callHandle !== BigInt(0)) {
-        console.log(`📡 Requested stats for user: ${steamId}`);
+        console.log(`[Steamworks] Requested stats for user: ${steamId}`);
         return true;
       } else {
-        console.warn(`⚠️ Failed to request user stats: ${steamId}`);
+        console.warn(`[Steamworks] Failed to request user stats: ${steamId}`);
         return false;
       }
     } catch (error: any) {
-      console.error(`❌ Error requesting user stats:`, error.message);
+      console.error(`[Steamworks] Error requesting user stats:`, error.message);
       return false;
     }
   }
@@ -450,7 +450,7 @@ export class SteamStatsManager {
    * const myKills = await statsManager.getStatInt('total_kills') || 0;
    * const friendKills = await statsManager.getUserStatInt(friendId, 'total_kills') || 0;
    * 
-   * console.log(`You: ${myKills}, Friend: ${friendKills}`);
+   * console.log(`[Steamworks] You: ${myKills}, Friend: ${friendKills}`);
    * ```
    * 
    * @remarks
@@ -463,7 +463,7 @@ export class SteamStatsManager {
    */
   async getUserStatInt(steamId: string | bigint, statName: string): Promise<number | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -481,14 +481,14 @@ export class SteamStatsManager {
 
       if (success) {
         const value = koffi.decode(valueOut, 'int32');
-        console.log(`📊 Got user stat "${statName}" for ${steamId}: ${value}`);
+        console.log(`[Steamworks] Got user stat "${statName}" for ${steamId}: ${value}`);
         return value;
       } else {
-        console.warn(`⚠️ Failed to get user stat: ${statName}`);
+        console.warn(`[Steamworks] Failed to get user stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`❌ Error getting user stat "${statName}":`, error.message);
+      console.error(`[Steamworks] Error getting user stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -512,7 +512,7 @@ export class SteamStatsManager {
    * 
    * const friendAccuracy = await statsManager.getUserStatFloat(friendId, 'shooting_accuracy');
    * if (friendAccuracy !== null) {
-   *   console.log(`Friend accuracy: ${(friendAccuracy * 100).toFixed(2)}%`);
+   *   console.log(`[Steamworks] Friend accuracy: ${(friendAccuracy * 100).toFixed(2)}%`);
    * }
    * ```
    * 
@@ -526,7 +526,7 @@ export class SteamStatsManager {
    */
   async getUserStatFloat(steamId: string | bigint, statName: string): Promise<number | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -544,14 +544,14 @@ export class SteamStatsManager {
 
       if (success) {
         const value = koffi.decode(valueOut, 'float');
-        console.log(`📊 Got user stat "${statName}" for ${steamId}: ${value}`);
+        console.log(`[Steamworks] Got user stat "${statName}" for ${steamId}: ${value}`);
         return value;
       } else {
-        console.warn(`⚠️ Failed to get user stat: ${statName}`);
+        console.warn(`[Steamworks] Failed to get user stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`❌ Error getting user stat "${statName}":`, error.message);
+      console.error(`[Steamworks] Error getting user stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -580,7 +580,7 @@ export class SteamStatsManager {
    * await new Promise(resolve => setTimeout(resolve, 100));
    * 
    * const totalKills = await statsManager.getGlobalStatInt('total_kills');
-   * console.log(`All players combined: ${totalKills} kills`);
+   * console.log(`[Steamworks] All players combined: ${totalKills} kills`);
    * ```
    * 
    * @remarks
@@ -595,7 +595,7 @@ export class SteamStatsManager {
    */
   async requestGlobalStats(historyDays: number = 0): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
@@ -611,14 +611,14 @@ export class SteamStatsManager {
       );
 
       if (callHandle !== BigInt(0)) {
-        console.log(`📡 Requested global stats with ${days} days of history`);
+        console.log(`[Steamworks] Requested global stats with ${days} days of history`);
         return true;
       } else {
-        console.warn(`⚠️ Failed to request global stats`);
+        console.warn(`[Steamworks] Failed to request global stats`);
         return false;
       }
     } catch (error: any) {
-      console.error(`❌ Error requesting global stats:`, error.message);
+      console.error(`[Steamworks] Error requesting global stats:`, error.message);
       return false;
     }
   }
@@ -640,7 +640,7 @@ export class SteamStatsManager {
    * 
    * const globalKills = await statsManager.getGlobalStatInt('total_kills');
    * if (globalKills !== null) {
-   *   console.log(`All players have ${globalKills} total kills`);
+   *   console.log(`[Steamworks] All players have ${globalKills} total kills`);
    * }
    * ```
    * 
@@ -655,7 +655,7 @@ export class SteamStatsManager {
    */
   async getGlobalStatInt(statName: string): Promise<bigint | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -671,14 +671,14 @@ export class SteamStatsManager {
 
       if (success) {
         const value = koffi.decode(valueOut, 'int64');
-        console.log(`🌍 Got global stat "${statName}": ${value}`);
+        console.log(`[Steamworks] Got global stat "${statName}": ${value}`);
         return value;
       } else {
-        console.warn(`⚠️ Failed to get global stat: ${statName}`);
+        console.warn(`[Steamworks] Failed to get global stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`❌ Error getting global stat "${statName}":`, error.message);
+      console.error(`[Steamworks] Error getting global stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -701,7 +701,7 @@ export class SteamStatsManager {
    * 
    * const avgAccuracy = await statsManager.getGlobalStatDouble('average_accuracy');
    * if (avgAccuracy !== null) {
-   *   console.log(`Global average accuracy: ${(avgAccuracy * 100).toFixed(2)}%`);
+   *   console.log(`[Steamworks] Global average accuracy: ${(avgAccuracy * 100).toFixed(2)}%`);
    * }
    * ```
    * 
@@ -716,7 +716,7 @@ export class SteamStatsManager {
    */
   async getGlobalStatDouble(statName: string): Promise<number | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -732,14 +732,14 @@ export class SteamStatsManager {
 
       if (success) {
         const value = koffi.decode(valueOut, 'double');
-        console.log(`🌍 Got global stat "${statName}": ${value}`);
+        console.log(`[Steamworks] Got global stat "${statName}": ${value}`);
         return value;
       } else {
-        console.warn(`⚠️ Failed to get global stat: ${statName}`);
+        console.warn(`[Steamworks] Failed to get global stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`❌ Error getting global stat "${statName}":`, error.message);
+      console.error(`[Steamworks] Error getting global stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -762,10 +762,10 @@ export class SteamStatsManager {
    * 
    * const history = await statsManager.getGlobalStatHistoryInt('total_kills', 7);
    * if (history) {
-   *   console.log('Kill history (newest to oldest):');
+   *   console.log('[Steamworks] Kill history (newest to oldest):');
    *   history.forEach((kills, index) => {
    *     const daysAgo = index === 0 ? 'today' : `${index} days ago`;
-   *     console.log(`  ${daysAgo}: ${kills} kills`);
+   *     console.log(`[Steamworks]   ${daysAgo}: ${kills} kills`);
    *   });
    * }
    * ```
@@ -782,7 +782,7 @@ export class SteamStatsManager {
    */
   async getGlobalStatHistoryInt(statName: string, days: number = 7): Promise<bigint[] | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -805,14 +805,14 @@ export class SteamStatsManager {
         for (let i = 0; i < elementsReturned; i++) {
           history.push(koffi.decode(historyOut, 'int64', i));
         }
-        console.log(`🌍 Got ${elementsReturned} days of history for "${statName}"`);
+        console.log(`[Steamworks] Got ${elementsReturned} days of history for "${statName}"`);
         return history;
       } else {
-        console.warn(`⚠️ Failed to get global stat history: ${statName}`);
+        console.warn(`[Steamworks] Failed to get global stat history: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`❌ Error getting global stat history "${statName}":`, error.message);
+      console.error(`[Steamworks] Error getting global stat history "${statName}":`, error.message);
       return null;
     }
   }
@@ -836,10 +836,10 @@ export class SteamStatsManager {
    * 
    * const history = await statsManager.getGlobalStatHistoryDouble('average_accuracy', 30);
    * if (history) {
-   *   console.log('Accuracy trend:');
+   *   console.log('[Steamworks] Accuracy trend:');
    *   history.forEach((accuracy, index) => {
    *     if (index % 7 === 0) { // Weekly intervals
-   *       console.log(`  Week ${index/7}: ${(accuracy * 100).toFixed(2)}%`);
+   *       console.log(`[Steamworks]   Week ${index/7}: ${(accuracy * 100).toFixed(2)}%`);
    *     }
    *   });
    * }
@@ -857,7 +857,7 @@ export class SteamStatsManager {
    */
   async getGlobalStatHistoryDouble(statName: string, days: number = 7): Promise<number[] | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -880,14 +880,14 @@ export class SteamStatsManager {
         for (let i = 0; i < elementsReturned; i++) {
           history.push(koffi.decode(historyOut, 'double', i));
         }
-        console.log(`🌍 Got ${elementsReturned} days of history for "${statName}"`);
+        console.log(`[Steamworks] Got ${elementsReturned} days of history for "${statName}"`);
         return history;
       } else {
-        console.warn(`⚠️ Failed to get global stat history: ${statName}`);
+        console.warn(`[Steamworks] Failed to get global stat history: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`❌ Error getting global stat history "${statName}":`, error.message);
+      console.error(`[Steamworks] Error getting global stat history "${statName}":`, error.message);
       return null;
     }
   }

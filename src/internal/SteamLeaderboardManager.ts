@@ -123,13 +123,13 @@ export class SteamLeaderboardManager {
     displayType: LeaderboardDisplayType
   ): Promise<LeaderboardInfo | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('⚠️ UserStats interface not available');
+      console.warn('[Steamworks] UserStats interface not available');
       return null;
     }
 
@@ -140,7 +140,7 @@ export class SteamLeaderboardManager {
         return this.getLeaderboardInfo(cachedHandle);
       }
 
-      console.log(`📊 Finding or creating leaderboard: ${name}`);
+      console.log(`[Steamworks] Finding or creating leaderboard: ${name}`);
       
       const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_FindOrCreateLeaderboard(
         userStatsInterface,
@@ -150,7 +150,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`❌ Failed to request leaderboard: ${name}`);
+        console.error(`[Steamworks] Failed to request leaderboard: ${name}`);
         return null;
       }
 
@@ -160,11 +160,11 @@ export class SteamLeaderboardManager {
 
       // Try to get leaderboard handle from cache (would be set by callback in real implementation)
       // For now, we'll use a simplified approach
-      console.log(`✅ Leaderboard request sent: ${name}`);
+      console.log(`[Steamworks] Leaderboard request sent: ${name}`);
       
       return null; // TODO: Implement proper callback handling
     } catch (error: any) {
-      console.error(`❌ Error finding/creating leaderboard "${name}":`, error.message);
+      console.error(`[Steamworks] Error finding/creating leaderboard "${name}":`, error.message);
       return null;
     }
   }
@@ -182,9 +182,9 @@ export class SteamLeaderboardManager {
    * ```typescript
    * const leaderboard = await leaderboardManager.findLeaderboard('HighScores');
    * if (leaderboard) {
-   *   console.log(`Found leaderboard with ${leaderboard.entryCount} entries`);
+   *   console.log(`[Steamworks] Found leaderboard with ${leaderboard.entryCount} entries`);
    * } else {
-   *   console.log('Leaderboard does not exist');
+   *   console.log('[Steamworks] Leaderboard does not exist');
    * }
    * ```
    * 
@@ -198,13 +198,13 @@ export class SteamLeaderboardManager {
    */
   async findLeaderboard(name: string): Promise<LeaderboardInfo | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('⚠️ UserStats interface not available');
+      console.warn('[Steamworks] UserStats interface not available');
       return null;
     }
 
@@ -215,7 +215,7 @@ export class SteamLeaderboardManager {
         return this.getLeaderboardInfo(cachedHandle);
       }
 
-      console.log(`🔍 Finding leaderboard: ${name}`);
+      console.log(`[Steamworks] Finding leaderboard: ${name}`);
       
       const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_FindLeaderboard(
         userStatsInterface,
@@ -223,7 +223,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`❌ Failed to request leaderboard: ${name}`);
+        console.error(`[Steamworks] Failed to request leaderboard: ${name}`);
         return null;
       }
 
@@ -231,11 +231,11 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 2000));
       this.apiCore.runCallbacks();
 
-      console.log(`✅ Leaderboard request sent: ${name}`);
+      console.log(`[Steamworks] Leaderboard request sent: ${name}`);
       
       return null; // TODO: Implement proper callback handling
     } catch (error: any) {
-      console.error(`❌ Error finding leaderboard "${name}":`, error.message);
+      console.error(`[Steamworks] Error finding leaderboard "${name}":`, error.message);
       return null;
     }
   }
@@ -297,7 +297,7 @@ export class SteamLeaderboardManager {
         displayType
       };
     } catch (error: any) {
-      console.error(`❌ Error getting leaderboard info:`, error.message);
+      console.error(`[Steamworks] Error getting leaderboard info:`, error.message);
       return null;
     }
   }
@@ -359,13 +359,13 @@ export class SteamLeaderboardManager {
     details?: number[]
   ): Promise<LeaderboardScoreUploadResult | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('⚠️ UserStats interface not available');
+      console.warn('[Steamworks] UserStats interface not available');
       return null;
     }
 
@@ -373,7 +373,7 @@ export class SteamLeaderboardManager {
       const detailsArray = details || [];
       const detailsCount = Math.min(detailsArray.length, 64);
 
-      console.log(`📤 Uploading score: ${score} (details: ${detailsCount})`);
+      console.log(`[Steamworks] Uploading score: ${score} (details: ${detailsCount})`);
       
       const detailsPtr = detailsCount > 0 ? koffi.alloc('int32', detailsCount) : null;
       if (detailsPtr && detailsCount > 0) {
@@ -392,7 +392,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`❌ Failed to upload score`);
+        console.error(`[Steamworks] Failed to upload score`);
         return null;
       }
 
@@ -400,11 +400,11 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 3000));
       this.apiCore.runCallbacks();
 
-      console.log(`✅ Score upload request sent`);
+      console.log(`[Steamworks] Score upload request sent`);
       
       return null; // TODO: Implement proper callback handling
     } catch (error: any) {
-      console.error(`❌ Error uploading score:`, error.message);
+      console.error(`[Steamworks] Error uploading score:`, error.message);
       return null;
     }
   }
@@ -470,18 +470,18 @@ export class SteamLeaderboardManager {
     rangeEnd: number
   ): Promise<LeaderboardEntry[]> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return [];
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('⚠️ UserStats interface not available');
+      console.warn('[Steamworks] UserStats interface not available');
       return [];
     }
 
     try {
-      console.log(`📥 Downloading entries (${rangeStart} to ${rangeEnd})`);
+      console.log(`[Steamworks] Downloading entries (${rangeStart} to ${rangeEnd})`);
       
       const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_DownloadLeaderboardEntries(
         userStatsInterface,
@@ -492,7 +492,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`❌ Failed to download entries`);
+        console.error(`[Steamworks] Failed to download entries`);
         return [];
       }
 
@@ -500,11 +500,11 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 3000));
       this.apiCore.runCallbacks();
 
-      console.log(`✅ Entry download request sent`);
+      console.log(`[Steamworks] Entry download request sent`);
       
       return []; // TODO: Implement proper callback handling and entry parsing
     } catch (error: any) {
-      console.error(`❌ Error downloading entries:`, error.message);
+      console.error(`[Steamworks] Error downloading entries:`, error.message);
       return [];
     }
   }
@@ -529,7 +529,7 @@ export class SteamLeaderboardManager {
    * );
    * 
    * entries.forEach(entry => {
-   *   console.log(`${entry.steamId}: ${entry.score} (rank ${entry.globalRank})`);
+   *   console.log(`[Steamworks] ${entry.steamId}: ${entry.score} (rank ${entry.globalRank})`);
    * });
    * ```
    * 
@@ -548,19 +548,19 @@ export class SteamLeaderboardManager {
     steamIds: string[]
   ): Promise<LeaderboardEntry[]> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return [];
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('⚠️ UserStats interface not available');
+      console.warn('[Steamworks] UserStats interface not available');
       return [];
     }
 
     try {
       const userCount = Math.min(steamIds.length, 100);
-      console.log(`📥 Downloading entries for ${userCount} users`);
+      console.log(`[Steamworks] Downloading entries for ${userCount} users`);
       
       // Convert Steam IDs to BigInt array
       const steamIdArray = koffi.alloc('uint64', userCount);
@@ -576,7 +576,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`❌ Failed to download user entries`);
+        console.error(`[Steamworks] Failed to download user entries`);
         return [];
       }
 
@@ -584,11 +584,11 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 3000));
       this.apiCore.runCallbacks();
 
-      console.log(`✅ User entry download request sent`);
+      console.log(`[Steamworks] User entry download request sent`);
       
       return []; // TODO: Implement proper callback handling
     } catch (error: any) {
-      console.error(`❌ Error downloading user entries:`, error.message);
+      console.error(`[Steamworks] Error downloading user entries:`, error.message);
       return [];
     }
   }
@@ -621,7 +621,7 @@ export class SteamLeaderboardManager {
    * );
    * 
    * if (success) {
-   *   console.log('UGC attached to leaderboard entry');
+   *   console.log('[Steamworks] UGC attached to leaderboard entry');
    * }
    * ```
    * 
@@ -640,18 +640,18 @@ export class SteamLeaderboardManager {
     ugcHandle: bigint
   ): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('⚠️ Steam API not initialized');
+      console.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('⚠️ UserStats interface not available');
+      console.warn('[Steamworks] UserStats interface not available');
       return false;
     }
 
     try {
-      console.log(`📎 Attaching UGC to leaderboard entry`);
+      console.log(`[Steamworks] Attaching UGC to leaderboard entry`);
       
       const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_AttachLeaderboardUGC(
         userStatsInterface,
@@ -660,7 +660,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`❌ Failed to attach UGC`);
+        console.error(`[Steamworks] Failed to attach UGC`);
         return false;
       }
 
@@ -668,11 +668,11 @@ export class SteamLeaderboardManager {
       await new Promise(resolve => setTimeout(resolve, 3000));
       this.apiCore.runCallbacks();
 
-      console.log(`✅ UGC attachment request sent`);
+      console.log(`[Steamworks] UGC attachment request sent`);
       
       return true; // TODO: Implement proper callback handling for actual result
     } catch (error: any) {
-      console.error(`❌ Error attaching UGC:`, error.message);
+      console.error(`[Steamworks] Error attaching UGC:`, error.message);
       return false;
     }
   }
