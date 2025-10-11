@@ -1,6 +1,6 @@
-# Steamworks FFI - Real Steam Integration
+# Steamworks FFI - Steamworks SDK Integration
 
-A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed for Node.js and Electron applications with **real Steam client integration**.
+A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed for Node.js and Electron applications with **Steamworks SDK integration**.
 
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
 
@@ -21,7 +21,7 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
   - ✅ User stats (get/set int/float, average rate tracking)
   - ✅ Friend comparisons (compare stats with friends)
   - ✅ Global statistics (worldwide aggregated data with history)
-- **Real Steam Integration**: Direct FFI calls to Steamworks C++ SDK
+- **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Batteries Included**: All Steamworks redistributables bundled - no SDK download needed!
 - **Electron Ready**: Perfect for Electron applications
@@ -51,14 +51,14 @@ npm install steamworks-ffi-node
 ```typescript
 import Steam from 'steamworks-ffi-node';
 
-// Initialize real Steam connection
+// Initialize Steam connection
 const steam = Steam.getInstance();
 const initialized = steam.init({ appId: 480 }); // Your Steam App ID
 
 if (initialized) {
   // Get achievements from Steam servers
   const achievements = await steam.getAllAchievements();
-  console.log('Real Steam achievements:', achievements);
+  console.log('Steam achievements:', achievements);
   
   // Unlock achievement (permanent in Steam!)
   await steam.unlockAchievement('ACH_WIN_ONE_GAME');
@@ -121,18 +121,18 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 
 ➡️ **[View Complete Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/README.md)**
 
-## 🎮 Real Steam Integration
+## 🎮 Steamworks Integration
 
 This library connects directly to the Steam client and Steamworks SDK:
 
 ```javascript
-// Real Steam API - no mocking!
+// Steam API - no mocking!
 const steam = Steam.getInstance();
 steam.init({ appId: 480 }); // Connects to actual Steam
 
 // Live achievements from Steam servers
 const achievements = await steam.getAllAchievements();
-console.log(achievements); // Real achievement data from your Steam app
+console.log(achievements); // Achievement data from your Steam app
 
 // Permanent achievement unlock in Steam
 await steam.unlockAchievement('YOUR_ACHIEVEMENT');

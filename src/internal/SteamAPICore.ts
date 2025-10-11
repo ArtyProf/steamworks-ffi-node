@@ -4,21 +4,91 @@ import { SteamInitOptions, SteamStatus } from '../types';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 
 /**
- * Core Steam API initialization and lifecycle management
+ * SteamAPICore
+ * 
+ * Core Steam API initialization and lifecycle management.
+ * Handles Steam client connection, interface management, and callback processing.
+ * 
+ * This class manages the fundamental Steam API operations:
+ * - Initialization and shutdown of the Steam API
+ * - Interface retrieval (UserStats, User)
+ * - Status monitoring (Steam running, initialization state)
+ * - Callback processing for Steam events
+ * 
+ * @example
+ * ```typescript
+ * const loader = new SteamLibraryLoader();
+ * const apiCore = new SteamAPICore(loader);
+ * 
+ * const success = apiCore.init({ appId: 480 });
+ * if (success) {
+ *   console.log('Steam API initialized!');
+ *   // Use Steam features...
+ *   apiCore.shutdown();
+ * }
+ * ```
  */
 export class SteamAPICore {
+  /** Steam library loader for FFI function calls */
   private libraryLoader: SteamLibraryLoader;
+  
+  /** Whether the Steam API has been successfully initialized */
   private initialized: boolean = false;
+  
+  /** The Steam App ID for this application */
   private appId: number = 0;
+  
+  /** Pointer to the ISteamUserStats interface */
   private userStatsInterface: any = null;
+  
+  /** Pointer to the ISteamUser interface */
   private userInterface: any = null;
 
+  /**
+   * Creates a new SteamAPICore instance
+   * 
+   * @param libraryLoader - The Steam library loader for FFI calls
+   */
   constructor(libraryLoader: SteamLibraryLoader) {
     this.libraryLoader = libraryLoader;
   }
 
   /**
-   * Initialize Steam API
+   * Initialize the Steam API
+   * 
+   * Establishes connection to the Steam client and retrieves necessary interfaces.
+   * Creates steam_appid.txt file required by Steam, loads the Steamworks library,
+   * and initializes all necessary Steam interfaces.
+   * 
+   * @param options - Initialization options containing the Steam App ID
+   * @returns true if initialization was successful, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * const success = apiCore.init({ appId: 480 });
+   * if (success) {
+   *   console.log('Connected to Steam for App ID:', 480);
+   * } else {
+   *   console.error('Failed to initialize Steam API');
+   * }
+   * ```
+   * 
+   * @remarks
+   * - Creates steam_appid.txt file in the current working directory
+   * - Sets SteamAppId environment variable
+   * - Automatically requests current stats from Steam servers
+   * - Runs callbacks to process initial Steam events
+   * 
+   * @warning
+   * Requires Steam client to be running and user to be logged in
+   * 
+   * Steamworks SDK Functions:
+   * - `SteamAPI_Init()` - Initialize the Steam API
+   * - `SteamAPI_IsSteamRunning()` - Check if Steam client is running
+   * - `SteamAPI_SteamUserStats_v013()` - Get ISteamUserStats interface
+   * - `SteamAPI_SteamUser_v023()` - Get ISteamUser interface
+   * - `SteamAPI_ISteamUserStats_RequestCurrentStats()` - Request current stats from Steam
+   * - `SteamAPI_RunCallbacks()` - Process Steam callbacks
    */
   init(options: SteamInitOptions): boolean {
     try {
@@ -88,7 +158,26 @@ export class SteamAPICore {
   }
 
   /**
-   * Shutdown Steam API
+   * Shutdown the Steam API
+   * 
+   * Cleanly shuts down the Steam API connection and releases all interfaces.
+   * Should be called when the application is closing or Steam features are no longer needed.
+   * 
+   * @example
+   * ```typescript
+   * process.on('SIGINT', () => {
+   *   apiCore.shutdown();
+   *   process.exit(0);
+   * });
+   * ```
+   * 
+   * @remarks
+   * - Safe to call multiple times (only shuts down if initialized)
+   * - Clears all interface pointers
+   * - Sets initialized state to false
+   * 
+   * Steamworks SDK Functions:
+   * - `SteamAPI_Shutdown()` - Shutdown the Steam API
    */
   shutdown(): void {
     if (this.libraryLoader.isLoaded() && this.initialized) {
@@ -102,7 +191,27 @@ export class SteamAPICore {
   }
 
   /**
-   * Get current Steam status
+   * Get the current Steam status
+   * 
+   * Returns detailed status information including initialization state,
+   * App ID, and the current user's Steam ID.
+   * 
+   * @returns Object containing initialization status, App ID, and Steam ID
+   * 
+   * @example
+   * ```typescript
+   * const status = apiCore.getStatus();
+   * console.log(`Initialized: ${status.initialized}`);
+   * console.log(`App ID: ${status.appId}`);
+   * console.log(`Steam ID: ${status.steamId}`);
+   * ```
+   * 
+   * @remarks
+   * - Steam ID is '0' if not initialized or unable to retrieve
+   * - App ID is 0 if not initialized
+   * 
+   * Steamworks SDK Functions:
+   * - `SteamAPI_ISteamUser_GetSteamID()` - Get current user's Steam ID
    */
   getStatus(): SteamStatus {
     let steamId = '0';
@@ -125,6 +234,25 @@ export class SteamAPICore {
 
   /**
    * Run Steam callbacks to process pending events
+   * 
+   * Processes all pending Steam callbacks and events. Should be called regularly
+   * (e.g., in a game loop or timer) to ensure Steam events are processed promptly.
+   * 
+   * @example
+   * ```typescript
+   * // In a game loop or setInterval
+   * setInterval(() => {
+   *   apiCore.runCallbacks();
+   * }, 100); // Every 100ms
+   * ```
+   * 
+   * @remarks
+   * - Safe to call even if not initialized (will be ignored)
+   * - Automatically called by init() and after stat/achievement operations
+   * - Required for receiving Steam events and callbacks
+   * 
+   * Steamworks SDK Functions:
+   * - `SteamAPI_RunCallbacks()` - Process all pending Steam callbacks
    */
   runCallbacks(): void {
     if (this.initialized && this.libraryLoader.isLoaded()) {
@@ -137,7 +265,27 @@ export class SteamAPICore {
   }
 
   /**
-   * Check if Steam client is running
+   * Check if the Steam client is running
+   * 
+   * Verifies that the Steam client application is currently running on the user's system.
+   * 
+   * @returns true if Steam is running, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * if (apiCore.isSteamRunning()) {
+   *   console.log('Steam client is active');
+   * } else {
+   *   console.warn('Steam client is not running');
+   * }
+   * ```
+   * 
+   * @remarks
+   * - Returns false if Steam API is not initialized
+   * - Safe to call at any time
+   * 
+   * Steamworks SDK Functions:
+   * - `SteamAPI_IsSteamRunning()` - Check if Steam client is running
    */
   isSteamRunning(): boolean {
     if (this.initialized && this.libraryLoader.isLoaded()) {
@@ -152,21 +300,67 @@ export class SteamAPICore {
   }
 
   /**
-   * Check if initialized
+   * Check if the Steam API is initialized
+   * 
+   * Returns the current initialization state of the Steam API.
+   * 
+   * @returns true if initialized and ready to use, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * if (!apiCore.isInitialized()) {
+   *   console.error('Cannot perform Steam operations - not initialized');
+   *   return;
+   * }
+   * ```
    */
   isInitialized(): boolean {
     return this.initialized;
   }
 
   /**
-   * Get UserStats interface pointer
+   * Get the ISteamUserStats interface pointer
+   * 
+   * Returns the native pointer to the ISteamUserStats interface, which is used
+   * for achievement and stats operations.
+   * 
+   * @returns Pointer to ISteamUserStats interface, or null if not initialized
+   * 
+   * @example
+   * ```typescript
+   * const userStats = apiCore.getUserStatsInterface();
+   * if (userStats) {
+   *   // Use interface for stats/achievement operations
+   * }
+   * ```
+   * 
+   * @remarks
+   * - Returns null if Steam API is not initialized
+   * - This is a native pointer for use with FFI calls
    */
   getUserStatsInterface(): any {
     return this.userStatsInterface;
   }
 
   /**
-   * Get User interface pointer
+   * Get the ISteamUser interface pointer
+   * 
+   * Returns the native pointer to the ISteamUser interface, which is used
+   * for user identity operations.
+   * 
+   * @returns Pointer to ISteamUser interface, or null if not initialized
+   * 
+   * @example
+   * ```typescript
+   * const user = apiCore.getUserInterface();
+   * if (user) {
+   *   // Use interface for user operations
+   * }
+   * ```
+   * 
+   * @remarks
+   * - Returns null if Steam API is not initialized
+   * - This is a native pointer for use with FFI calls
    */
   getUserInterface(): any {
     return this.userInterface;
