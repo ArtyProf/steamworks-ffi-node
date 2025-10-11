@@ -3,9 +3,13 @@ src/
 tsconfig.json
 
 # Tests
+tests/
 test.js
 *.test.js
 *.spec.js
+
+# Documentation (keep README.md, exclude detailed docs)
+docs/
 
 # Development files
 .github/

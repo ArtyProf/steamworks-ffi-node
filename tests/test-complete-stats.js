@@ -3,7 +3,7 @@
  * Tests all stats operations including get/set, user stats, and global stats
  */
 
-const Steam = require('./dist/steam').default;
+const Steam = require('../dist/steam').default;
 
 async function testStatsAPI() {
   console.log('🧪 Starting Steam Stats API Test\n');

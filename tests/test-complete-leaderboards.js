@@ -5,13 +5,13 @@
  * Uses ISteamUtils polling to retrieve callback results synchronously after async operations.
  */
 
-const Steam = require('./dist/steam').default;
+const Steam = require('../dist/steam').default;
 const { 
   LeaderboardSortMethod, 
   LeaderboardDisplayType, 
   LeaderboardDataRequest,
   LeaderboardUploadScoreMethod 
-} = require('./dist/types');
+} = require('../dist/types');
 
 async function testLeaderboardsAPI() {
   console.log('🧪 Starting Steam Leaderboards API Test\n');
