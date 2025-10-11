@@ -4,9 +4,9 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
 
-> 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions implemented! See complete documentation below.
+> 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)
 
-> 🎉 **NEW: 100% Stats API Coverage** - All 13 Steam statistics functions implemented! See complete documentation below.
+> 🎉 **NEW: 100% Stats API Coverage** - All 13 Steam statistics functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)
 
 ## 🎯 Features
 
@@ -117,11 +117,9 @@ For immediate testing, use Spacewar (App ID 480):
 
 ## 📚 API Documentation
 
-### Documentation
+Complete documentation for all APIs is available in the [docs folder](https://github.com/ArtyProf/steamworks-ffi-node/tree/main/docs):
 
-- **[SteamAPICore Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_API_CORE.md)** - Initialization, lifecycle management, callbacks
-- **[Achievement Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)** - Complete achievement functionality (20 functions)
-- **[Stats Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)** - Complete statistics functionality (13 functions)
+➡️ **[View Complete Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/README.md)**
 
 ## 🎮 Real Steam Integration
 

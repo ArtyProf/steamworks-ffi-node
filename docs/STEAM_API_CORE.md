@@ -466,13 +466,4 @@ if (!initialized) {
 
 ---
 
-## Related Documentation
-
-- [Achievement Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)
-- [Stats Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)
-- [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)
-- [NPM Package](https://www.npmjs.com/package/steamworks-ffi-node)
-
----
-
-**Last Updated:** October 10, 2025
+**Last Updated:** October 11, 2025

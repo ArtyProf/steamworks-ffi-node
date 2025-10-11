@@ -747,13 +747,4 @@ if (!success) {
 
 ---
 
-## Related Documentation
-
-- [SteamAPICore Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_API_CORE.md)
-- [Achievement Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)
-- [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)
-- [NPM Package](https://www.npmjs.com/package/steamworks-ffi-node)
-
----
-
 **Last Updated:** October 11, 2025

@@ -919,13 +919,4 @@ console.log(achievement.displayName); // Might crash
 
 ---
 
-## Related Documentation
-
-- [SteamAPICore Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_API_CORE.md)
-- [Stats Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)
-- [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)
-- [NPM Package](https://www.npmjs.com/package/steamworks-ffi-node)
-
----
-
-**Last Updated:** October 10, 2025  
+**Last Updated:** October 11, 2025  
