@@ -11,6 +11,8 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 > 🎉 **NEW: 100% Stats API Coverage** - All 13 Steam statistics functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)
 
+> 🎉 **NEW: 100% Leaderboard API Coverage** - All 7 Steam leaderboard functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)
+
 ## 🎯 Features
 
 - **Complete Achievement API**: 100% coverage of Steam Achievement functionality (20/20 functions)
@@ -24,6 +26,11 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
   - ✅ User stats (get/set int/float, average rate tracking)
   - ✅ Friend comparisons (compare stats with friends)
   - ✅ Global statistics (worldwide aggregated data with history)
+- **Complete Leaderboard API**: 100% coverage of Steam Leaderboard functionality (7/7 functions)
+  - ✅ Leaderboard management (find, create, get info)
+  - ✅ Score operations (upload with optional details)
+  - ✅ Entry download (global, friends, specific users)
+  - ✅ UGC integration (attach replays/screenshots to entries)
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Batteries Included**: All Steamworks redistributables bundled - no SDK download needed!
@@ -80,6 +87,31 @@ if (initialized) {
   steam.runCallbacks();
   const globalKills = await steam.getGlobalStatInt('global.total_kills');
   console.log('Total kills worldwide:', globalKills);
+  
+  // Work with leaderboards
+  const leaderboard = await steam.findOrCreateLeaderboard(
+    'HighScores',
+    1, // Descending (higher is better)
+    0  // Numeric display
+  );
+  
+  if (leaderboard) {
+    // Upload score
+    await steam.uploadLeaderboardScore(
+      leaderboard.handle,
+      1000,
+      1  // Keep best score
+    );
+    
+    // Download top 10 scores
+    const topScores = await steam.downloadLeaderboardEntries(
+      leaderboard.handle,
+      0, // Global
+      0,
+      9
+    );
+    console.log('Top 10 scores:', topScores);
+  }
 }
 
 // Cleanup

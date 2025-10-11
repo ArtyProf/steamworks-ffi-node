@@ -56,9 +56,9 @@ export class SteamAchievementManager {
    * @example
    * ```typescript
    * const achievements = await achievementManager.getAllAchievements();
-   * console.log(`Found ${achievements.length} achievements`);
+   * console.log(`[Steamworks] Found ${achievements.length} achievements`);
    * achievements.forEach(ach => {
-   *   console.log(`${ach.displayName}: ${ach.unlocked ? 'Unlocked' : 'Locked'}`);
+   *   console.log(`[Steamworks] ${ach.displayName}: ${ach.unlocked ? 'Unlocked' : 'Locked'}`);
    * });
    * ```
    * 
@@ -130,7 +130,7 @@ export class SteamAchievementManager {
           });
 
         } catch (error) {
-          console.warn(`Failed to get achievement ${i}:`, (error as Error).message);
+          console.warn(`[Steamworks] Failed to get achievement ${i}:`, (error as Error).message);
         }
       }
 
@@ -155,7 +155,7 @@ export class SteamAchievementManager {
    * ```typescript
    * const success = await achievementManager.unlockAchievement('ACH_WIN_ONE_GAME');
    * if (success) {
-   *   console.log('Achievement unlocked!');
+   *   console.log('[Steamworks] Achievement unlocked!');
    * }
    * ```
    * 
@@ -296,7 +296,7 @@ export class SteamAchievementManager {
    * ```typescript
    * const isUnlocked = await achievementManager.isAchievementUnlocked('ACH_WIN_ONE_GAME');
    * if (isUnlocked) {
-   *   console.log('Player has already won one game');
+   *   console.log('[Steamworks] Player has already won one game');
    * }
    * ```
    * 
@@ -345,7 +345,7 @@ export class SteamAchievementManager {
    * ```typescript
    * const achievement = await achievementManager.getAchievementByName('ACH_WIN_ONE_GAME');
    * if (achievement) {
-   *   console.log(`${achievement.displayName}: ${achievement.description}`);
+   *   console.log(`[Steamworks] ${achievement.displayName}: ${achievement.description}`);
    * }
    * ```
    * 
@@ -372,7 +372,7 @@ export class SteamAchievementManager {
    * @example
    * ```typescript
    * const total = await achievementManager.getTotalAchievementCount();
-   * console.log(`This game has ${total} achievements`);
+   * console.log(`[Steamworks] This game has ${total} achievements`);
    * ```
    * 
    * @remarks
@@ -411,7 +411,7 @@ export class SteamAchievementManager {
    * ```typescript
    * const total = await achievementManager.getTotalAchievementCount();
    * const unlocked = await achievementManager.getUnlockedAchievementCount();
-   * console.log(`Progress: ${unlocked}/${total} (${(unlocked/total*100).toFixed(1)}%)`);
+   * console.log(`[Steamworks] Progress: ${unlocked}/${total} (${(unlocked/total*100).toFixed(1)}%)`);
    * ```
    * 
    * @remarks
@@ -440,7 +440,7 @@ export class SteamAchievementManager {
    * const iconHandle = await achievementManager.getAchievementIcon('ACH_WIN_ONE_GAME');
    * if (iconHandle > 0) {
    *   // Use ISteamUtils::GetImageRGBA() to get actual image data
-   *   console.log(`Icon handle: ${iconHandle}`);
+   *   console.log(`[Steamworks] Icon handle: ${iconHandle}`);
    * }
    * ```
    * 
@@ -561,7 +561,7 @@ export class SteamAchievementManager {
    * ```typescript
    * const limits = await achievementManager.getAchievementProgressLimitsInt('ACH_WIN_50_GAMES');
    * if (limits) {
-   *   console.log(`Progress range: ${limits.minProgress} to ${limits.maxProgress}`);
+   *   console.log(`[Steamworks] Progress range: ${limits.minProgress} to ${limits.maxProgress}`);
    * }
    * ```
    * 
@@ -624,7 +624,7 @@ export class SteamAchievementManager {
    * ```typescript
    * const limits = await achievementManager.getAchievementProgressLimitsFloat('ACH_TRAVEL_100KM');
    * if (limits) {
-   *   console.log(`Need to travel ${limits.maxProgress}km`);
+   *   console.log(`[Steamworks] Need to travel ${limits.maxProgress}km`);
    * }
    * ```
    * 
@@ -766,7 +766,7 @@ export class SteamAchievementManager {
    * 
    * if (achievement && achievement.unlocked) {
    *   const date = new Date(achievement.unlockTime * 1000);
-   *   console.log(`Friend unlocked on: ${date.toLocaleDateString()}`);
+   *   console.log(`[Steamworks] Friend unlocked on: ${date.toLocaleDateString()}`);
    * }
    * ```
    * 
@@ -853,7 +853,7 @@ export class SteamAchievementManager {
    * 
    * // Now can get percentages
    * const percent = await achievementManager.getAchievementAchievedPercent('ACH_WIN_ONE_GAME');
-   * console.log(`${percent}% of players have unlocked this achievement`);
+   * console.log(`[Steamworks] ${percent}% of players have unlocked this achievement`);
    * ```
    * 
    * @remarks
@@ -911,9 +911,9 @@ export class SteamAchievementManager {
    * const percent = await achievementManager.getAchievementAchievedPercent('ACH_WIN_ONE_GAME');
    * if (percent !== null) {
    *   if (percent < 10) {
-   *     console.log(`Rare achievement! Only ${percent.toFixed(2)}% have this`);
+   *     console.log(`[Steamworks] Rare achievement! Only ${percent.toFixed(2)}% have this`);
    *   } else {
-   *     console.log(`Common achievement: ${percent.toFixed(2)}% unlocked`);
+   *     console.log(`[Steamworks] Common achievement: ${percent.toFixed(2)}% unlocked`);
    *   }
    * }
    * ```
@@ -983,7 +983,7 @@ export class SteamAchievementManager {
    * const rarest = achievements.reduce((prev, curr) => 
    *   curr.globalUnlockPercentage < prev.globalUnlockPercentage ? curr : prev
    * );
-   * console.log(`Rarest: ${rarest.displayName} (${rarest.globalUnlockPercentage.toFixed(2)}%)`);
+   * console.log(`[Steamworks] Rarest: ${rarest.displayName} (${rarest.globalUnlockPercentage.toFixed(2)}%)`);
    * ```
    * 
    * @remarks
@@ -1025,9 +1025,9 @@ export class SteamAchievementManager {
    * ```typescript
    * const mostAchieved = await achievementManager.getMostAchievedAchievementInfo();
    * if (mostAchieved) {
-   *   console.log(`Most achieved: ${mostAchieved.apiName}`);
-   *   console.log(`Unlocked by: ${mostAchieved.percent.toFixed(2)}% of players`);
-   *   console.log(`You ${mostAchieved.unlocked ? 'have' : 'don\'t have'} it`);
+   *   console.log(`[Steamworks] Most achieved: ${mostAchieved.apiName}`);
+   *   console.log(`[Steamworks] Unlocked by: ${mostAchieved.percent.toFixed(2)}% of players`);
+   *   console.log(`[Steamworks] You ${mostAchieved.unlocked ? 'have' : 'don\'t have'} it`);
    * }
    * ```
    * 
@@ -1112,7 +1112,7 @@ export class SteamAchievementManager {
    * }
    * 
    * top5.forEach((ach, i) => {
-   *   console.log(`${i + 1}. ${ach.apiName}: ${ach.percent.toFixed(2)}%`);
+   *   console.log(`[Steamworks] ${i + 1}. ${ach.apiName}: ${ach.percent.toFixed(2)}%`);
    * });
    * ```
    * 
@@ -1188,14 +1188,14 @@ export class SteamAchievementManager {
    * // Get sorted achievements
    * const sorted = await achievementManager.getAllAchievementsSortedByPopularity();
    * 
-   * console.log('Most to Least Achieved:');
+   * console.log('[Steamworks] Most to Least Achieved:');
    * sorted.forEach((ach, i) => {
-   *   console.log(`${i + 1}. ${ach.displayName}: ${ach.globalUnlockPercentage.toFixed(2)}%`);
+   *   console.log(`[Steamworks] ${i + 1}. ${ach.displayName}: ${ach.globalUnlockPercentage.toFixed(2)}%`);
    * });
    * 
    * // Find rarest achievements
    * const rare = sorted.filter(a => a.globalUnlockPercentage < 5);
-   * console.log(`${rare.length} rare achievements (< 5% unlock rate)`);
+   * console.log(`[Steamworks] ${rare.length} rare achievements (< 5% unlock rate)`);
    * ```
    * 
    * @remarks
@@ -1361,9 +1361,9 @@ export class SteamAchievementManager {
    * const achievements = await achievementManager.getAllAchievementsWithIcons();
    * 
    * achievements.forEach(ach => {
-   *   console.log(`${ach.displayName}:`);
-   *   console.log(`  Status: ${ach.unlocked ? 'Unlocked' : 'Locked'}`);
-   *   console.log(`  Icon Handle: ${ach.iconHandle}`);
+   *   console.log(`[Steamworks] ${ach.displayName}:`);
+   *   console.log(`[Steamworks]   Status: ${ach.unlocked ? 'Unlocked' : 'Locked'}`);
+   *   console.log(`[Steamworks]   Icon Handle: ${ach.iconHandle}`);
    *   
    *   if (ach.iconHandle > 0) {
    *     // Use ISteamUtils::GetImageRGBA() to get actual image

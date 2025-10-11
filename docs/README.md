@@ -28,6 +28,14 @@ Complete API documentation for all Steamworks FFI functionality.
   - Friend comparisons (compare stats with friends)
   - Global statistics (worldwide aggregated data with history)
 
+### Leaderboard System
+- **[Leaderboard Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)**
+  - **7 Functions** - 100% Leaderboard API coverage
+  - Leaderboard management (find, create, get info)
+  - Score operations (upload with optional details)
+  - Entry download (global, friends, specific users)
+  - UGC integration (attach replays/screenshots to entries)
+
 ## 🚀 Quick Links
 
 ### Getting Started

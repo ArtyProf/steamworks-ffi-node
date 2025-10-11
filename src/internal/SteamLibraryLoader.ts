@@ -15,6 +15,7 @@ export class SteamLibraryLoader {
   public SteamAPI_IsSteamRunning!: koffi.KoffiFunction;
   public SteamAPI_SteamUserStats_v013!: koffi.KoffiFunction;
   public SteamAPI_SteamUser_v023!: koffi.KoffiFunction;
+  public SteamAPI_SteamUtils_v010!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetNumAchievements!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetAchievementName!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetAchievementDisplayAttribute!: koffi.KoffiFunction;
@@ -69,6 +70,38 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUserStats_GetGlobalStatDouble!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble!: koffi.KoffiFunction;
+
+  // ========================================
+  // Leaderboard API Functions
+  // ========================================
+  
+  // Leaderboard find/create
+  public SteamAPI_ISteamUserStats_FindOrCreateLeaderboard!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_FindLeaderboard!: koffi.KoffiFunction;
+  
+  // Leaderboard info
+  public SteamAPI_ISteamUserStats_GetLeaderboardName!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetLeaderboardEntryCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetLeaderboardSortMethod!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetLeaderboardDisplayType!: koffi.KoffiFunction;
+  
+  // Leaderboard entries
+  public SteamAPI_ISteamUserStats_DownloadLeaderboardEntries!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_DownloadLeaderboardEntriesForUsers!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetDownloadedLeaderboardEntry!: koffi.KoffiFunction;
+  
+  // Leaderboard upload
+  public SteamAPI_ISteamUserStats_UploadLeaderboardScore!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_AttachLeaderboardUGC!: koffi.KoffiFunction;
+
+  // ========================================
+  // ISteamUtils API Functions (for callback results)
+  // ========================================
+  
+  // API call result checking
+  public SteamAPI_ISteamUtils_IsAPICallCompleted!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetAPICallResult!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetAPICallFailureReason!: koffi.KoffiFunction;
 
   /**
    * Get platform-specific Steam library path
@@ -132,6 +165,7 @@ export class SteamLibraryLoader {
     
     this.SteamAPI_SteamUserStats_v013 = this.steamLib.func('SteamAPI_SteamUserStats_v013', 'void*', []);
     this.SteamAPI_SteamUser_v023 = this.steamLib.func('SteamAPI_SteamUser_v023', 'void*', []);
+    this.SteamAPI_SteamUtils_v010 = this.steamLib.func('SteamAPI_SteamUtils_v010', 'void*', []);
     
     this.SteamAPI_ISteamUserStats_GetNumAchievements = this.steamLib.func('SteamAPI_ISteamUserStats_GetNumAchievements', 'uint32', ['void*']);
     this.SteamAPI_ISteamUserStats_GetAchievementName = this.steamLib.func('SteamAPI_ISteamUserStats_GetAchievementName', 'str', ['void*', 'uint32']);
@@ -187,6 +221,38 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUserStats_GetGlobalStatDouble = this.steamLib.func('SteamAPI_ISteamUserStats_GetGlobalStatDouble', 'bool', ['void*', 'str', 'double*']);
     this.SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64 = this.steamLib.func('SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64', 'int32', ['void*', 'str', 'int64*', 'uint32']);
     this.SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble = this.steamLib.func('SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble', 'int32', ['void*', 'str', 'double*', 'uint32']);
+    
+    // ========================================
+    // Leaderboard API Functions
+    // ========================================
+    
+    // Leaderboard find/create
+    this.SteamAPI_ISteamUserStats_FindOrCreateLeaderboard = this.steamLib.func('SteamAPI_ISteamUserStats_FindOrCreateLeaderboard', 'uint64', ['void*', 'str', 'int', 'int']);
+    this.SteamAPI_ISteamUserStats_FindLeaderboard = this.steamLib.func('SteamAPI_ISteamUserStats_FindLeaderboard', 'uint64', ['void*', 'str']);
+    
+    // Leaderboard info
+    this.SteamAPI_ISteamUserStats_GetLeaderboardName = this.steamLib.func('SteamAPI_ISteamUserStats_GetLeaderboardName', 'str', ['void*', 'uint64']);
+    this.SteamAPI_ISteamUserStats_GetLeaderboardEntryCount = this.steamLib.func('SteamAPI_ISteamUserStats_GetLeaderboardEntryCount', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamUserStats_GetLeaderboardSortMethod = this.steamLib.func('SteamAPI_ISteamUserStats_GetLeaderboardSortMethod', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamUserStats_GetLeaderboardDisplayType = this.steamLib.func('SteamAPI_ISteamUserStats_GetLeaderboardDisplayType', 'int', ['void*', 'uint64']);
+    
+    // Leaderboard entries
+    this.SteamAPI_ISteamUserStats_DownloadLeaderboardEntries = this.steamLib.func('SteamAPI_ISteamUserStats_DownloadLeaderboardEntries', 'uint64', ['void*', 'uint64', 'int', 'int', 'int']);
+    this.SteamAPI_ISteamUserStats_DownloadLeaderboardEntriesForUsers = this.steamLib.func('SteamAPI_ISteamUserStats_DownloadLeaderboardEntriesForUsers', 'uint64', ['void*', 'uint64', 'uint64*', 'int']);
+    this.SteamAPI_ISteamUserStats_GetDownloadedLeaderboardEntry = this.steamLib.func('SteamAPI_ISteamUserStats_GetDownloadedLeaderboardEntry', 'bool', ['void*', 'uint64', 'int', 'void*', 'int32*', 'int']);
+    
+    // Leaderboard upload
+    this.SteamAPI_ISteamUserStats_UploadLeaderboardScore = this.steamLib.func('SteamAPI_ISteamUserStats_UploadLeaderboardScore', 'uint64', ['void*', 'uint64', 'int', 'int32', 'int32*', 'int']);
+    this.SteamAPI_ISteamUserStats_AttachLeaderboardUGC = this.steamLib.func('SteamAPI_ISteamUserStats_AttachLeaderboardUGC', 'uint64', ['void*', 'uint64', 'uint64']);
+    
+    // ========================================
+    // ISteamUtils Functions
+    // ========================================
+    
+    // API call result checking
+    this.SteamAPI_ISteamUtils_IsAPICallCompleted = this.steamLib.func('SteamAPI_ISteamUtils_IsAPICallCompleted', 'bool', ['void*', 'uint64', 'bool*']);
+    this.SteamAPI_ISteamUtils_GetAPICallResult = this.steamLib.func('SteamAPI_ISteamUtils_GetAPICallResult', 'bool', ['void*', 'uint64', 'void*', 'int', 'int', 'bool*']);
+    this.SteamAPI_ISteamUtils_GetAPICallFailureReason = this.steamLib.func('SteamAPI_ISteamUtils_GetAPICallFailureReason', 'int', ['void*', 'uint64']);
   }
 
   /**
