@@ -6,14 +6,6 @@ Complete reference for all achievement-related functionality in Steamworks FFI.
 
 The `SteamAchievementManager` provides **100% coverage** of the Steamworks Achievement API with 21 functions organized into logical categories.
 
-**Architecture**: The Achievement Manager is part of a modular architecture:
-- `SteamLibraryLoader`: Handles FFI library loading and function binding
-- `SteamAPICore`: Manages Steam API lifecycle (init, shutdown, callbacks)  
-- `SteamAchievementManager`: Handles all achievement operations (this module)
-- `SteamworksSDK`: Main class that composes all modules and exposes the public API
-
-All functions are accessed through the main `SteamworksSDK` class using composition pattern.
-
 ## Quick Reference
 
 | Category | Functions | Description |
@@ -929,11 +921,11 @@ console.log(achievement.displayName); // Might crash
 
 ## Related Documentation
 
-- [SteamAPICore Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SteamAPICore.md)
+- [SteamAPICore Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_API_CORE.md)
+- [Stats Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)
 - [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)
 - [NPM Package](https://www.npmjs.com/package/steamworks-ffi-node)
 
 ---
 
 **Last Updated:** October 10, 2025  
-**Coverage:** 100% of Steamworks Achievement API (21/21 functions)

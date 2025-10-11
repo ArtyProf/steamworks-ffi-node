@@ -4,7 +4,9 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
 
-> 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions now implemented! See [Complete Achievement Manager Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/AchievementManager.md)
+> 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions implemented! See complete documentation below.
+
+> 🎉 **NEW: 100% Stats API Coverage** - All 13 Steam statistics functions implemented! See complete documentation below.
 
 ## 🎯 Features
 
@@ -15,6 +17,10 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
   - ✅ Friend comparisons (see friend achievements)
   - ✅ Global statistics (unlock percentages, popularity sorting)
   - ✅ Testing tools (reset stats/achievements)
+- **Complete Stats API**: 100% coverage of Steam User Stats functionality (13/13 functions)
+  - ✅ User stats (get/set int/float, average rate tracking)
+  - ✅ Friend comparisons (compare stats with friends)
+  - ✅ Global statistics (worldwide aggregated data with history)
 - **Real Steam Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Batteries Included**: All Steamworks redistributables bundled - no SDK download needed!
@@ -60,6 +66,17 @@ if (initialized) {
   // Check unlock status from Steam
   const isUnlocked = await steam.isAchievementUnlocked('ACH_WIN_ONE_GAME');
   console.log('Achievement unlocked:', isUnlocked);
+  
+  // Track user statistics
+  const kills = await steam.getStatInt('total_kills') || 0;
+  await steam.setStatInt('total_kills', kills + 1);
+  
+  // Get global statistics
+  await steam.requestGlobalStats(7);
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  steam.runCallbacks();
+  const globalKills = await steam.getGlobalStatInt('global.total_kills');
+  console.log('Total kills worldwide:', globalKills);
 }
 
 // Cleanup
@@ -102,8 +119,9 @@ For immediate testing, use Spacewar (App ID 480):
 
 ### Documentation
 
-- **[SteamAPICore Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SteamAPICore.md)** - Initialization, lifecycle management, callbacks
-- **[Achievement Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/AchievementManager.md)** - Complete achievement functionality (20 functions)
+- **[SteamAPICore Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_API_CORE.md)** - Initialization, lifecycle management, callbacks
+- **[Achievement Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)** - Complete achievement functionality (20 functions)
+- **[Stats Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)** - Complete statistics functionality (13 functions)
 
 ## 🎮 Real Steam Integration
 
