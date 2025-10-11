@@ -2,18 +2,7 @@
  * Test script for Steam Leaderboards API
  * Tests leaderboard operations including find/create, upload scores, and download entries
  * 
- * ⚠️ IMPORTANT: Du  // Check leaderboard info before uploads
-  console.log('📋 Checking Quickest Win leaderboard before uploads...');
-  const infoBefore = await steam.getLeaderboardInfo(quickestWinHandle);
-  if (infoBefore) {
-    console.log(`   Name: ${infoBefore.name}`);
-    console.log(`   Entry Count: ${infoBefore.entryCount}`);
-    console.log(`   Sort Method: ${infoBefore.sortMethod}`);
-    console.log(`   Display Type: ${infoBefore.displayType}`);
-  }
-  console.log('');lback limitations in the FFI implementation,
- * leaderboard operations will initiate requests but cannot retrieve callback results.
- * See docs/CALLBACK_LIMITATION.md for details.
+ * Uses ISteamUtils polling to retrieve callback results synchronously after async operations.
  */
 
 const Steam = require('./dist/steam').default;
@@ -26,8 +15,6 @@ const {
 
 async function testLeaderboardsAPI() {
   console.log('🧪 Starting Steam Leaderboards API Test\n');
-  console.log('⚠️  Note: Due to FFI callback limitations, operations will be initiated');
-  console.log('   but results cannot be retrieved. See CALLBACK_LIMITATION.md\n');
   
   const steam = Steam.getInstance();
   
@@ -67,7 +54,7 @@ async function testLeaderboardsAPI() {
   );
   
   if (quickestWinLeaderboard) {
-    console.log('✅ Request initiated successfully');
+    console.log('✅ Leaderboard retrieved successfully');
     console.log(`   Handle: ${quickestWinLeaderboard.handle}`);
     console.log(`   Name: ${quickestWinLeaderboard.name}`);
     console.log(`   Entry Count: ${quickestWinLeaderboard.entryCount}`);
@@ -87,7 +74,7 @@ async function testLeaderboardsAPI() {
       console.log('⚠️  getLeaderboardInfo returned null');
     }
   } else {
-    console.log('⚠️  Request returned null (expected due to callback limitation)');
+    console.log('❌ Failed to find/create leaderboard');
   }
   
   // Wait for Steam to process
@@ -100,7 +87,7 @@ async function testLeaderboardsAPI() {
   const foundLeaderboard = await steam.findLeaderboard('Quickest Win');
   
   if (foundLeaderboard) {
-    console.log('✅ Request initiated successfully');
+    console.log('✅ Leaderboard found successfully');
     console.log(`   Handle: ${foundLeaderboard.handle}`);
     
     // Try to get info for the found leaderboard
@@ -114,7 +101,7 @@ async function testLeaderboardsAPI() {
       console.log('⚠️  getLeaderboardInfo returned null');
     }
   } else {
-    console.log('⚠️  Request returned null (expected due to callback limitation)');
+    console.log('❌ Failed to find leaderboard');
   }
 
   await new Promise(resolve => setTimeout(resolve, 3000));
@@ -185,14 +172,14 @@ async function testLeaderboardsAPI() {
   );
   
   if (upload1) {
-    console.log('✅ Upload request initiated successfully');
+    console.log('✅ Score uploaded successfully');
     console.log(`   Success: ${upload1.success}`);
     console.log(`   Score: ${upload1.score}`);
     console.log(`   Score Changed: ${upload1.scoreChanged}`);
     console.log(`   New Global Rank: ${upload1.globalRankNew}`);
     console.log(`   Previous Global Rank: ${upload1.globalRankPrevious}`);
   } else {
-    console.log('⚠️  Upload returned null (expected due to callback limitation)');
+    console.log('❌ Score upload failed');
   }
   
   await new Promise(resolve => setTimeout(resolve, 3000));
@@ -220,9 +207,9 @@ async function testLeaderboardsAPI() {
   );
   
   if (upload2) {
-    console.log('✅ Upload request initiated successfully');
+    console.log('✅ Score uploaded successfully');
   } else {
-    console.log('⚠️  Upload returned null (expected due to callback limitation)');
+    console.log('❌ Score upload failed');
   }
   
   await new Promise(resolve => setTimeout(resolve, 3000));
@@ -248,9 +235,9 @@ async function testLeaderboardsAPI() {
   );
   
   if (upload3) {
-    console.log('✅ Upload request initiated successfully');
+    console.log('✅ Score uploaded successfully (forced)');
   } else {
-    console.log('⚠️  Upload returned null (expected due to callback limitation)');
+    console.log('❌ Score upload failed');
   }
   
   await new Promise(resolve => setTimeout(resolve, 3000));
@@ -310,7 +297,7 @@ async function testLeaderboardsAPI() {
       }
     });
   } else {
-    console.log('⚠️  Download returned empty array (expected due to callback limitation)');
+    console.log('⚠️  No entries downloaded');
   }
   
   await new Promise(resolve => setTimeout(resolve, 3000));
@@ -329,7 +316,7 @@ async function testLeaderboardsAPI() {
   if (aroundUserEntries && aroundUserEntries.length > 0) {
     console.log(`✅ Downloaded ${aroundUserEntries.length} entries`);
   } else {
-    console.log('⚠️  Download returned empty array (expected due to callback limitation)');
+    console.log('⚠️  No entries downloaded');
   }
   
   await new Promise(resolve => setTimeout(resolve, 3000));
@@ -348,7 +335,7 @@ async function testLeaderboardsAPI() {
   if (friendEntries && friendEntries.length > 0) {
     console.log(`✅ Downloaded ${friendEntries.length} friend entries`);
   } else {
-    console.log('⚠️  Download returned empty array (expected due to callback limitation)');
+    console.log('⚠️  No friend entries downloaded');
   }
   
   await new Promise(resolve => setTimeout(resolve, 3000));
@@ -366,7 +353,7 @@ async function testLeaderboardsAPI() {
   if (userEntries && userEntries.length > 0) {
     console.log(`✅ Downloaded ${userEntries.length} user entries`);
   } else {
-    console.log('⚠️  Download returned empty array (expected due to callback limitation)');
+    console.log('⚠️  No user entries downloaded');
   }
   
   await new Promise(resolve => setTimeout(resolve, 3000));
@@ -384,9 +371,9 @@ async function testLeaderboardsAPI() {
   const attachResult = await steam.attachLeaderboardUGC(quickestWinHandle, ugcHandle);
   
   if (attachResult) {
-    console.log('✅ UGC attachment request initiated successfully');
+    console.log('✅ UGC attached successfully');
   } else {
-    console.log('❌ UGC attachment request failed');
+    console.log('❌ UGC attachment failed');
   }
   
   await new Promise(resolve => setTimeout(resolve, 3000));
@@ -405,17 +392,10 @@ async function testLeaderboardsAPI() {
   console.log('   ✅ Entry Download (global, around user, friends, specific users)');
   console.log('   ✅ UGC Attachment\n');
   
-  console.log('⚠️  Current Limitations:');
-  console.log('   - Callback results cannot be retrieved via FFI');
-  console.log('   - Leaderboard handles are not accessible');
-  console.log('   - Upload success/rank data is not available');
-  console.log('   - Downloaded entries cannot be retrieved');
-  console.log('   - UGC attachment confirmation not available\n');
-  
-  console.log('💡 For Production:');
-  console.log('   - Implement C++ addon with N-API for proper callback support');
-  console.log('   - See docs/CALLBACK_LIMITATION.md for detailed solutions');
-  console.log('   - Pre-create leaderboards in Steamworks Partner dashboard\n');
+  console.log('✨ Implementation:');
+  console.log('   - Uses ISteamUtils polling to retrieve callback results');
+  console.log('   - Full access to leaderboard data via synchronous polling');
+  console.log('   - No C++ addon required\n');
   
   // Shutdown
   console.log('🔧 Shutting down Steam API...');
