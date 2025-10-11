@@ -10,7 +10,14 @@ import {
   SteamStat,
   GlobalStat,
   GlobalStatHistory,
-  UserStat
+  UserStat,
+  LeaderboardEntry,
+  LeaderboardInfo,
+  LeaderboardScoreUploadResult,
+  LeaderboardSortMethod,
+  LeaderboardDisplayType,
+  LeaderboardDataRequest,
+  LeaderboardUploadScoreMethod
 } from './types';
 
 // Export types
@@ -25,7 +32,14 @@ export {
   SteamStat,
   GlobalStat,
   GlobalStatHistory,
-  UserStat
+  UserStat,
+  LeaderboardEntry,
+  LeaderboardInfo,
+  LeaderboardScoreUploadResult,
+  LeaderboardSortMethod,
+  LeaderboardDisplayType,
+  LeaderboardDataRequest,
+  LeaderboardUploadScoreMethod
 };
 
 // Export main Steam class
