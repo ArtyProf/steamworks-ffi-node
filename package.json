@@ -1,13 +1,13 @@
 {
   "name": "steamworks-ffi-node",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Real Steamworks SDK wrapper using FFI for Node.js/Electron - Full Steam Integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "start": "node test-complete-achievements.js",
-    "test": "node test-complete-achievements.js",
+    "test:achievements": "node test-complete-achievements.js",
+    "test:stats": "node test-complete-stats.js",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

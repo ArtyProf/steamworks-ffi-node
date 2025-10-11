@@ -11,20 +11,6 @@ The `SteamAPICore` module manages the Steam API lifecycle, including initializat
 - Checking Steam client status
 - Shutting down the Steam API cleanly
 
-## Architecture
-
-```
-SteamAPICore
-├── Depends on: SteamLibraryLoader (Koffi FFI bindings)
-└── Used by: SteamAchievementManager, SteamworksSDK
-```
-
-**Implementation Details:**
-- Uses Koffi FFI for native Steamworks SDK integration
-- No C++ compilation required (pure JavaScript FFI)
-- Manages Steam API lifecycle and interface pointers
-- Handles automatic `steam_appid.txt` file creation
-
 ## API Reference
 
 ### `init(options: SteamInitOptions): boolean`
@@ -480,12 +466,4 @@ if (!initialized) {
 
 ---
 
-## Related Documentation
-
-- [Achievement Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/AchievementManager.md)
-- [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)
-- [NPM Package](https://www.npmjs.com/package/steamworks-ffi-node)
-
----
-
-**Last Updated:** October 10, 2025
+**Last Updated:** October 11, 2025

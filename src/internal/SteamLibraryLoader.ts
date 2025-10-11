@@ -48,6 +48,28 @@ export class SteamLibraryLoader {
   // Reset stats
   public SteamAPI_ISteamUserStats_ResetAllStats!: koffi.KoffiFunction;
 
+  // ========================================
+  // Stats API Functions
+  // ========================================
+  
+  // User stats (get/set)
+  public SteamAPI_ISteamUserStats_GetStatInt32!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetStatFloat!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_SetStatInt32!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_SetStatFloat!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_UpdateAvgRateStat!: koffi.KoffiFunction;
+  
+  // Friend/user stats
+  public SteamAPI_ISteamUserStats_GetUserStatInt32!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetUserStatFloat!: koffi.KoffiFunction;
+  
+  // Global stats
+  public SteamAPI_ISteamUserStats_RequestGlobalStats!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetGlobalStatInt64!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetGlobalStatDouble!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble!: koffi.KoffiFunction;
+
   /**
    * Get platform-specific Steam library path
    */
@@ -130,6 +152,28 @@ export class SteamLibraryLoader {
     
     // Reset stats
     this.SteamAPI_ISteamUserStats_ResetAllStats = this.steamLib.func('SteamAPI_ISteamUserStats_ResetAllStats', 'bool', ['void*', 'bool']);
+    
+    // ========================================
+    // Stats API Functions
+    // ========================================
+    
+    // User stats (get/set)
+    this.SteamAPI_ISteamUserStats_GetStatInt32 = this.steamLib.func('SteamAPI_ISteamUserStats_GetStatInt32', 'bool', ['void*', 'str', 'int32*']);
+    this.SteamAPI_ISteamUserStats_GetStatFloat = this.steamLib.func('SteamAPI_ISteamUserStats_GetStatFloat', 'bool', ['void*', 'str', 'float*']);
+    this.SteamAPI_ISteamUserStats_SetStatInt32 = this.steamLib.func('SteamAPI_ISteamUserStats_SetStatInt32', 'bool', ['void*', 'str', 'int32']);
+    this.SteamAPI_ISteamUserStats_SetStatFloat = this.steamLib.func('SteamAPI_ISteamUserStats_SetStatFloat', 'bool', ['void*', 'str', 'float']);
+    this.SteamAPI_ISteamUserStats_UpdateAvgRateStat = this.steamLib.func('SteamAPI_ISteamUserStats_UpdateAvgRateStat', 'bool', ['void*', 'str', 'float', 'double']);
+    
+    // Friend/user stats
+    this.SteamAPI_ISteamUserStats_GetUserStatInt32 = this.steamLib.func('SteamAPI_ISteamUserStats_GetUserStatInt32', 'bool', ['void*', 'uint64', 'str', 'int32*']);
+    this.SteamAPI_ISteamUserStats_GetUserStatFloat = this.steamLib.func('SteamAPI_ISteamUserStats_GetUserStatFloat', 'bool', ['void*', 'uint64', 'str', 'float*']);
+    
+    // Global stats
+    this.SteamAPI_ISteamUserStats_RequestGlobalStats = this.steamLib.func('SteamAPI_ISteamUserStats_RequestGlobalStats', 'uint64', ['void*', 'int']);
+    this.SteamAPI_ISteamUserStats_GetGlobalStatInt64 = this.steamLib.func('SteamAPI_ISteamUserStats_GetGlobalStatInt64', 'bool', ['void*', 'str', 'int64*']);
+    this.SteamAPI_ISteamUserStats_GetGlobalStatDouble = this.steamLib.func('SteamAPI_ISteamUserStats_GetGlobalStatDouble', 'bool', ['void*', 'str', 'double*']);
+    this.SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64 = this.steamLib.func('SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64', 'int32', ['void*', 'str', 'int64*', 'uint32']);
+    this.SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble = this.steamLib.func('SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble', 'int32', ['void*', 'str', 'double*', 'uint32']);
   }
 
   /**

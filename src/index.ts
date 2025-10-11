@@ -6,7 +6,11 @@ import {
   AchievementProgressLimits,
   UserAchievement,
   AchievementGlobalStats,
-  AchievementWithIcon
+  AchievementWithIcon,
+  SteamStat,
+  GlobalStat,
+  GlobalStatHistory,
+  UserStat
 } from './types';
 
 // Export types
@@ -17,7 +21,11 @@ export {
   AchievementProgressLimits,
   UserAchievement,
   AchievementGlobalStats,
-  AchievementWithIcon
+  AchievementWithIcon,
+  SteamStat,
+  GlobalStat,
+  GlobalStatHistory,
+  UserStat
 };
 
 // Export main Steam class
