@@ -68,9 +68,20 @@ This design:
 - [Electron Integration](https://github.com/ArtyProf/steamworks-ffi-node#electron-integration)
 
 ### Testing
-- Run Achievement Tests: `npm run test:achievements`
-- Run Stats Tests: `npm run test:stats`
-- Run Leaderboard Tests: `npm run test:leaderboards`
+
+**JavaScript Tests** (Production - Uses compiled dist/):
+- Run Achievement Tests: `npm run test:achievements:js` - Tests all 21 achievement functions
+- Run Stats Tests: `npm run test:stats:js` - Tests all 14 stats functions
+- Run Leaderboard Tests: `npm run test:leaderboards:js` - Tests all 6 leaderboard functions
+
+**TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
+- Run Achievement Tests: `npm run test:achievements:ts` - With type safety ✨
+- Run Stats Tests: `npm run test:stats:ts` - With type safety ✨
+- Run Leaderboard Tests: `npm run test:leaderboards:ts` - With type safety ✨
+
+📁 All tests are in `tests/` folder with separate `js/` and `ts/` subfolders.
+
+💡 **Pro tip**: TypeScript tests import directly from `src/` so you can test changes immediately without running `npm run build`!
 
 ### Additional Resources
 - [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)

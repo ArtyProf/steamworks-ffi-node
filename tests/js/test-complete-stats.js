@@ -3,10 +3,10 @@
  * Tests all stats operations including get/set, user stats, and global stats
  */
 
-const SteamworksSDK = require('../dist/index').default;
+const SteamworksSDK = require('../../dist/index').default;
 
 async function testStatsAPI() {
-  console.log('🧪 Starting Steam Stats API Test\n');
+  console.log('🧪 Starting Steam Stats API Test (JavaScript)\n');
   
   const steam = new SteamworksSDK();
   

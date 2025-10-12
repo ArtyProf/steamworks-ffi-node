@@ -6,9 +6,12 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test:achievements": "node tests/test-complete-achievements.js",
-    "test:stats": "node tests/test-complete-stats.js",
-    "test:leaderboards": "node tests/test-complete-leaderboards.js",
+    "test:achievements:js": "node tests/js/test-complete-achievements.js",
+    "test:stats:js": "node tests/js/test-complete-stats.js",
+    "test:leaderboards:js": "node tests/js/test-complete-leaderboards.js",
+    "test:achievements:ts": "ts-node tests/ts/test-complete-achievements.ts",
+    "test:stats:ts": "ts-node tests/ts/test-complete-stats.ts",
+    "test:leaderboards:ts": "ts-node tests/ts/test-complete-leaderboards.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -16,6 +19,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.19.20",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   },
   "files": [
