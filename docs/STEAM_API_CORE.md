@@ -467,5 +467,3 @@ if (!initialized) {
      - Linux: `libsteam_api.so`
 
 ---
-
-**Last Updated:** October 11, 2025

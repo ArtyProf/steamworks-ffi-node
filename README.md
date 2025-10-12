@@ -13,6 +13,8 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 > 🎉 **NEW: 100% Leaderboard API Coverage** - All 7 Steam leaderboard functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)
 
+> 🎉 **NEW: Friends API** - 10 essential Steam friends and social functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)
+
 ## 🎯 Features
 
 - **Complete Achievement API**: 100% coverage of Steam Achievement functionality (20/20 functions)
@@ -31,6 +33,11 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
   - ✅ Score operations (upload with optional details)
   - ✅ Entry download (global, friends, specific users)
   - ✅ UGC integration (attach replays/screenshots to entries)
+- **Friends & Social API**: Essential Steam friends and social features (10 core functions)
+  - ✅ Current user info (persona name, online state)
+  - ✅ Friends list management (count, iterate, get all friends)
+  - ✅ Friend information (names, states, relationships, Steam levels)
+  - ✅ Friend activity (check games being played)
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Batteries Included**: All Steamworks redistributables bundled - no SDK download needed!
@@ -112,6 +119,26 @@ if (initialized) {
     );
     console.log('Top 10 scores:', topScores);
   }
+  
+  // Access friends and social features
+  const personaName = steam.friends.getPersonaName();
+  const friendCount = steam.friends.getFriendCount(4); // All friends
+  console.log(`${personaName} has ${friendCount} friends`);
+  
+  // Get all friends with details
+  const allFriends = steam.friends.getAllFriends(4); // All friends
+  allFriends.slice(0, 5).forEach(friend => {
+    const name = steam.friends.getFriendPersonaName(friend.steamId);
+    const state = steam.friends.getFriendPersonaState(friend.steamId);
+    const level = steam.friends.getFriendSteamLevel(friend.steamId);
+    console.log(`${name}: Level ${level}, Status: ${state}`);
+    
+    // Check if playing a game
+    const gameInfo = steam.friends.getFriendGamePlayed(friend.steamId);
+    if (gameInfo.playing) {
+      console.log(`  Playing: ${gameInfo.gameName} (AppID: ${gameInfo.gameId})`);
+    }
+  });
 }
 
 // Cleanup
@@ -155,6 +182,12 @@ For immediate testing, use Spacewar (App ID 480):
 Complete documentation for all APIs is available in the [docs folder](https://github.com/ArtyProf/steamworks-ffi-node/tree/main/docs):
 
 ➡️ **[View Complete Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/README.md)**
+
+### API Guides:
+- **[Achievement Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)** - Complete achievement system (20 functions)
+- **[Stats Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)** - User and global statistics (14 functions)
+- **[Leaderboard Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)** - Leaderboard operations (7 functions)
+- **[Friends Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)** - Friends and social features (10 functions)
 
 ## 🎮 Steamworks Integration
 

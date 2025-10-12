@@ -46,6 +46,9 @@ export class SteamAPICore {
   
   /** Pointer to the ISteamUtils interface */
   private utilsInterface: any = null;
+  
+  /** Pointer to the ISteamFriends interface */
+  private friendsInterface: any = null;
 
   /**
    * Creates a new SteamAPICore instance
@@ -137,6 +140,12 @@ export class SteamAPICore {
       this.utilsInterface = this.libraryLoader.SteamAPI_SteamUtils_v010();
       if (!this.utilsInterface || this.utilsInterface === null) {
         console.warn('[Steamworks] WARNING: Failed to get SteamUtils interface');
+      }
+      
+      // Get Friends interface
+      this.friendsInterface = this.libraryLoader.SteamAPI_SteamFriends_v018();
+      if (!this.friendsInterface || this.friendsInterface === null) {
+        console.warn('[Steamworks] WARNING: Failed to get SteamFriends interface');
       }
 
       // Request current stats from Steam servers
@@ -398,5 +407,29 @@ export class SteamAPICore {
    */
   getUtilsInterface(): any {
     return this.utilsInterface;
+  }
+  
+  /**
+   * Get the ISteamFriends interface pointer
+   * 
+   * Returns the native pointer to the ISteamFriends interface, which is used
+   * for friends list and social features.
+   * 
+   * @returns Pointer to ISteamFriends interface, or null if not initialized
+   * 
+   * @example
+   * ```typescript
+   * const friends = apiCore.getFriendsInterface();
+   * if (friends) {
+   *   // Use interface for friends operations
+   * }
+   * ```
+   * 
+   * @remarks
+   * - Returns null if Steam API is not initialized
+   * - This is a native pointer for use with FFI calls
+   */
+  getFriendsInterface(): any {
+    return this.friendsInterface;
   }
 }

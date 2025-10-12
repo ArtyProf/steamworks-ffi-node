@@ -16,6 +16,7 @@ steam.init({ appId: 480 });
 steam.achievements.*  // Achievement operations
 steam.stats.*         // Statistics operations  
 steam.leaderboards.*  // Leaderboard operations
+steam.friends.*       // Friends and social operations
 ```
 
 This design:
@@ -60,6 +61,15 @@ This design:
   - Entry download (global, friends, specific users)
   - UGC integration (attach replays/screenshots to entries)
 
+### Friends & Social System
+- **[Friends Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)**
+  - **10 Functions** - 100% Basic Friends List & Info
+  - Current user info (get persona name, online status)
+  - Friends list management (count, iterate, retrieve all)
+  - Friend information (names, status, relationship types)
+  - Friend activity (check what games friends are playing)
+  - Steam levels and social features
+
 ## 🚀 Quick Links
 
 ### Getting Started
@@ -72,12 +82,14 @@ This design:
 **JavaScript Tests** (Production - Uses compiled dist/):
 - Run Achievement Tests: `npm run test:achievements:js` - Tests all 21 achievement functions
 - Run Stats Tests: `npm run test:stats:js` - Tests all 14 stats functions
-- Run Leaderboard Tests: `npm run test:leaderboards:js` - Tests all 6 leaderboard functions
+- Run Leaderboard Tests: `npm run test:leaderboards:js` - Tests all 7 leaderboard functions
+- Run Friends Tests: `npm run test:friends:js` - Tests all 10 friends functions
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
 - Run Achievement Tests: `npm run test:achievements:ts` - With type safety ✨
 - Run Stats Tests: `npm run test:stats:ts` - With type safety ✨
 - Run Leaderboard Tests: `npm run test:leaderboards:ts` - With type safety ✨
+- Run Friends Tests: `npm run test:friends:ts` - With type safety ✨
 
 📁 All tests are in `tests/` folder with separate `js/` and `ts/` subfolders.
 

@@ -918,5 +918,3 @@ console.log(achievement.displayName); // Might crash
 ```
 
 ---
-
-**Last Updated:** October 11, 2025  
