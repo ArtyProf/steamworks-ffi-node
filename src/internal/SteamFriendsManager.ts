@@ -15,7 +15,6 @@ import {
  * The SteamFriendsManager provides comprehensive access to Steam's social features,
  * allowing you to retrieve information about the current user and their friends.
  * 
- * **Phase 1 Implementation** includes:
  * - Current user information (persona name, online state)
  * - Friends list retrieval and iteration
  * - Individual friend information (name, state, relationship)

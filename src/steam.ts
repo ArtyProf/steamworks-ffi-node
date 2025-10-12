@@ -138,7 +138,7 @@ class SteamworksSDK {
   /**
    * Friends Manager - Handle all Steam friends and social operations
    * 
-   * Provides Phase 1 friends functionality including:
+   * Provides friends functionality including:
    * - Get current user info (name, status)
    * - Query friends list and details
    * - Check friend online status
