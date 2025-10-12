@@ -201,35 +201,27 @@ jobs:
       run: |
         VERSION="v${{ needs.check-version.outputs.version }}"
         
-        # Get all tags sorted by version, excluding the current one if it exists
-        git fetch --tags 2>/dev/null || true
+        # Fetch all tags and history
+        git fetch --tags --unshallow 2>/dev/null || git fetch --tags 2>/dev/null || true
         
-        # Get the previous tag (second most recent)
+        # Get the previous tag (excluding current if it exists)
         LAST_TAG=$(git tag -l --sort=-version:refname | grep -v "^${VERSION}$" | head -1)
         
         if [ -z "$LAST_TAG" ]; then
           echo "📝 No previous tag found, generating release notes from all history..."
-          RANGE=""
-          RANGE_DISPLAY="All commits"
-          echo "Since: Beginning of repository"
-        else
-          echo "📝 Generating release notes from ${LAST_TAG}...${VERSION}"
-          RANGE="${LAST_TAG}..HEAD"
-          RANGE_DISPLAY="${LAST_TAG}..${VERSION}"
-          echo "Previous tag: $LAST_TAG"
-        fi
-        
-        # Generate commits section only
-        if [ -n "$LAST_TAG" ]; then
-          echo "## 📝 What's Changed" > release_notes.md
-          echo "" >> release_notes.md
-          # All commits between tags
-          git log ${RANGE} --pretty=format:"- %s (%h)" >> release_notes.md
-        else
           echo "## 📝 What's Changed" > release_notes.md
           echo "" >> release_notes.md
           # All commits for first release
           git log --pretty=format:"- %s (%h)" >> release_notes.md
+        else
+          echo "📝 Generating release notes from ${LAST_TAG} to current HEAD"
+          echo "Previous tag: $LAST_TAG"
+          echo "Current HEAD: $(git rev-parse HEAD)"
+          
+          echo "## 📝 What's Changed" > release_notes.md
+          echo "" >> release_notes.md
+          # All commits between the previous tag and current HEAD
+          git log ${LAST_TAG}..HEAD --pretty=format:"- %s (%h)" >> release_notes.md
         fi
         
         echo "" >> release_notes.md
