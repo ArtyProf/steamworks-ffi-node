@@ -9,7 +9,7 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 > 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)
 
-> 🎉 **NEW: 100% Stats API Coverage** - All 13 Steam statistics functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)
+> 🎉 **NEW: 100% Stats API Coverage** - All 14 Steam statistics functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)
 
 > 🎉 **NEW: 100% Leaderboard API Coverage** - All 7 Steam leaderboard functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)
 
