@@ -7,6 +7,7 @@ import { SteamAPICore } from './internal/SteamAPICore';
 import { SteamAchievementManager } from './internal/SteamAchievementManager';
 import { SteamStatsManager } from './internal/SteamStatsManager';
 import { SteamLeaderboardManager } from './internal/SteamLeaderboardManager';
+import { SteamFriendsManager } from './internal/SteamFriendsManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -134,6 +135,41 @@ class SteamworksSDK {
    */
   public readonly leaderboards: SteamLeaderboardManager;
 
+  /**
+   * Friends Manager - Handle all Steam friends and social operations
+   * 
+   * Provides Phase 1 friends functionality including:
+   * - Get current user info (name, status)
+   * - Query friends list and details
+   * - Check friend online status
+   * - Get friend relationship status
+   * - Check what games friends are playing
+   * - Get Steam levels
+   * 
+   * @example
+   * ```typescript
+   * // Current user info
+   * const myName = steam.friends.getPersonaName();
+   * const myStatus = steam.friends.getPersonaState();
+   * 
+   * // Friends list
+   * const friendCount = steam.friends.getFriendCount();
+   * const friends = steam.friends.getAllFriends();
+   * 
+   * // Friend details
+   * friends.forEach(friend => {
+   *   console.log(`${friend.personaName} is ${friend.personaState}`);
+   *   const gameInfo = steam.friends.getFriendGamePlayed(friend.steamId);
+   *   if (gameInfo) {
+   *     console.log(`Playing game: ${gameInfo.gameId}`);
+   *   }
+   * });
+   * ```
+   * 
+   * @see {@link SteamFriendsManager} for complete API documentation
+   */
+  public readonly friends!: SteamFriendsManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -143,6 +179,7 @@ class SteamworksSDK {
     this.achievements = new SteamAchievementManager(this.libraryLoader, this.apiCore);
     this.stats = new SteamStatsManager(this.libraryLoader, this.apiCore);
     this.leaderboards = new SteamLeaderboardManager(this.libraryLoader, this.apiCore);
+    this.friends = new SteamFriendsManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {

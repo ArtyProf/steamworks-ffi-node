@@ -12,6 +12,7 @@
     "test:achievements:ts": "ts-node tests/ts/test-complete-achievements.ts",
     "test:stats:ts": "ts-node tests/ts/test-complete-stats.ts",
     "test:leaderboards:ts": "ts-node tests/ts/test-complete-leaderboards.ts",
+    "test:friends:ts": "ts-node tests/ts/test-friends-phase1.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

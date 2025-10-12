@@ -6,6 +6,7 @@
  * - achievements.ts - Achievement-related types
  * - stats.ts - Stats-related types
  * - leaderboards.ts - Leaderboard-related types
+ * - friends.ts - Friends-related types
  */
 
 // Core types
@@ -19,3 +20,6 @@ export * from './stats';
 
 // Leaderboard types
 export * from './leaderboards';
+
+// Friends types
+export * from './friends';

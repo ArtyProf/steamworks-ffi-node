@@ -106,6 +106,28 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUtils_GetAPICallResult!: koffi.KoffiFunction;
   public SteamAPI_ISteamUtils_GetAPICallFailureReason!: koffi.KoffiFunction;
 
+  // ========================================
+  // ISteamFriends API Functions
+  // ========================================
+  
+  // Interface accessor
+  public SteamAPI_SteamFriends_v018!: koffi.KoffiFunction;
+  
+  // User info
+  public SteamAPI_ISteamFriends_GetPersonaName!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetPersonaState!: koffi.KoffiFunction;
+  
+  // Friends list
+  public SteamAPI_ISteamFriends_GetFriendCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendByIndex!: koffi.KoffiFunction;
+  
+  // Friend info
+  public SteamAPI_ISteamFriends_GetFriendPersonaName!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendPersonaState!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendRelationship!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendSteamLevel!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendGamePlayed!: koffi.KoffiFunction;
+
   /**
    * Get platform-specific Steam library path
    */
@@ -259,6 +281,28 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUtils_IsAPICallCompleted = this.steamLib.func('SteamAPI_ISteamUtils_IsAPICallCompleted', 'bool', ['void*', 'uint64', 'bool*']);
     this.SteamAPI_ISteamUtils_GetAPICallResult = this.steamLib.func('SteamAPI_ISteamUtils_GetAPICallResult', 'bool', ['void*', 'uint64', 'void*', 'int', 'int', 'bool*']);
     this.SteamAPI_ISteamUtils_GetAPICallFailureReason = this.steamLib.func('SteamAPI_ISteamUtils_GetAPICallFailureReason', 'int', ['void*', 'uint64']);
+    
+    // ========================================
+    // ISteamFriends Functions
+    // ========================================
+    
+    // Interface accessor
+    this.SteamAPI_SteamFriends_v018 = this.steamLib.func('SteamAPI_SteamFriends_v018', 'void*', []);
+    
+    // User info
+    this.SteamAPI_ISteamFriends_GetPersonaName = this.steamLib.func('SteamAPI_ISteamFriends_GetPersonaName', 'str', ['void*']);
+    this.SteamAPI_ISteamFriends_GetPersonaState = this.steamLib.func('SteamAPI_ISteamFriends_GetPersonaState', 'int', ['void*']);
+    
+    // Friends list
+    this.SteamAPI_ISteamFriends_GetFriendCount = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendCount', 'int', ['void*', 'int']);
+    this.SteamAPI_ISteamFriends_GetFriendByIndex = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendByIndex', 'uint64', ['void*', 'int', 'int']);
+    
+    // Friend info
+    this.SteamAPI_ISteamFriends_GetFriendPersonaName = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendPersonaName', 'str', ['void*', 'uint64']);
+    this.SteamAPI_ISteamFriends_GetFriendPersonaState = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendPersonaState', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamFriends_GetFriendRelationship = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendRelationship', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamFriends_GetFriendSteamLevel = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendSteamLevel', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamFriends_GetFriendGamePlayed = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendGamePlayed', 'bool', ['void*', 'uint64', 'void*']);
   }
 
   /**
