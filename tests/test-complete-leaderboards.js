@@ -5,18 +5,18 @@
  * Uses ISteamUtils polling to retrieve callback results synchronously after async operations.
  */
 
-const Steam = require('../dist/steam').default;
+const SteamworksSDK = require('../dist/index').default;
 const { 
   LeaderboardSortMethod, 
   LeaderboardDisplayType, 
   LeaderboardDataRequest,
   LeaderboardUploadScoreMethod 
-} = require('../dist/types');
+} = require('../dist/index');
 
 async function testLeaderboardsAPI() {
   console.log('🧪 Starting Steam Leaderboards API Test\n');
   
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   
   // Initialize Steam
   console.log('🔧 Initializing Steam API...');
@@ -47,7 +47,7 @@ async function testLeaderboardsAPI() {
   console.log('   Sort: Ascending (lowest time wins)');
   console.log('   Display: TimeSeconds');
   
-  const quickestWinLeaderboard = await steam.findOrCreateLeaderboard(
+  const quickestWinLeaderboard = await steam.leaderboards.findOrCreateLeaderboard(
     'Quickest Win',
     LeaderboardSortMethod.Ascending,
     LeaderboardDisplayType.TimeSeconds
@@ -63,7 +63,7 @@ async function testLeaderboardsAPI() {
     
     // Try to get leaderboard info using the handle
     console.log('\n📋 Getting leaderboard info for handle...');
-    const leaderboardInfo = await steam.getLeaderboardInfo(quickestWinLeaderboard.handle);
+    const leaderboardInfo = await steam.leaderboards.getLeaderboardInfo(quickestWinLeaderboard.handle);
     if (leaderboardInfo) {
       console.log('✅ Retrieved leaderboard info:');
       console.log(`   Name: ${leaderboardInfo.name}`);
@@ -84,7 +84,7 @@ async function testLeaderboardsAPI() {
   
   // Test finding existing Quickest Win leaderboard
   console.log('🔍 Finding existing "Quickest Win" leaderboard...');
-  const foundLeaderboard = await steam.findLeaderboard('Quickest Win');
+  const foundLeaderboard = await steam.leaderboards.findLeaderboard('Quickest Win');
   
   if (foundLeaderboard) {
     console.log('✅ Leaderboard found successfully');
@@ -92,7 +92,7 @@ async function testLeaderboardsAPI() {
     
     // Try to get info for the found leaderboard
     console.log('\n📋 Getting info for found leaderboard...');
-    const foundInfo = await steam.getLeaderboardInfo(foundLeaderboard.handle);
+    const foundInfo = await steam.leaderboards.getLeaderboardInfo(foundLeaderboard.handle);
     if (foundInfo) {
       console.log('✅ Retrieved info:');
       console.log(`   Name: ${foundInfo.name}`);
@@ -116,7 +116,7 @@ async function testLeaderboardsAPI() {
   
   // Test with handle 0 (invalid)
   console.log('   Testing with handle 0 (invalid):');
-  const info0 = await steam.getLeaderboardInfo(BigInt(0));
+  const info0 = await steam.leaderboards.getLeaderboardInfo(BigInt(0));
   if (info0) {
     console.log(`   ✅ Got info: ${info0.name || '(empty name)'}`);
   } else {
@@ -125,7 +125,7 @@ async function testLeaderboardsAPI() {
   
   // Test with handle 1 (Quickest Win in Spacewar)
   console.log('\n   Testing with handle 1 (Quickest Win):');
-  const info1 = await steam.getLeaderboardInfo(BigInt(1));
+  const info1 = await steam.leaderboards.getLeaderboardInfo(BigInt(1));
   if (info1) {
     console.log(`   ✅ Got info for: ${info1.name}`);
     console.log(`      Entry Count: ${info1.entryCount}`);
@@ -137,7 +137,7 @@ async function testLeaderboardsAPI() {
   
   // Test with a large handle value
   console.log('\n   Testing with handle 999999 (non-existent):');
-  const info999 = await steam.getLeaderboardInfo(BigInt(999999));
+  const info999 = await steam.leaderboards.getLeaderboardInfo(BigInt(999999));
   if (info999) {
     console.log(`   ✅ Got info: ${info999.name || '(empty name)'}`);
   } else {
@@ -156,7 +156,7 @@ async function testLeaderboardsAPI() {
   
   // Check leaderboard info before uploads
   console.log('� Checking Quickest Win leaderboard before uploads...');
-  const infoBefore = await steam.getLeaderboardInfo(quickestWinHandle);
+  const infoBefore = await steam.leaderboards.getLeaderboardInfo(quickestWinHandle);
   if (infoBefore) {
     console.log(`   Name: ${infoBefore.name}`);
     console.log(`   Entry Count BEFORE: ${infoBefore.entryCount}`);
@@ -165,7 +165,7 @@ async function testLeaderboardsAPI() {
   
   console.log('�📤 Uploading time score: 65 seconds (KeepBest method)...');
   console.log('   Using Quickest Win leaderboard (handle 1)');
-  const upload1 = await steam.uploadLeaderboardScore(
+  const upload1 = await steam.leaderboards.uploadScore(
     quickestWinHandle,
     65, // 65 seconds
     LeaderboardUploadScoreMethod.KeepBest
@@ -187,7 +187,7 @@ async function testLeaderboardsAPI() {
   
   // Check leaderboard info after first upload
   console.log('\n📋 Checking leaderboard after first upload...');
-  const infoAfter1 = await steam.getLeaderboardInfo(quickestWinHandle);
+  const infoAfter1 = await steam.leaderboards.getLeaderboardInfo(quickestWinHandle);
   if (infoAfter1 && infoBefore) {
     console.log(`   Name: ${infoAfter1.name} ${infoAfter1.name === infoBefore.name ? '✓' : '✗ CHANGED'}`);
     console.log(`   Entry Count: ${infoAfter1.entryCount} ${infoAfter1.entryCount === infoBefore.entryCount ? '(unchanged)' : `(${infoBefore.entryCount} → ${infoAfter1.entryCount})`}`);
@@ -199,7 +199,7 @@ async function testLeaderboardsAPI() {
   // Upload time score with details
   console.log('📤 Uploading time score: 45 seconds with details [3, 12, 0]...');
   console.log('   Details: attempts=3, deaths=12, powerups=0');
-  const upload2 = await steam.uploadLeaderboardScore(
+  const upload2 = await steam.leaderboards.uploadScore(
     quickestWinHandle,
     45, // 45 seconds
     LeaderboardUploadScoreMethod.KeepBest,
@@ -217,7 +217,7 @@ async function testLeaderboardsAPI() {
   
   // Check leaderboard info after second upload
   console.log('\n📋 Checking leaderboard after second upload...');
-  const infoAfter2 = await steam.getLeaderboardInfo(quickestWinHandle);
+  const infoAfter2 = await steam.leaderboards.getLeaderboardInfo(quickestWinHandle);
   if (infoAfter2 && infoAfter1) {
     console.log(`   Name: ${infoAfter2.name} ${infoAfter2.name === infoAfter1.name ? '✓' : '✗ CHANGED'}`);
     console.log(`   Entry Count: ${infoAfter2.entryCount} ${infoAfter2.entryCount === infoAfter1.entryCount ? '(unchanged)' : `(${infoAfter1.entryCount} → ${infoAfter2.entryCount})`}`);
@@ -228,7 +228,7 @@ async function testLeaderboardsAPI() {
   
   // Force update with slower time
   console.log('📤 Force updating time score: 120 seconds (ForceUpdate method)...');
-  const upload3 = await steam.uploadLeaderboardScore(
+  const upload3 = await steam.leaderboards.uploadScore(
     quickestWinHandle,
     120, // 120 seconds (slower time)
     LeaderboardUploadScoreMethod.ForceUpdate
@@ -245,7 +245,7 @@ async function testLeaderboardsAPI() {
   
   // Check leaderboard info after force update
   console.log('\n📋 Checking leaderboard after force update...');
-  const infoAfter3 = await steam.getLeaderboardInfo(quickestWinHandle);
+  const infoAfter3 = await steam.leaderboards.getLeaderboardInfo(quickestWinHandle);
   if (infoAfter3 && infoAfter2) {
     console.log(`   Name: ${infoAfter3.name} ${infoAfter3.name === infoAfter2.name ? '✓' : '✗ CHANGED'}`);
     console.log(`   Entry Count: ${infoAfter3.entryCount} ${infoAfter3.entryCount === infoAfter2.entryCount ? '(unchanged)' : `(${infoAfter2.entryCount} → ${infoAfter3.entryCount})`}`);
@@ -281,7 +281,7 @@ async function testLeaderboardsAPI() {
   
   // Download global top entries from Quickest Win
   console.log('📥 Downloading top 10 global entries from Quickest Win...');
-  const globalEntries = await steam.downloadLeaderboardEntries(
+  const globalEntries = await steam.leaderboards.downloadLeaderboardEntries(
     quickestWinHandle,
     LeaderboardDataRequest.Global,
     1,  // Start at rank 1
@@ -306,7 +306,7 @@ async function testLeaderboardsAPI() {
   
   // Download entries around user
   console.log('📥 Downloading entries around current user on Quickest Win (-3 to +3)...');
-  const aroundUserEntries = await steam.downloadLeaderboardEntries(
+  const aroundUserEntries = await steam.leaderboards.downloadLeaderboardEntries(
     quickestWinHandle,
     LeaderboardDataRequest.GlobalAroundUser,
     -3,  // 3 entries above user
@@ -325,7 +325,7 @@ async function testLeaderboardsAPI() {
   
   // Download friend entries
   console.log('📥 Downloading friend entries from Quickest Win...');
-  const friendEntries = await steam.downloadLeaderboardEntries(
+  const friendEntries = await steam.leaderboards.downloadLeaderboardEntries(
     quickestWinHandle,
     LeaderboardDataRequest.Friends,
     0,  // Ignored for friends request
@@ -345,7 +345,7 @@ async function testLeaderboardsAPI() {
   // Download entries for specific users
   console.log('📥 Downloading entries for specific users on Quickest Win...');
   const userIds = [status.steamId]; // Use current user's Steam ID
-  const userEntries = await steam.downloadLeaderboardEntriesForUsers(
+  const userEntries = await steam.leaderboards.downloadLeaderboardEntriesForUsers(
     quickestWinHandle,
     userIds
   );
@@ -368,7 +368,7 @@ async function testLeaderboardsAPI() {
   console.log('📎 Attaching UGC to Quickest Win leaderboard entry...');
   console.log('   (UGC handle would come from FileShare operation)');
   const ugcHandle = BigInt(12345); // Placeholder UGC handle
-  const attachResult = await steam.attachLeaderboardUGC(quickestWinHandle, ugcHandle);
+  const attachResult = await steam.leaderboards.attachLeaderboardUGC(quickestWinHandle, ugcHandle);
   
   if (attachResult) {
     console.log('✅ UGC attached successfully');

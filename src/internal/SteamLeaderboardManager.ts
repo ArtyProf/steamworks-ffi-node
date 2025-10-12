@@ -13,11 +13,8 @@ import {
   LeaderboardFindResultType,
   LeaderboardScoreUploadedType,
   LeaderboardScoresDownloadedType,
-  LeaderboardUGCSetType,
-  LeaderboardEntryType
+  LeaderboardUGCSetType
 } from '../types';
-
-
 
 /**
  * LeaderboardFindResult_t - Result of FindOrCreateLeaderboard/FindLeaderboard

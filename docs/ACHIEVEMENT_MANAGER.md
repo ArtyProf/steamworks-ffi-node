@@ -49,10 +49,10 @@ interface SteamAchievement {
 
 **Example:**
 ```typescript
-import Steam from 'steamworks-ffi-node';
+import SteamworksSDK from 'steamworks-ffi-node';
 
-const steam = Steam.getInstance();
-const achievements = await steam.getAllAchievements();
+const steam = new SteamworksSDK();
+const achievements = await steam.achievements.getAllAchievements();
 
 console.log(`Found ${achievements.length} achievements`);
 
@@ -87,15 +87,15 @@ Unlock an achievement and sync to Steam servers.
 **Example:**
 ```typescript
 // Simple unlock
-const success = await steam.unlockAchievement('ACH_WIN_ONE_GAME');
+const success = await steam.achievements.unlockAchievement('ACH_WIN_ONE_GAME');
 if (success) {
   console.log('🎉 Achievement unlocked!');
 }
 
 // Check first, then unlock
-const isUnlocked = await steam.isAchievementUnlocked('ACH_WIN_ONE_GAME');
+const isUnlocked = await steam.achievements.isAchievementUnlocked('ACH_WIN_ONE_GAME');
 if (!isUnlocked) {
-  await steam.unlockAchievement('ACH_WIN_ONE_GAME');
+  await steam.achievements.unlockAchievement('ACH_WIN_ONE_GAME');
 }
 ```
 
@@ -123,15 +123,15 @@ Clear an achievement (for testing purposes).
 **Example:**
 ```typescript
 // Clear for testing
-const success = await steam.clearAchievement('ACH_WIN_ONE_GAME');
+const success = await steam.achievements.clearAchievement('ACH_WIN_ONE_GAME');
 if (success) {
   console.log('Achievement cleared for testing');
 }
 
 // Clear all achievements (testing)
-const achievements = await steam.getAllAchievements();
+const achievements = await steam.achievements.getAllAchievements();
 for (const ach of achievements.filter(a => a.unlocked)) {
-  await steam.clearAchievement(ach.apiName);
+  await steam.achievements.clearAchievement(ach.apiName);
 }
 ```
 
@@ -153,13 +153,13 @@ Check if a specific achievement is unlocked.
 
 **Example:**
 ```typescript
-const unlocked = await steam.isAchievementUnlocked('ACH_WIN_ONE_GAME');
+const unlocked = await steam.achievements.isAchievementUnlocked('ACH_WIN_ONE_GAME');
 console.log(`Status: ${unlocked ? 'Unlocked ✅' : 'Locked 🔒'}`);
 
 // Use in conditional logic
-if (!await steam.isAchievementUnlocked('ACH_WIN_ONE_GAME')) {
+if (!await steam.achievements.isAchievementUnlocked('ACH_WIN_ONE_GAME')) {
   // Award the achievement
-  await steam.unlockAchievement('ACH_WIN_ONE_GAME');
+  await steam.achievements.unlockAchievement('ACH_WIN_ONE_GAME');
 }
 ```
 
@@ -179,7 +179,7 @@ Get detailed information about a specific achievement.
 
 **Example:**
 ```typescript
-const achievement = await steam.getAchievementByName('ACH_WIN_ONE_GAME');
+const achievement = await steam.achievements.getAchievementByName('ACH_WIN_ONE_GAME');
 
 if (achievement) {
   console.log(`Name: ${achievement.displayName}`);
@@ -205,7 +205,7 @@ Get total number of achievements available for this game.
 
 **Example:**
 ```typescript
-const total = await steam.getTotalAchievementCount();
+const total = await steam.achievements.getTotalAchievementCount();
 console.log(`This game has ${total} achievements`);
 ```
 
@@ -222,8 +222,8 @@ Get number of achievements the user has unlocked.
 
 **Example:**
 ```typescript
-const total = await steam.getTotalAchievementCount();
-const unlocked = await steam.getUnlockedAchievementCount();
+const total = await steam.achievements.getTotalAchievementCount();
+const unlocked = await steam.achievements.getUnlockedAchievementCount();
 const percentage = (unlocked / total * 100).toFixed(1);
 
 console.log(`Progress: ${unlocked}/${total} (${percentage}%)`);
@@ -255,7 +255,7 @@ Get icon handle for an achievement. Can be used with `ISteamUtils::GetImageRGBA(
 
 **Example:**
 ```typescript
-const iconHandle = await steam.getAchievementIcon('ACH_WIN_ONE_GAME');
+const iconHandle = await steam.achievements.getAchievementIcon('ACH_WIN_ONE_GAME');
 
 if (iconHandle > 0) {
   console.log(`Icon handle: ${iconHandle}`);
@@ -288,7 +288,7 @@ interface AchievementWithIcon extends SteamAchievement {
 
 **Example:**
 ```typescript
-const achievements = await steam.getAllAchievementsWithIcons();
+const achievements = await steam.achievements.getAllAchievementsWithIcons();
 
 achievements.forEach(ach => {
   const status = ach.unlocked ? '✅' : '🔒';
@@ -317,7 +317,7 @@ Show a progress notification in the Steam overlay.
 **Example:**
 ```typescript
 // Show progress notification
-await steam.indicateAchievementProgress('ACH_COLLECT_100_ITEMS', 50, 100);
+await steam.achievements.indicateAchievementProgress('ACH_COLLECT_100_ITEMS', 50, 100);
 // Steam overlay shows: "50/100 items collected"
 
 // Update progress as player advances
@@ -329,12 +329,12 @@ function collectItem() {
   
   // Show progress at milestones
   if (itemsCollected % 10 === 0) {
-    steam.indicateAchievementProgress('ACH_COLLECT_100_ITEMS', itemsCollected, target);
+    steam.achievements.indicateAchievementProgress('ACH_COLLECT_100_ITEMS', itemsCollected, target);
   }
   
   // Unlock when complete
   if (itemsCollected >= target) {
-    steam.unlockAchievement('ACH_COLLECT_100_ITEMS');
+    steam.achievements.unlockAchievement('ACH_COLLECT_100_ITEMS');
   }
 }
 ```
@@ -366,7 +366,7 @@ interface AchievementProgressLimits {
 
 **Example:**
 ```typescript
-const limits = await steam.getAchievementProgressLimitsInt('ACH_COLLECT_100_ITEMS');
+const limits = await steam.achievements.getAchievementProgressLimitsInt('ACH_COLLECT_100_ITEMS');
 
 if (limits) {
   console.log(`Progress range: ${limits.minProgress} to ${limits.maxProgress}`);
@@ -378,7 +378,7 @@ if (limits) {
   
   // Show notification at milestones
   if (currentProgress % 25 === 0) {
-    await steam.indicateAchievementProgress(
+    await steam.achievements.indicateAchievementProgress(
       'ACH_COLLECT_100_ITEMS',
       currentProgress,
       limits.maxProgress
@@ -402,7 +402,7 @@ Get float-based progress limits for an achievement.
 
 **Example:**
 ```typescript
-const limits = await steam.getAchievementProgressLimitsFloat('ACH_TRAVEL_FAR');
+const limits = await steam.achievements.getAchievementProgressLimitsFloat('ACH_TRAVEL_FAR');
 
 if (limits) {
   console.log(`Travel range: ${limits.minProgress} to ${limits.maxProgress} miles`);
@@ -413,7 +413,7 @@ if (limits) {
   console.log(`Progress: ${distanceTraveled}/${limits.maxProgress} miles`);
   
   if (distanceTraveled >= limits.maxProgress) {
-    await steam.unlockAchievement('ACH_TRAVEL_FAR');
+    await steam.achievements.unlockAchievement('ACH_TRAVEL_FAR');
   }
 }
 ```
@@ -443,7 +443,7 @@ Request achievement stats for another user (friend). This is an asynchronous ope
 const friendSteamId = '76561198012345678';
 
 // Request friend's stats
-const success = await steam.requestUserStats(friendSteamId);
+const success = await steam.achievements.requestUserStats(friendSteamId);
 
 if (success) {
   console.log('📊 Requesting friend stats...');
@@ -453,7 +453,7 @@ if (success) {
   steam.runCallbacks();
   
   // Now you can get friend's achievements
-  const friendAch = await steam.getUserAchievement(friendSteamId, 'ACH_WIN_ONE_GAME');
+  const friendAch = await steam.achievements.getUserAchievement(friendSteamId, 'ACH_WIN_ONE_GAME');
   console.log(`Friend status: ${friendAch?.unlocked ? 'Unlocked' : 'Locked'}`);
 }
 ```
@@ -492,17 +492,17 @@ interface UserAchievement {
 ```typescript
 async function compareWithFriend(friendSteamId: string) {
   // Request friend's data
-  await steam.requestUserStats(friendSteamId);
+  await steam.achievements.requestUserStats(friendSteamId);
   await new Promise(resolve => setTimeout(resolve, 1000));
   steam.runCallbacks();
   
   // Get all your achievements
-  const myAchievements = await steam.getAllAchievements();
+  const myAchievements = await steam.achievements.getAllAchievements();
   
   console.log('🏆 Achievement Comparison:');
   
   for (const myAch of myAchievements) {
-    const friendAch = await steam.getUserAchievement(friendSteamId, myAch.apiName);
+    const friendAch = await steam.achievements.getUserAchievement(friendSteamId, myAch.apiName);
     
     if (!friendAch) continue;
     
@@ -538,7 +538,7 @@ Request global achievement unlock percentages from Steam. Asynchronous operation
 **Example:**
 ```typescript
 // Request global data
-const success = await steam.requestGlobalAchievementPercentages();
+const success = await steam.achievements.requestGlobalAchievementPercentages();
 
 if (success) {
   console.log('📊 Requesting global stats...');
@@ -548,7 +548,7 @@ if (success) {
   steam.runCallbacks();
   
   // Now you can access global statistics
-  const percent = await steam.getAchievementAchievedPercent('ACH_WIN_ONE_GAME');
+  const percent = await steam.achievements.getAchievementAchievedPercent('ACH_WIN_ONE_GAME');
   console.log(`${percent}% of players have unlocked this`);
 }
 ```
@@ -571,7 +571,7 @@ Get percentage of users who unlocked a specific achievement.
 
 **Example:**
 ```typescript
-const percent = await steam.getAchievementAchievedPercent('ACH_WIN_ONE_GAME');
+const percent = await steam.achievements.getAchievementAchievedPercent('ACH_WIN_ONE_GAME');
 
 if (percent !== null) {
   console.log(`${percent.toFixed(2)}% of players have this achievement`);
@@ -616,7 +616,7 @@ interface AchievementGlobalStats {
 
 **Example:**
 ```typescript
-const stats = await steam.getAllAchievementsWithGlobalStats();
+const stats = await steam.achievements.getAllAchievementsWithGlobalStats();
 
 console.log('🌍 Global Achievement Statistics:');
 
@@ -648,7 +648,7 @@ Get the most commonly unlocked achievement.
 
 **Example:**
 ```typescript
-const mostAchieved = await steam.getMostAchievedAchievementInfo();
+const mostAchieved = await steam.achievements.getMostAchievedAchievementInfo();
 
 if (mostAchieved) {
   console.log(`🥇 Most achieved: ${mostAchieved.apiName}`);
@@ -676,14 +676,14 @@ Get next achievement in popularity order.
 **Example:**
 ```typescript
 // Get top 5 most achieved achievements
-const first = await steam.getMostAchievedAchievementInfo();
+const first = await steam.achievements.getMostAchievedAchievementInfo();
 if (!first) return;
 
 console.log(`1. ${first.apiName}: ${first.percent.toFixed(2)}%`);
 
 let iterator = first.iterator;
 for (let i = 2; i <= 5; i++) {
-  const next = await steam.getNextMostAchievedAchievementInfo(iterator);
+  const next = await steam.achievements.getNextMostAchievedAchievementInfo(iterator);
   if (!next) break;
   
   console.log(`${i}. ${next.apiName}: ${next.percent.toFixed(2)}%`);
@@ -706,7 +706,7 @@ Get all achievements sorted by global unlock percentage (most achieved first).
 
 **Example:**
 ```typescript
-const sorted = await steam.getAllAchievementsSortedByPopularity();
+const sorted = await steam.achievements.getAllAchievementsSortedByPopularity();
 
 console.log('🏆 Achievements by Popularity:');
 
@@ -751,13 +751,13 @@ Reset all stats and optionally all achievements.
 **Example:**
 ```typescript
 // Reset only stats, keep achievements
-const success = await steam.resetAllStats(false);
+const success = await steam.achievements.resetAllStats(false);
 console.log('Stats reset:', success);
 
 // Reset EVERYTHING including achievements
 console.log('⚠️ WARNING: Resetting ALL stats and achievements!');
 await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second warning
-const success = await steam.resetAllStats(true);
+const success = await steam.achievements.resetAllStats(true);
 console.log('Everything reset:', success);
 ```
 
@@ -774,7 +774,7 @@ if (process.env.NODE_ENV === 'production') {
 console.warn('This will reset all stats. Are you sure? (5 seconds to cancel)');
 await new Promise(resolve => setTimeout(resolve, 5000));
 
-await steam.resetAllStats(true);
+await steam.achievements.resetAllStats(true);
 ```
 
 ---
@@ -782,10 +782,10 @@ await steam.resetAllStats(true);
 ## Complete Usage Example
 
 ```typescript
-import Steam from 'steamworks-ffi-node';
+import SteamworksSDK from 'steamworks-ffi-node';
 
 async function comprehensiveExample() {
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   
   // Initialize
   if (!steam.init({ appId: 480 })) {
@@ -796,48 +796,48 @@ async function comprehensiveExample() {
   try {
     // ===== CORE OPERATIONS =====
     console.log('📊 Core Operations:');
-    const achievements = await steam.getAllAchievements();
-    const total = await steam.getTotalAchievementCount();
-    const unlocked = await steam.getUnlockedAchievementCount();
+    const achievements = await steam.achievements.getAllAchievements();
+    const total = await steam.achievements.getTotalAchievementCount();
+    const unlocked = await steam.achievements.getUnlockedAchievementCount();
     console.log(`Progress: ${unlocked}/${total} achievements`);
     
     // ===== VISUAL FEATURES =====
     console.log('\n🎨 Visual Features:');
-    const withIcons = await steam.getAllAchievementsWithIcons();
+    const withIcons = await steam.achievements.getAllAchievementsWithIcons();
     console.log(`${withIcons.filter(a => a.iconHandle > 0).length} have icons`);
     
     // ===== PROGRESS TRACKING =====
     console.log('\n📈 Progress Tracking:');
-    const limits = await steam.getAchievementProgressLimitsFloat('ACH_TRAVEL_FAR');
+    const limits = await steam.achievements.getAchievementProgressLimitsFloat('ACH_TRAVEL_FAR');
     if (limits) {
       console.log(`Range: ${limits.minProgress}-${limits.maxProgress}`);
-      await steam.indicateAchievementProgress('ACH_TRAVEL_FAR', 2500, limits.maxProgress);
+      await steam.achievements.indicateAchievementProgress('ACH_TRAVEL_FAR', 2500, limits.maxProgress);
     }
     
     // ===== GLOBAL STATISTICS =====
     console.log('\n🌍 Global Statistics:');
-    await steam.requestGlobalAchievementPercentages();
+    await steam.achievements.requestGlobalAchievementPercentages();
     await new Promise(resolve => setTimeout(resolve, 2000));
     steam.runCallbacks();
     
-    const globalStats = await steam.getAllAchievementsWithGlobalStats();
+    const globalStats = await steam.achievements.getAllAchievementsWithGlobalStats();
     globalStats.forEach(ach => {
       if (ach.globalUnlockPercentage < 5) {
         console.log(`💎 ${ach.displayName}: ${ach.globalUnlockPercentage.toFixed(2)}% (rare!)`);
       }
     });
     
-    const sorted = await steam.getAllAchievementsSortedByPopularity();
+    const sorted = await steam.achievements.getAllAchievementsSortedByPopularity();
     console.log(`Most achieved: ${sorted[0].displayName} (${sorted[0].globalUnlockPercentage.toFixed(2)}%)`);
     
     // ===== FRIEND COMPARISON =====
     console.log('\n👥 Friend Comparison:');
     const status = steam.getStatus();
-    await steam.requestUserStats(status.steamId);
+    await steam.achievements.requestUserStats(status.steamId);
     await new Promise(resolve => setTimeout(resolve, 1000));
     steam.runCallbacks();
     
-    const userAch = await steam.getUserAchievement(status.steamId, 'ACH_WIN_ONE_GAME');
+    const userAch = await steam.achievements.getUserAchievement(status.steamId, 'ACH_WIN_ONE_GAME');
     if (userAch) {
       console.log(`Your achievement: ${userAch.unlocked ? 'Unlocked' : 'Locked'}`);
     }
@@ -857,55 +857,55 @@ comprehensiveExample();
 ### 1. Check Before Unlock
 ```typescript
 // ✅ Good
-if (!await steam.isAchievementUnlocked('ACH_WIN_ONE_GAME')) {
-  await steam.unlockAchievement('ACH_WIN_ONE_GAME');
+if (!await steam.achievements.isAchievementUnlocked('ACH_WIN_ONE_GAME')) {
+  await steam.achievements.unlockAchievement('ACH_WIN_ONE_GAME');
 }
 
 // ❌ Unnecessary
-await steam.unlockAchievement('ACH_WIN_ONE_GAME'); // Works but redundant
+await steam.achievements.unlockAchievement('ACH_WIN_ONE_GAME'); // Works but redundant
 ```
 
 ### 2. Progress Notifications at Milestones
 ```typescript
 // ✅ Good - Show at meaningful intervals
 if (progress % 25 === 0) {
-  await steam.indicateAchievementProgress('ACH_COLLECT_100', progress, 100);
+  await steam.achievements.indicateAchievementProgress('ACH_COLLECT_100', progress, 100);
 }
 
 // ❌ Bad - Too frequent
-await steam.indicateAchievementProgress('ACH_COLLECT_100', progress, 100); // Every update
+await steam.achievements.indicateAchievementProgress('ACH_COLLECT_100', progress, 100); // Every update
 ```
 
 ### 3. Cache Achievement Data
 ```typescript
 // ✅ Good - Fetch once
-const achievements = await steam.getAllAchievements();
+const achievements = await steam.achievements.getAllAchievements();
 const totalCount = achievements.length;
 const unlockedCount = achievements.filter(a => a.unlocked).length;
 
 // ❌ Bad - Multiple fetches
-const total = await steam.getTotalAchievementCount();
-const achievements = await steam.getAllAchievements();
-const unlocked = await steam.getUnlockedAchievementCount();
+const total = await steam.achievements.getTotalAchievementCount();
+const achievements = await steam.achievements.getAllAchievements();
+const unlocked = await steam.achievements.getUnlockedAchievementCount();
 ```
 
 ### 4. Handle Async Operations
 ```typescript
 // ✅ Good - Wait for callbacks
-await steam.requestGlobalAchievementPercentages();
+await steam.achievements.requestGlobalAchievementPercentages();
 await new Promise(resolve => setTimeout(resolve, 2000));
 steam.runCallbacks();
-const percent = await steam.getAchievementAchievedPercent('ACH_WIN_ONE_GAME');
+const percent = await steam.achievements.getAchievementAchievedPercent('ACH_WIN_ONE_GAME');
 
 // ❌ Bad - Don't wait
-await steam.requestGlobalAchievementPercentages();
-const percent = await steam.getAchievementAchievedPercent('ACH_WIN_ONE_GAME'); // null
+await steam.achievements.requestGlobalAchievementPercentages();
+const percent = await steam.achievements.getAchievementAchievedPercent('ACH_WIN_ONE_GAME'); // null
 ```
 
 ### 5. Error Handling
 ```typescript
 // ✅ Good
-const achievement = await steam.getAchievementByName('ACH_WIN_ONE_GAME');
+const achievement = await steam.achievements.getAchievementByName('ACH_WIN_ONE_GAME');
 if (achievement) {
   console.log(achievement.displayName);
 } else {
@@ -913,7 +913,7 @@ if (achievement) {
 }
 
 // ❌ Bad - No null check
-const achievement = await steam.getAchievementByName('ACH_WIN_ONE_GAME');
+const achievement = await steam.achievements.getAchievementByName('ACH_WIN_ONE_GAME');
 console.log(achievement.displayName); // Might crash
 ```
 

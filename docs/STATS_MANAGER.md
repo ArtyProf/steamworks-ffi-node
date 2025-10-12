@@ -43,12 +43,12 @@ interface SteamStat {
 
 **Example:**
 ```typescript
-import Steam from 'steamworks-ffi-node';
+import SteamworksSDK from 'steamworks-ffi-node';
 
-const steam = Steam.getInstance();
+const steam = new SteamworksSDK();
 steam.init({ appId: YOUR_APP_ID });
 
-const killsStat = await steam.getStatInt('total_kills');
+const killsStat = await steam.stats.getStatInt('total_kills');
 if (killsStat) {
   console.log(`${killsStat.name}: ${killsStat.value}`);
   // Access value: killsStat.value
@@ -73,7 +73,7 @@ Get a float stat value for the current user.
 
 **Example:**
 ```typescript
-const distanceStat = await steam.getStatFloat('total_distance');
+const distanceStat = await steam.stats.getStatFloat('total_distance');
 if (distanceStat) {
   console.log(`${distanceStat.name}: ${distanceStat.value.toFixed(2)} km`);
 }
@@ -99,15 +99,15 @@ Set an integer stat value for the current user. Automatically stored to Steam se
 **Example:**
 ```typescript
 // Update kill count
-const currentKills = await steam.getStatInt('total_kills') || 0;
-await steam.setStatInt('total_kills', currentKills + 1);
+const currentKills = await steam.stats.getStatInt('total_kills') || 0;
+await steam.stats.setStatInt('total_kills', currentKills + 1);
 
 // Track games played
-const gamesPlayed = await steam.getStatInt('games_played') || 0;
-await steam.setStatInt('games_played', gamesPlayed + 1);
+const gamesPlayed = await steam.stats.getStatInt('games_played') || 0;
+await steam.stats.setStatInt('games_played', gamesPlayed + 1);
 
 // Set specific value
-await steam.setStatInt('player_level', 15);
+await steam.stats.setStatInt('player_level', 15);
 ```
 
 **Note:** Stats are automatically synced to Steam servers when set.
@@ -132,14 +132,14 @@ Set a float stat value for the current user. Automatically stored to Steam serve
 **Example:**
 ```typescript
 // Track distance traveled
-const currentDistance = await steam.getStatFloat('total_distance') || 0;
-await steam.setStatFloat('total_distance', currentDistance + 123.45);
+const currentDistance = await steam.stats.getStatFloat('total_distance') || 0;
+await steam.stats.setStatFloat('total_distance', currentDistance + 123.45);
 
 // Track accuracy percentage
-await steam.setStatFloat('accuracy', 87.5);
+await steam.stats.setStatFloat('accuracy', 87.5);
 
 // Track average speed
-await steam.setStatFloat('average_speed', 45.2);
+await steam.stats.setStatFloat('average_speed', 45.2);
 ```
 
 ---
@@ -163,17 +163,17 @@ Update an average rate stat (e.g., kills per hour, damage per second). Steam aut
 **Example:**
 ```typescript
 // Player got 15 kills in 3600 seconds (1 hour)
-await steam.updateAvgRateStat('kills_per_hour', 15, 3600);
+await steam.stats.updateAvgRateStat('kills_per_hour', 15, 3600);
 
 // Player dealt 500 damage in 60 seconds
-await steam.updateAvgRateStat('damage_per_second', 500, 60);
+await steam.stats.updateAvgRateStat('damage_per_second', 500, 60);
 
 // Calculate session stats
 const sessionStart = Date.now();
 // ... gameplay happens ...
 const sessionEnd = Date.now();
 const sessionSeconds = (sessionEnd - sessionStart) / 1000;
-await steam.updateAvgRateStat('points_per_second', earnedPoints, sessionSeconds);
+await steam.stats.updateAvgRateStat('points_per_second', earnedPoints, sessionSeconds);
 ```
 
 **Note:** Steam maintains a running average across all sessions automatically.
@@ -201,14 +201,14 @@ Request stats for another user (friend). Must be called before getting user stat
 const friendSteamId = '76561197960287930';
 
 // Request friend's stats
-await steam.requestUserStatsForStats(friendSteamId);
+await steam.stats.requestUserStatsForStats(friendSteamId);
 
 // Wait for Steam to process the request
 await new Promise(resolve => setTimeout(resolve, 2000));
 steam.runCallbacks();
 
 // Now you can get their stats
-const friendKills = await steam.getUserStatInt(friendSteamId, 'total_kills');
+const friendKills = await steam.stats.getUserStatInt(friendSteamId, 'total_kills');
 ```
 
 **Important:** 
@@ -244,20 +244,20 @@ interface UserStat {
 **Example:**
 ```typescript
 async function compareWithFriend(friendSteamId: string) {
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   steam.init({ appId: YOUR_APP_ID });
   
   // Get your stats
-  const myKillsStat = await steam.getStatInt('total_kills');
-  const myGamesStat = await steam.getStatInt('games_played');
+  const myKillsStat = await steam.stats.getStatInt('total_kills');
+  const myGamesStat = await steam.stats.getStatInt('games_played');
   
   // Get friend's stats
-  await steam.requestUserStatsForStats(friendSteamId);
+  await steam.stats.requestUserStatsForStats(friendSteamId);
   await new Promise(resolve => setTimeout(resolve, 2000));
   steam.runCallbacks();
   
-  const friendKills = await steam.getUserStatInt(friendSteamId, 'total_kills');
-  const friendGames = await steam.getUserStatInt(friendSteamId, 'games_played');
+  const friendKills = await steam.stats.getUserStatInt(friendSteamId, 'total_kills');
+  const friendGames = await steam.stats.getUserStatInt(friendSteamId, 'games_played');
   
   if (myKillsStat && myGamesStat && friendKills && friendGames) {
     console.log('Comparison:');
@@ -287,12 +287,12 @@ Get a float stat value for another user (friend). Must call `requestUserStatsFor
 
 **Example:**
 ```typescript
-const friendDistance = await steam.getUserStatFloat(friendSteamId, 'total_distance');
+const friendDistance = await steam.stats.getUserStatFloat(friendSteamId, 'total_distance');
 if (friendDistance) {
   console.log(`${friendDistance.name}: ${friendDistance.value.toFixed(2)} km`);
 }
 
-const friendAccuracy = await steam.getUserStatFloat(friendSteamId, 'accuracy');
+const friendAccuracy = await steam.stats.getUserStatFloat(friendSteamId, 'accuracy');
 if (friendAccuracy) {
   console.log(`${friendAccuracy.name}: ${friendAccuracy.value.toFixed(1)}%`);
 }
@@ -319,13 +319,13 @@ Request global stats data from Steam. Must be called before getting global stats
 **Example:**
 ```typescript
 // Request global stats without history
-await steam.requestGlobalStats(0);
+await steam.stats.requestGlobalStats(0);
 
 // Request global stats with 7 days of history
-await steam.requestGlobalStats(7);
+await steam.stats.requestGlobalStats(7);
 
 // Request global stats with maximum history (30 days)
-await steam.requestGlobalStats(30);
+await steam.stats.requestGlobalStats(30);
 
 // Wait for Steam to process
 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -362,18 +362,18 @@ interface GlobalStat {
 **Example:**
 ```typescript
 async function viewGlobalStats() {
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   steam.init({ appId: YOUR_APP_ID });
   
   // Request global stats
-  await steam.requestGlobalStats(0);
+  await steam.stats.requestGlobalStats(0);
   await new Promise(resolve => setTimeout(resolve, 2000));
   steam.runCallbacks();
   
   // Get aggregated stats
-  const totalPlayers = await steam.getGlobalStatInt('global.total_players');
-  const totalKills = await steam.getGlobalStatInt('global.total_kills');
-  const totalGames = await steam.getGlobalStatInt('global.games_played');
+  const totalPlayers = await steam.stats.getGlobalStatInt('global.total_players');
+  const totalKills = await steam.stats.getGlobalStatInt('global.total_kills');
+  const totalGames = await steam.stats.getGlobalStatInt('global.games_played');
   
   if (totalPlayers && totalKills && totalGames) {
     console.log('🌍 Global Statistics:');
@@ -405,12 +405,12 @@ Get a global stat value (double). Must call `requestGlobalStats()` first.
 
 **Example:**
 ```typescript
-const totalDistance = await steam.getGlobalStatDouble('global.total_distance');
+const totalDistance = await steam.stats.getGlobalStatDouble('global.total_distance');
 if (totalDistance) {
   console.log(`Total distance traveled by all players: ${totalDistance.value} km`);
 }
 
-const avgAccuracy = await steam.getGlobalStatDouble('global.average_accuracy');
+const avgAccuracy = await steam.stats.getGlobalStatDouble('global.average_accuracy');
 if (avgAccuracy) {
   console.log(`Global average accuracy: ${avgAccuracy.value.toFixed(2)}%`);
 }
@@ -442,7 +442,7 @@ interface GlobalStatHistory {
 
 **Example:**
 ```typescript
-const historyData = await steam.getGlobalStatHistoryInt('global.daily_kills', 7);
+const historyData = await steam.stats.getGlobalStatHistoryInt('global.daily_kills', 7);
 
 if (historyData) {
   console.log('Last 7 days of global kills:');
@@ -477,7 +477,7 @@ Get historical data for a global stat (double). Returns daily values.
 
 **Example:**
 ```typescript
-const playtimeData = await steam.getGlobalStatHistoryDouble('global.daily_playtime', 30);
+const playtimeData = await steam.stats.getGlobalStatHistoryDouble('global.daily_playtime', 30);
 
 if (playtimeData) {
   console.log('Last 30 days of global playtime:');
@@ -564,19 +564,19 @@ interface GlobalStatHistory {
 ### Example 1: Track Game Session
 
 ```typescript
-import Steam from 'steamworks-ffi-node';
+import SteamworksSDK from 'steamworks-ffi-node';
 
 async function trackGameSession() {
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   steam.init({ appId: YOUR_APP_ID });
   
   // Session start
   const sessionStart = Date.now();
   
   // Get current stats
-  const gamesPlayedStat = await steam.getStatInt('games_played');
-  const totalKillsStat = await steam.getStatInt('total_kills');
-  const totalDistanceStat = await steam.getStatFloat('total_distance');
+  const gamesPlayedStat = await steam.stats.getStatInt('games_played');
+  const totalKillsStat = await steam.stats.getStatInt('total_kills');
+  const totalDistanceStat = await steam.stats.getStatFloat('total_distance');
   
   const gamesPlayed = gamesPlayedStat ? gamesPlayedStat.value : 0;
   const totalKills = totalKillsStat ? totalKillsStat.value : 0;
@@ -587,14 +587,14 @@ async function trackGameSession() {
   const sessionDistance = 1234.56;
   
   // Update stats
-  await steam.setStatInt('games_played', gamesPlayed + 1);
-  await steam.setStatInt('total_kills', totalKills + sessionKills);
-  await steam.setStatFloat('total_distance', totalDistance + sessionDistance);
+  await steam.stats.setStatInt('games_played', gamesPlayed + 1);
+  await steam.stats.setStatInt('total_kills', totalKills + sessionKills);
+  await steam.stats.setStatFloat('total_distance', totalDistance + sessionDistance);
   
   // Update average rate stats
   const sessionEnd = Date.now();
   const sessionSeconds = (sessionEnd - sessionStart) / 1000;
-  await steam.updateAvgRateStat('kills_per_hour', sessionKills, sessionSeconds);
+  await steam.stats.updateAvgRateStat('kills_per_hour', sessionKills, sessionSeconds);
   
   console.log('✅ Session stats saved to Steam');
   
@@ -610,12 +610,12 @@ trackGameSession();
 
 ```typescript
 async function createLeaderboard(friendSteamIds: string[]) {
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   steam.init({ appId: YOUR_APP_ID });
   
   // Get your stats
-  const myKillsStat = await steam.getStatInt('total_kills');
-  const myGamesStat = await steam.getStatInt('games_played');
+  const myKillsStat = await steam.stats.getStatInt('total_kills');
+  const myGamesStat = await steam.stats.getStatInt('games_played');
   
   const myKills = myKillsStat ? myKillsStat.value : 0;
   const myGames = myGamesStat ? myGamesStat.value : 0;
@@ -627,12 +627,12 @@ async function createLeaderboard(friendSteamIds: string[]) {
   
   // Get friends' stats
   for (const friendId of friendSteamIds) {
-    await steam.requestUserStatsForStats(friendId);
+    await steam.stats.requestUserStatsForStats(friendId);
     await new Promise(resolve => setTimeout(resolve, 2000));
     steam.runCallbacks();
     
-    const friendKillsStat = await steam.getUserStatInt(friendId, 'total_kills');
-    const friendGamesStat = await steam.getUserStatInt(friendId, 'games_played');
+    const friendKillsStat = await steam.stats.getUserStatInt(friendId, 'total_kills');
+    const friendGamesStat = await steam.stats.getUserStatInt(friendId, 'games_played');
     
     const friendKills = friendKillsStat ? friendKillsStat.value : 0;
     const friendGames = friendGamesStat ? friendGamesStat.value : 0;
@@ -666,20 +666,20 @@ async function createLeaderboard(friendSteamIds: string[]) {
 
 ```typescript
 async function showGlobalDashboard() {
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   steam.init({ appId: YOUR_APP_ID });
   
   // Request global stats with 30 days history
-  await steam.requestGlobalStats(30);
+  await steam.stats.requestGlobalStats(30);
   await new Promise(resolve => setTimeout(resolve, 2000));
   steam.runCallbacks();
   
   console.log('\n🌍 GLOBAL STATISTICS DASHBOARD\n');
   
   // Overall stats
-  const totalPlayers = await steam.getGlobalStatInt('global.total_players');
-  const totalKills = await steam.getGlobalStatInt('global.total_kills');
-  const totalGames = await steam.getGlobalStatInt('global.games_played');
+  const totalPlayers = await steam.stats.getGlobalStatInt('global.total_players');
+  const totalKills = await steam.stats.getGlobalStatInt('global.total_kills');
+  const totalGames = await steam.stats.getGlobalStatInt('global.games_played');
   
   if (totalPlayers && totalKills && totalGames) {
     console.log('📊 Overall Statistics:');
@@ -690,7 +690,7 @@ async function showGlobalDashboard() {
   }
   
   // Historical trends
-  const killHistoryData = await steam.getGlobalStatHistoryInt('global.daily_kills', 7);
+  const killHistoryData = await steam.stats.getGlobalStatHistoryInt('global.daily_kills', 7);
   if (killHistoryData) {
     console.log('📈 Last 7 Days Trend:');
     killHistoryData.history.forEach((kills, index) => {
@@ -713,7 +713,7 @@ async function showGlobalDashboard() {
 Stats may not be configured or available:
 
 ```typescript
-const killsStat = await steam.getStatInt('total_kills');
+const killsStat = await steam.stats.getStatInt('total_kills');
 if (killsStat) {
   console.log(`Kills: ${killsStat.value}`);
 } else {
@@ -733,14 +733,14 @@ Always wait for Steam callbacks:
 
 ```typescript
 // ❌ Wrong
-await steam.requestGlobalStats(7);
-const stat = await steam.getGlobalStatInt('global.kills'); // null!
+await steam.stats.requestGlobalStats(7);
+const stat = await steam.stats.getGlobalStatInt('global.kills'); // null!
 
 // ✅ Correct
-await steam.requestGlobalStats(7);
+await steam.stats.requestGlobalStats(7);
 await new Promise(resolve => setTimeout(resolve, 2000));
 steam.runCallbacks();
-const stat = await steam.getGlobalStatInt('global.kills'); // works!
+const stat = await steam.stats.getGlobalStatInt('global.kills'); // works!
 ```
 
 ### 4. Batch Stat Updates
@@ -749,10 +749,10 @@ Update multiple stats together for efficiency:
 
 ```typescript
 // Update all session stats at once
-await steam.setStatInt('games_played', gamesPlayed + 1);
-await steam.setStatInt('total_kills', totalKills + sessionKills);
-await steam.setStatFloat('total_distance', totalDistance + sessionDistance);
-await steam.updateAvgRateStat('kills_per_hour', sessionKills, sessionSeconds);
+await steam.stats.setStatInt('games_played', gamesPlayed + 1);
+await steam.stats.setStatInt('total_kills', totalKills + sessionKills);
+await steam.stats.setStatFloat('total_distance', totalDistance + sessionDistance);
+await steam.stats.updateAvgRateStat('kills_per_hour', sessionKills, sessionSeconds);
 ```
 
 ### 5. Working with Typed Objects
@@ -760,7 +760,7 @@ await steam.updateAvgRateStat('kills_per_hour', sessionKills, sessionSeconds);
 All getter methods return typed objects with metadata:
 
 ```typescript
-const killsStat = await steam.getGlobalStatInt('global.total_kills');
+const killsStat = await steam.stats.getGlobalStatInt('global.total_kills');
 if (killsStat) {
   // Access the value
   console.log(`Total: ${killsStat.value}`);
@@ -779,13 +779,13 @@ All stat methods return `null` or `false` on error and log warnings:
 
 ```typescript
 // Returns null on error
-const stat = await steam.getStatInt('invalid_stat');
+const stat = await steam.stats.getStatInt('invalid_stat');
 if (stat === null) {
   console.log('Stat not found - check Steamworks configuration');
 }
 
 // Returns false on error
-const success = await steam.setStatInt('my_stat', 100);
+const success = await steam.stats.setStatInt('my_stat', 100);
 if (!success) {
   console.log('Failed to set stat - check initialization');
 }

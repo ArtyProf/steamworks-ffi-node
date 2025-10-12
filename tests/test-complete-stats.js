@@ -3,12 +3,12 @@
  * Tests all stats operations including get/set, user stats, and global stats
  */
 
-const Steam = require('../dist/steam').default;
+const SteamworksSDK = require('../dist/index').default;
 
 async function testStatsAPI() {
   console.log('🧪 Starting Steam Stats API Test\n');
   
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   
   // Initialize Steam
   console.log('🔧 Initializing Steam API...');
@@ -36,10 +36,10 @@ async function testStatsAPI() {
   
   // Test setting integer stats
   console.log('📝 Setting integer stat "NumGames" to 10...');
-  await steam.setStatInt('NumGames', 10);
+  await steam.stats.setStatInt('NumGames', 10);
   
   console.log('📝 Setting integer stat "NumWins" to 5...');
-  await steam.setStatInt('NumWins', 5);
+  await steam.stats.setStatInt('NumWins', 5);
   
   // Give Steam a moment to process
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -47,8 +47,8 @@ async function testStatsAPI() {
   
   // Test getting integer stats
   console.log('\n📖 Reading back integer stats...');
-  const numGamesStat = await steam.getStatInt('NumGames');
-  const numWinsStat = await steam.getStatInt('NumWins');
+  const numGamesStat = await steam.stats.getStatInt('NumGames');
+  const numWinsStat = await steam.stats.getStatInt('NumWins');
   
   if (numGamesStat) {
     console.log(`   ✅ NumGames: ${numGamesStat.value} (type: ${numGamesStat.type})`);
@@ -59,21 +59,21 @@ async function testStatsAPI() {
   
   // Test setting float stats
   console.log('\n📝 Setting float stat "MaxFeetTraveled" to 5280.5...');
-  await steam.setStatFloat('MaxFeetTraveled', 5280.5);
+  await steam.stats.setStatFloat('MaxFeetTraveled', 5280.5);
   
   await new Promise(resolve => setTimeout(resolve, 500));
   steam.runCallbacks();
   
   // Test getting float stats
   console.log('📖 Reading back float stat...');
-  const maxFeetStat = await steam.getStatFloat('MaxFeetTraveled');
+  const maxFeetStat = await steam.stats.getStatFloat('MaxFeetTraveled');
   if (maxFeetStat) {
     console.log(`   ✅ MaxFeetTraveled: ${maxFeetStat.value} (type: ${maxFeetStat.type})`);
   }
   
   // Test average rate stat
   console.log('\n📝 Updating average rate stat "AverageRate" (15 kills in 3600s)...');
-  await steam.updateAvgRateStat('AverageRate', 15, 3600);
+  await steam.stats.updateAvgRateStat('AverageRate', 15, 3600);
   
   await new Promise(resolve => setTimeout(resolve, 500));
   steam.runCallbacks();
@@ -84,7 +84,7 @@ async function testStatsAPI() {
   console.log('=' .repeat(60) + '\n');
   
   console.log('📡 Requesting global stats (7 days history)...');
-  const globalStatsRequested = await steam.requestGlobalStats(7);
+  const globalStatsRequested = await steam.stats.requestGlobalStats(7);
   
   if (globalStatsRequested) {
     console.log('✅ Global stats request sent');
@@ -97,7 +97,7 @@ async function testStatsAPI() {
     console.log('\n📖 Attempting to read global stats...');
     
     // Test getGlobalStatInt (int64)
-    const globalTotalInt = await steam.getGlobalStatInt('global.total_games');
+    const globalTotalInt = await steam.stats.getGlobalStatInt('global.total_games');
     if (globalTotalInt) {
       console.log(`   🌍 Global Total Games (int64): ${globalTotalInt.value} (type: ${globalTotalInt.type})`);
     } else {
@@ -105,7 +105,7 @@ async function testStatsAPI() {
     }
     
     // Test getGlobalStatDouble
-    const globalTotalDouble = await steam.getGlobalStatDouble('global.total_playtime');
+    const globalTotalDouble = await steam.stats.getGlobalStatDouble('global.total_playtime');
     if (globalTotalDouble) {
       console.log(`   🌍 Global Total Playtime (double): ${globalTotalDouble.value} (type: ${globalTotalDouble.type})`);
     } else {
@@ -113,7 +113,7 @@ async function testStatsAPI() {
     }
     
     // Test getGlobalStatHistoryInt (int64 array)
-    const historyIntData = await steam.getGlobalStatHistoryInt('global.daily_games', 7);
+    const historyIntData = await steam.stats.getGlobalStatHistoryInt('global.daily_games', 7);
     if (historyIntData && historyIntData.history.length > 0) {
       console.log(`   🌍 Global stat history INT64 (${historyIntData.history.length} days, type: ${historyIntData.type}):`);
       historyIntData.history.forEach((value, index) => {
@@ -125,7 +125,7 @@ async function testStatsAPI() {
     }
     
     // Test getGlobalStatHistoryDouble
-    const historyDoubleData = await steam.getGlobalStatHistoryDouble('global.daily_playtime', 7);
+    const historyDoubleData = await steam.stats.getGlobalStatHistoryDouble('global.daily_playtime', 7);
     if (historyDoubleData && historyDoubleData.history.length > 0) {
       console.log(`   🌍 Global stat history DOUBLE (${historyDoubleData.history.length} days, type: ${historyDoubleData.type}):`);
       historyDoubleData.history.forEach((value, index) => {
@@ -151,7 +151,7 @@ async function testStatsAPI() {
   
   if (testSteamId && testSteamId !== '0') {
     console.log(`📡 Requesting user stats for Steam ID: ${testSteamId}...`);
-    const userStatsRequested = await steam.requestUserStatsForStats(testSteamId);
+    const userStatsRequested = await steam.stats.requestUserStats(testSteamId);
     
     if (userStatsRequested) {
       console.log('✅ User stats request sent');
@@ -164,7 +164,7 @@ async function testStatsAPI() {
       console.log('\n📖 Reading user stats...');
       
       // Test getUserStatInt
-      const userGamesStat = await steam.getUserStatInt(testSteamId, 'NumGames');
+      const userGamesStat = await steam.stats.getUserStatInt(testSteamId, 'NumGames');
       if (userGamesStat) {
         console.log(`   ✅ User stat (int) "NumGames": ${userGamesStat.value} (type: ${userGamesStat.type}, steamId: ${userGamesStat.steamId})`);
       } else {
@@ -172,7 +172,7 @@ async function testStatsAPI() {
       }
       
       // Test getUserStatFloat
-      const userFeetStat = await steam.getUserStatFloat(testSteamId, 'MaxFeetTraveled');
+      const userFeetStat = await steam.stats.getUserStatFloat(testSteamId, 'MaxFeetTraveled');
       if (userFeetStat) {
         console.log(`   ✅ User stat (float) "MaxFeetTraveled": ${userFeetStat.value} (type: ${userFeetStat.type}, steamId: ${userFeetStat.steamId})`);
       } else {
@@ -181,9 +181,9 @@ async function testStatsAPI() {
       
       console.log('\n💡 To test with a friend:');
       console.log('   1. Get friend\'s Steam ID (e.g., from their profile URL)');
-      console.log('   2. Call: await steam.requestUserStatsForStats("76561197960287930")');
+      console.log('   2. Call: await steam.stats.requestUserStats("76561197960287930")');
       console.log('   3. Wait and run callbacks');
-      console.log('   4. Call: const stat = await steam.getUserStatInt("76561197960287930", "StatName")');
+      console.log('   4. Call: const stat = await steam.stats.getUserStatInt("76561197960287930", "StatName")');
       console.log('   5. Access: stat.value, stat.type, stat.steamId');
     } else {
       console.log('⚠️ Failed to request user stats');
@@ -191,12 +191,12 @@ async function testStatsAPI() {
   } else {
     console.log('ℹ️ Steam ID not available, showing example usage instead:');
     console.log('📝 Example usage:');
-    console.log('   await steam.requestUserStatsForStats("76561197960287930");');
+    console.log('   await steam.stats.requestUserStats("76561197960287930");');
     console.log('   await new Promise(resolve => setTimeout(resolve, 2000));');
     console.log('   steam.runCallbacks();');
-    console.log('   const friendGamesStat = await steam.getUserStatInt("76561197960287930", "NumGames");');
+    console.log('   const friendGamesStat = await steam.stats.getUserStatInt("76561197960287930", "NumGames");');
     console.log('   console.log(`Games: ${friendGamesStat.value}`);');
-    console.log('   const friendFeetStat = await steam.getUserStatFloat("76561197960287930", "MaxFeetTraveled");');
+    console.log('   const friendFeetStat = await steam.stats.getUserStatFloat("76561197960287930", "MaxFeetTraveled");');
     console.log('   console.log(`Distance: ${friendFeetStat.value}`);');
   }
   

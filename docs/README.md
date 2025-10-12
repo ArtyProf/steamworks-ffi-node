@@ -2,6 +2,30 @@
 
 Complete API documentation for all Steamworks FFI functionality.
 
+## 🎯 Manager-Based API
+
+Steamworks FFI uses a **manager-based architecture** for better organization:
+
+```typescript
+import SteamworksSDK from 'steamworks-ffi-node';
+
+const steam = new SteamworksSDK();
+steam.init({ appId: 480 });
+
+// Access features through specialized managers
+steam.achievements.*  // Achievement operations
+steam.stats.*         // Statistics operations  
+steam.leaderboards.*  // Leaderboard operations
+```
+
+This design:
+- ✅ **Groups related functions** - Easy to discover all achievement/stats/leaderboard methods
+- ✅ **Clear namespacing** - No naming conflicts
+- ✅ **Better IDE support** - Autocomplete shows relevant methods
+- ✅ **Logical organization** - Matches Steamworks SDK structure
+
+---
+
 ## 📚 Available Documentation
 
 ### Core API
@@ -46,6 +70,7 @@ Complete API documentation for all Steamworks FFI functionality.
 ### Testing
 - Run Achievement Tests: `npm run test:achievements`
 - Run Stats Tests: `npm run test:stats`
+- Run Leaderboard Tests: `npm run test:leaderboards`
 
 ### Additional Resources
 - [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)

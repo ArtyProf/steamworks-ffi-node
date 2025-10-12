@@ -46,15 +46,15 @@ async function testAllAchievementFunctions() {
     console.log('─────────────────────────────────────────────');
     
     // Function 1: getAllAchievements()
-    const allAchievements = await steam.getAllAchievements();
+    const allAchievements = await steam.achievements.getAllAchievements();
     console.log(`   📋 Total achievements discovered: ${allAchievements.length}`);
-    
-    // Function 6: getTotalAchievementCount() 
-    const totalCount = await steam.getTotalAchievementCount();
+
+    // Function 6: getTotalAchievementCount()
+    const totalCount = await steam.achievements.getTotalAchievementCount();
     console.log(`   🔢 Total Count (direct API): ${totalCount}`);
     
     // Function 7: getUnlockedAchievementCount()
-    const unlockedCount = await steam.getUnlockedAchievementCount();
+    const unlockedCount = await steam.achievements.getUnlockedAchievementCount();
     console.log(`   🏅 Unlocked Count: ${unlockedCount}/${totalCount}`);
     
     if (allAchievements.length > 0) {
@@ -80,11 +80,11 @@ async function testAllAchievementFunctions() {
       console.log(`   🔸 API Name: ${testAchievement.apiName}`);
       
       // Function 4: isAchievementUnlocked()
-      const isUnlocked = await steam.isAchievementUnlocked(testAchievement.apiName);
+      const isUnlocked = await steam.achievements.isAchievementUnlocked(testAchievement.apiName);
       console.log(`   🔸 Initial Status: ${isUnlocked ? 'Unlocked ✅' : 'Locked 🔒'}`);
       
       // Function 5: getAchievementByName()
-      const specificAch = await steam.getAchievementByName(testAchievement.apiName);
+      const specificAch = await steam.achievements.getAchievementByName(testAchievement.apiName);
       if (specificAch) {
         console.log(`   📊 Individual Query: ${specificAch.displayName} - ${specificAch.unlocked ? 'Unlocked' : 'Locked'}`);
       }
@@ -93,22 +93,22 @@ async function testAllAchievementFunctions() {
       console.log('   🧪 Testing unlock/clear cycle...');
       console.log(`   🔓 Attempting to unlock "${testAchievement.apiName}"...`);
       
-      const unlocked = await steam.unlockAchievement(testAchievement.apiName);
+      const unlocked = await steam.achievements.unlockAchievement(testAchievement.apiName);
       if (unlocked) {
         console.log('   ✅ Unlock successful!');
         
         // Verify unlock
-        const verifyUnlock = await steam.isAchievementUnlocked(testAchievement.apiName);
+        const verifyUnlock = await steam.achievements.isAchievementUnlocked(testAchievement.apiName);
         console.log(`   🔍 Verification: ${verifyUnlock ? 'Now unlocked ✅' : 'Still locked 🔒'}`);
         
         // Clear achievement (for testing)
         console.log('   🔒 Testing clear operation...');
-        const cleared = await steam.clearAchievement(testAchievement.apiName);
+        const cleared = await steam.achievements.clearAchievement(testAchievement.apiName);
         if (cleared) {
           console.log('   ✅ Clear successful');
           
           // Verify clear
-          const verifyClear = await steam.isAchievementUnlocked(testAchievement.apiName);
+          const verifyClear = await steam.achievements.isAchievementUnlocked(testAchievement.apiName);
           console.log(`   🔍 After clear: ${verifyClear ? 'Still unlocked ✅' : 'Now locked 🔒'}`);
         }
       }
@@ -121,13 +121,13 @@ async function testAllAchievementFunctions() {
       console.log('──────────────────────────────────────────────');
       
       // Function 8: getAchievementIcon()
-      const iconHandle = await steam.getAchievementIcon(testAchievement.apiName);
+      const iconHandle = await steam.achievements.getAchievementIcon(testAchievement.apiName);
       console.log(`   🎨 Icon handle for "${testAchievement.apiName}": ${iconHandle}`);
       console.log(`   ${iconHandle > 0 ? '✅ Icon available' : '⚠️  No icon or still loading'}`);
       
       // Function 21: getAllAchievementsWithIcons() (bonus function)
       console.log('   🖼️  Getting all achievements with icons...');
-      const achsWithIcons = await steam.getAllAchievementsWithIcons();
+      const achsWithIcons = await steam.achievements.getAllAchievementsWithIcons();
       const withIcons = achsWithIcons.filter(a => a.iconHandle > 0).length;
       console.log(`   📊 Achievements with loaded icons: ${withIcons}/${achsWithIcons.length}`);
       console.log('');
@@ -140,11 +140,11 @@ async function testAllAchievementFunctions() {
       
       // Function 9: indicateAchievementProgress()
       console.log(`   📊 Testing progress indication for "${testAchievement.apiName}"...`);
-      const progressIndicated = await steam.indicateAchievementProgress(testAchievement.apiName, 50, 100);
+      const progressIndicated = await steam.achievements.indicateAchievementProgress(testAchievement.apiName, 50, 100);
       console.log(`   ${progressIndicated ? '✅' : '❌'} Progress indication: ${progressIndicated ? 'Success' : 'Failed'}`);
       
       // Function 10: getAchievementProgressLimitsInt()
-      const intLimits = await steam.getAchievementProgressLimitsInt(testAchievement.apiName);
+      const intLimits = await steam.achievements.getAchievementProgressLimitsInt(testAchievement.apiName);
       if (intLimits) {
         console.log(`   🔢 Integer Progress Limits: ${intLimits.minProgress} - ${intLimits.maxProgress}`);
       } else {
@@ -152,7 +152,7 @@ async function testAllAchievementFunctions() {
       }
       
       // Function 11: getAchievementProgressLimitsFloat()
-      const floatLimits = await steam.getAchievementProgressLimitsFloat(testAchievement.apiName);
+      const floatLimits = await steam.achievements.getAchievementProgressLimitsFloat(testAchievement.apiName);
       if (floatLimits) {
         console.log(`   🔢 Float Progress Limits: ${floatLimits.minProgress} - ${floatLimits.maxProgress}`);
       } else {
@@ -169,7 +169,7 @@ async function testAllAchievementFunctions() {
     
     // Function 14: requestGlobalAchievementPercentages()
     console.log('   📡 Requesting global achievement percentages...');
-    const globalRequested = await steam.requestGlobalAchievementPercentages();
+    const globalRequested = await steam.achievements.requestGlobalAchievementPercentages();
     console.log(`   ${globalRequested ? '✅' : '❌'} Global stats request: ${globalRequested ? 'Sent' : 'Failed'}`);
     
     if (globalRequested) {
@@ -184,7 +184,7 @@ async function testAllAchievementFunctions() {
         const testAch = allAchievements[0];
         
         // Function 15: getAchievementAchievedPercent()
-        const percent = await steam.getAchievementAchievedPercent(testAch.apiName);
+        const percent = await steam.achievements.getAchievementAchievedPercent(testAch.apiName);
         if (percent !== null) {
           console.log(`   📊 Global unlock rate for "${testAch.displayName}": ${percent.toFixed(2)}%`);
         } else {
@@ -193,18 +193,18 @@ async function testAllAchievementFunctions() {
         
         // Function 16: getAllAchievementsWithGlobalStats()
         console.log('   🌐 Getting all achievements with global statistics...');
-        const globalStats = await steam.getAllAchievementsWithGlobalStats();
+        const globalStats = await steam.achievements.getAllAchievementsWithGlobalStats();
         const availableStats = globalStats.filter(a => a.globalUnlockPercentage > 0).length;
         console.log(`   📊 Achievements with global stats: ${availableStats}/${globalStats.length}`);
         
         // Function 17 & 18: getMostAchievedAchievementInfo() & getNextMostAchievedAchievementInfo()
         console.log('   🏆 Getting achievements sorted by popularity...');
-        const mostAchieved = await steam.getMostAchievedAchievementInfo();
+        const mostAchieved = await steam.achievements.getMostAchievedAchievementInfo();
         if (mostAchieved) {
           console.log(`   👑 Most achieved: "${mostAchieved.apiName}" (${mostAchieved.percent.toFixed(1)}%)`);
           
           // Get next most achieved
-          const nextMost = await steam.getNextMostAchievedAchievementInfo(mostAchieved.iterator);
+          const nextMost = await steam.achievements.getNextMostAchievedAchievementInfo(mostAchieved.iterator);
           if (nextMost) {
             console.log(`   🥈 Second most: "${nextMost.apiName}" (${nextMost.percent.toFixed(1)}%)`);
           }
@@ -214,7 +214,7 @@ async function testAllAchievementFunctions() {
         
         // Function 19: getAllAchievementsSortedByPopularity()
         console.log('   📊 Getting complete popularity ranking...');
-        const sortedByPopularity = await steam.getAllAchievementsSortedByPopularity();
+        const sortedByPopularity = await steam.achievements.getAllAchievementsSortedByPopularity();
         if (sortedByPopularity.length > 0) {
           console.log(`   📈 Successfully ranked ${sortedByPopularity.length} achievements by global popularity`);
           console.log('   🏆 Top 3 most achieved:');
@@ -239,7 +239,7 @@ async function testAllAchievementFunctions() {
     
     // Function 12: requestUserStats()
     console.log(`   📡 Requesting user stats for Steam ID: ${currentSteamId}...`);
-    const userStatsRequested = await steam.requestUserStats(currentSteamId);
+    const userStatsRequested = await steam.achievements.requestUserStats(currentSteamId);
     console.log(`   ${userStatsRequested ? '✅' : '❌'} User stats request: ${userStatsRequested ? 'Sent' : 'Failed'}`);
     
     if (userStatsRequested && allAchievements.length > 0) {
@@ -250,7 +250,7 @@ async function testAllAchievementFunctions() {
       
       // Function 13: getUserAchievement()
       const testAch = allAchievements[0];
-      const userAchievement = await steam.getUserAchievement(currentSteamId, testAch.apiName);
+      const userAchievement = await steam.achievements.getUserAchievement(currentSteamId, testAch.apiName);
       if (userAchievement) {
         console.log(`   👤 User achievement "${userAchievement.displayName}": ${userAchievement.unlocked ? 'Unlocked ✅' : 'Locked 🔒'}`);
         if (userAchievement.unlocked && userAchievement.unlockTime > 0) {
@@ -272,7 +272,7 @@ async function testAllAchievementFunctions() {
     // Function 20: resetAllStats() - WARNING: This is destructive!
     console.log('   ⚠️  resetAllStats() - SKIPPED for safety');
     console.log('      This function would reset ALL user statistics and achievements');
-    console.log('      Use with extreme caution: await steam.resetAllStats(true);');
+    console.log('      Use with extreme caution: await steam.achievements.resetAllStats(true);');
     console.log('');
 
     // ═══════════════════════════════════════════════════════════════

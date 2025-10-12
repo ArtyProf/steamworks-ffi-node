@@ -59,37 +59,37 @@ npm install steamworks-ffi-node
 ### Basic Usage
 
 ```typescript
-import Steam from 'steamworks-ffi-node';
+import SteamworksSDK from 'steamworks-ffi-node';
 
 // Initialize Steam connection
-const steam = Steam.getInstance();
+const steam = new SteamworksSDK();
 const initialized = steam.init({ appId: 480 }); // Your Steam App ID
 
 if (initialized) {
   // Get achievements from Steam servers
-  const achievements = await steam.getAllAchievements();
+  const achievements = await steam.achievements.getAllAchievements();
   console.log('Steam achievements:', achievements);
   
   // Unlock achievement (permanent in Steam!)
-  await steam.unlockAchievement('ACH_WIN_ONE_GAME');
+  await steam.achievements.unlockAchievement('ACH_WIN_ONE_GAME');
   
   // Check unlock status from Steam
-  const isUnlocked = await steam.isAchievementUnlocked('ACH_WIN_ONE_GAME');
+  const isUnlocked = await steam.achievements.isAchievementUnlocked('ACH_WIN_ONE_GAME');
   console.log('Achievement unlocked:', isUnlocked);
   
   // Track user statistics
-  const kills = await steam.getStatInt('total_kills') || 0;
-  await steam.setStatInt('total_kills', kills + 1);
+  const kills = await steam.stats.getStatInt('total_kills') || 0;
+  await steam.stats.setStatInt('total_kills', kills + 1);
   
   // Get global statistics
-  await steam.requestGlobalStats(7);
+  await steam.stats.requestGlobalStats(7);
   await new Promise(resolve => setTimeout(resolve, 2000));
   steam.runCallbacks();
-  const globalKills = await steam.getGlobalStatInt('global.total_kills');
+  const globalKills = await steam.stats.getGlobalStatInt('global.total_kills');
   console.log('Total kills worldwide:', globalKills);
   
   // Work with leaderboards
-  const leaderboard = await steam.findOrCreateLeaderboard(
+  const leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
     'HighScores',
     1, // Descending (higher is better)
     0  // Numeric display
@@ -97,14 +97,14 @@ if (initialized) {
   
   if (leaderboard) {
     // Upload score
-    await steam.uploadLeaderboardScore(
+    await steam.leaderboards.uploadLeaderboardScore(
       leaderboard.handle,
       1000,
       1  // Keep best score
     );
     
     // Download top 10 scores
-    const topScores = await steam.downloadLeaderboardEntries(
+    const topScores = await steam.leaderboards.downloadLeaderboardEntries(
       leaderboard.handle,
       0, // Global
       0,
@@ -121,19 +121,19 @@ steam.shutdown();
 ### JavaScript (CommonJS)
 
 ```javascript
-const Steam = require('steamworks-ffi-node').default;
+const SteamworksSDK = require('steamworks-ffi-node').default;
 
 async function example() {
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   
   if (steam.init({ appId: 480 })) {
-    const achievements = await steam.getAllAchievements();
+    const achievements = await steam.achievements.getAllAchievements();
     console.log(`Found ${achievements.length} achievements`);
     
     // Unlock first locked achievement
     const locked = achievements.find(a => !a.unlocked);
     if (locked) {
-      await steam.unlockAchievement(locked.apiName);
+      await steam.achievements.unlockAchievement(locked.apiName);
     }
   }
   
@@ -161,16 +161,16 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 This library connects directly to the Steam client and Steamworks SDK:
 
 ```javascript
-// Steam API - no mocking!
-const steam = Steam.getInstance();
+// Steamworks API
+const steam = new SteamworksSDK();
 steam.init({ appId: 480 }); // Connects to actual Steam
 
 // Live achievements from Steam servers
-const achievements = await steam.getAllAchievements();
+const achievements = await steam.achievements.getAllAchievements();
 console.log(achievements); // Achievement data from your Steam app
 
 // Permanent achievement unlock in Steam
-await steam.unlockAchievement('YOUR_ACHIEVEMENT');
+await steam.achievements.unlockAchievement('YOUR_ACHIEVEMENT');
 // ^ This shows up in Steam overlay and is saved permanently
 ```
 
@@ -188,10 +188,10 @@ For Electron applications, use it in your main process:
 ```typescript
 // main.ts
 import { app } from 'electron';
-import Steam from 'steamworks-ffi-node';
+import SteamworksSDK from 'steamworks-ffi-node';
 
 app.whenReady().then(() => {
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   
   if (steam.init({ appId: YOUR_STEAM_APP_ID })) {
     console.log('Steam initialized in Electron!');
@@ -202,7 +202,8 @@ app.whenReady().then(() => {
 });
 
 app.on('before-quit', () => {
-  Steam.getInstance().shutdown();
+  const steam = new SteamworksSDK();
+  steam.shutdown();
 });
 ```
 

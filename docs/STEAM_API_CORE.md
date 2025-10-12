@@ -36,9 +36,9 @@ interface SteamInitOptions {
 
 **Example:**
 ```typescript
-import Steam from 'steamworks-ffi-node';
+import SteamworksSDK from 'steamworks-ffi-node';
 
-const steam = Steam.getInstance();
+const steam = new SteamworksSDK();
 const success = steam.init({ appId: 480 });
 
 if (success) {
@@ -308,10 +308,10 @@ if (!status.initialized) {
 ## Complete Example
 
 ```typescript
-import Steam from 'steamworks-ffi-node';
+import SteamworksSDK from 'steamworks-ffi-node';
 
 async function steamExample() {
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   
   // Check if Steam is running
   if (!steam.isSteamRunning()) {
@@ -335,8 +335,8 @@ async function steamExample() {
   console.log(`📊 Steam ID: ${status.steamId}`);
   console.log(`📊 App ID: ${status.appId}`);
   
-  // Do work...
-  const achievements = await steam.getAllAchievements();
+  // Do work with managers...
+  const achievements = await steam.achievements.getAllAchievements();
   console.log(`Found ${achievements.length} achievements`);
   
   // Process callbacks
@@ -350,7 +350,7 @@ async function steamExample() {
 
 // Handle cleanup on exit
 process.on('SIGINT', () => {
-  const steam = Steam.getInstance();
+  const steam = new SteamworksSDK();
   steam.shutdown();
   process.exit(0);
 });
@@ -362,20 +362,21 @@ steamExample();
 
 ## Best Practices
 
-### 1. Initialize Once
+### 1. Create Instance Per Usage
 ```typescript
-// ✅ Good - Singleton pattern
-const steam = Steam.getInstance();
+// ✅ Good - Create instance when needed
+const steam = new SteamworksSDK();
 steam.init({ appId: 480 });
 
-// ❌ Bad - Don't create multiple instances
-const steam1 = Steam.getInstance();
-const steam2 = Steam.getInstance(); // Same instance
+// Multiple instances are fine
+const steam1 = new SteamworksSDK();
+const steam2 = new SteamworksSDK();
 ```
 
 ### 2. Always Shutdown
 ```typescript
 // ✅ Good
+const steam = new SteamworksSDK();
 try {
   steam.init({ appId: 480 });
   // ... work ...
@@ -387,11 +388,12 @@ try {
 ### 3. Check Status
 ```typescript
 // ✅ Good - Check before operations
+const steam = new SteamworksSDK();
 if (!steam.getStatus().initialized) {
   steam.init({ appId: 480 });
 }
 
-await steam.getAllAchievements();
+await steam.achievements.getAllAchievements();
 ```
 
 ### 4. Process Callbacks Regularly
@@ -402,7 +404,7 @@ setInterval(() => {
 }, 1000);
 
 // Or after operations
-await steam.unlockAchievement('ACH_WIN_ONE_GAME');
+await steam.achievements.unlockAchievement('ACH_WIN_ONE_GAME');
 steam.runCallbacks();
 ```
 

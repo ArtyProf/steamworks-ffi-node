@@ -68,13 +68,13 @@ enum LeaderboardDisplayType {
 
 **Example:**
 ```typescript
-import Steam, { LeaderboardSortMethod, LeaderboardDisplayType } from 'steamworks-ffi-node';
+import SteamworksSDK, { LeaderboardSortMethod, LeaderboardDisplayType } from 'steamworks-ffi-node';
 
-const steam = Steam.getInstance();
+const steam = new SteamworksSDK();
 steam.init({ appId: YOUR_APP_ID });
 
 // High score leaderboard (higher is better)
-const highScores = await steam.findOrCreateLeaderboard(
+const highScores = await steam.leaderboards.findOrCreateLeaderboard(
   'HighScores',
   LeaderboardSortMethod.Descending,
   LeaderboardDisplayType.Numeric
@@ -87,7 +87,7 @@ if (highScores) {
 }
 
 // Speed run leaderboard (lower time is better)
-const speedRun = await steam.findOrCreateLeaderboard(
+const speedRun = await steam.leaderboards.findOrCreateLeaderboard(
   'SpeedRun_Level1',
   LeaderboardSortMethod.Ascending,
   LeaderboardDisplayType.TimeMilliseconds
@@ -122,7 +122,7 @@ Find an existing leaderboard without creating it.
 
 **Example:**
 ```typescript
-const leaderboard = await steam.findLeaderboard('HighScores');
+const leaderboard = await steam.leaderboards.findLeaderboard('HighScores');
 
 if (leaderboard) {
   console.log(`Found leaderboard with ${leaderboard.entryCount} entries`);
@@ -155,9 +155,9 @@ Get detailed information about a leaderboard.
 
 **Example:**
 ```typescript
-const leaderboard = await steam.findLeaderboard('HighScores');
+const leaderboard = await steam.leaderboards.findLeaderboard('HighScores');
 if (leaderboard) {
-  const info = await steam.getLeaderboardInfo(leaderboard.handle);
+  const info = await steam.leaderboards.getLeaderboardInfo(leaderboard.handle);
   console.log(`${info.name}: ${info.entryCount} entries`);
   console.log(`Sort: ${info.sortMethod === 1 ? 'Descending' : 'Ascending'}`);
 }
@@ -207,14 +207,14 @@ enum LeaderboardUploadScoreMethod {
 ```typescript
 import { LeaderboardUploadScoreMethod } from 'steamworks-ffi-node';
 
-const leaderboard = await steam.findOrCreateLeaderboard(
+const leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
   'HighScores',
   LeaderboardSortMethod.Descending,
   LeaderboardDisplayType.Numeric
 );
 
 // Simple score upload (only if better)
-const result = await steam.uploadLeaderboardScore(
+const result = await steam.leaderboards.uploadLeaderboardScore(
   leaderboard.handle,
   1000,
   LeaderboardUploadScoreMethod.KeepBest
@@ -226,7 +226,7 @@ if (result?.scoreChanged) {
 }
 
 // Upload with additional details (e.g., time, deaths, collectibles)
-const detailedResult = await steam.uploadLeaderboardScore(
+const detailedResult = await steam.leaderboards.uploadLeaderboardScore(
   leaderboard.handle,
   1000,
   LeaderboardUploadScoreMethod.KeepBest,
@@ -234,7 +234,7 @@ const detailedResult = await steam.uploadLeaderboardScore(
 );
 
 // Force update (for testing or when score might be worse)
-await steam.uploadLeaderboardScore(
+await steam.leaderboards.uploadLeaderboardScore(
   leaderboard.handle,
   500,
   LeaderboardUploadScoreMethod.ForceUpdate
@@ -292,10 +292,10 @@ enum LeaderboardDataRequest {
 ```typescript
 import { LeaderboardDataRequest } from 'steamworks-ffi-node';
 
-const leaderboard = await steam.findLeaderboard('HighScores');
+const leaderboard = await steam.leaderboards.findLeaderboard('HighScores');
 
 // Get top 10 global scores
-const top10 = await steam.downloadLeaderboardEntries(
+const top10 = await steam.leaderboards.downloadLeaderboardEntries(
   leaderboard.handle,
   LeaderboardDataRequest.Global,
   0,  // Start at rank 1 (0-indexed)
@@ -311,7 +311,7 @@ top10.forEach(entry => {
 });
 
 // Get scores around current user (5 above, 5 below)
-const aroundUser = await steam.downloadLeaderboardEntries(
+const aroundUser = await steam.leaderboards.downloadLeaderboardEntries(
   leaderboard.handle,
   LeaderboardDataRequest.GlobalAroundUser,
   -5,  // 5 entries above user
@@ -324,7 +324,7 @@ aroundUser.forEach(entry => {
 });
 
 // Get all friend scores
-const friends = await steam.downloadLeaderboardEntries(
+const friends = await steam.leaderboards.downloadLeaderboardEntries(
   leaderboard.handle,
   LeaderboardDataRequest.Friends,
   0,   // Ignored for Friends request
@@ -359,7 +359,7 @@ Download leaderboard entries for specific Steam users.
 **Example:**
 ```typescript
 // Get entries for specific players
-const entries = await steam.downloadLeaderboardEntriesForUsers(
+const entries = await steam.leaderboards.downloadLeaderboardEntriesForUsers(
   leaderboard.handle,
   [
     '76561198000000000',
@@ -375,7 +375,7 @@ entries.forEach(entry => {
 
 // Compare with a specific friend
 const friendSteamId = '76561198000000000';
-const friendEntries = await steam.downloadLeaderboardEntriesForUsers(
+const friendEntries = await steam.leaderboards.downloadLeaderboardEntriesForUsers(
   leaderboard.handle,
   [friendSteamId]
 );
@@ -419,7 +419,7 @@ Attach user-generated content (like replays or screenshots) to the current user'
 
 const ugcHandle = BigInt('123456789'); // From ISteamRemoteStorage.FileShare()
 
-const success = await steam.attachLeaderboardUGC(
+const success = await steam.leaderboards.attachLeaderboardUGC(
   leaderboard.handle,
   ugcHandle
 );
@@ -537,7 +537,7 @@ import Steam, {
   LeaderboardDataRequest
 } from 'steamworks-ffi-node';
 
-const steam = Steam.getInstance();
+const steam = new SteamworksSDK();
 
 async function highScoreExample() {
   // Initialize Steam
@@ -547,7 +547,7 @@ async function highScoreExample() {
   }
 
   // Find or create high score leaderboard
-  const leaderboard = await steam.findOrCreateLeaderboard(
+  const leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
     'HighScores',
     LeaderboardSortMethod.Descending,  // Higher is better
     LeaderboardDisplayType.Numeric
@@ -564,7 +564,7 @@ async function highScoreExample() {
 
   // Upload player's score (only if it's better)
   const playerScore = 1500;
-  const result = await steam.uploadLeaderboardScore(
+  const result = await steam.leaderboards.uploadLeaderboardScore(
     leaderboard.handle,
     playerScore,
     LeaderboardUploadScoreMethod.KeepBest
@@ -580,7 +580,7 @@ async function highScoreExample() {
   }
 
   // Download top 10 scores
-  const topScores = await steam.downloadLeaderboardEntries(
+  const topScores = await steam.leaderboards.downloadLeaderboardEntries(
     leaderboard.handle,
     LeaderboardDataRequest.Global,
     0,
@@ -593,7 +593,7 @@ async function highScoreExample() {
   });
 
   // Download scores around current user
-  const nearby = await steam.downloadLeaderboardEntries(
+  const nearby = await steam.leaderboards.downloadLeaderboardEntries(
     leaderboard.handle,
     LeaderboardDataRequest.GlobalAroundUser,
     -3,  // 3 above
@@ -621,13 +621,13 @@ import Steam, {
   LeaderboardDataRequest
 } from 'steamworks-ffi-node';
 
-const steam = Steam.getInstance();
+const steam = new SteamworksSDK();
 
 async function speedRunExample() {
   steam.init({ appId: YOUR_APP_ID });
 
   // Create speed run leaderboard (lower time is better)
-  const leaderboard = await steam.findOrCreateLeaderboard(
+  const leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
     'Level1_SpeedRun',
     LeaderboardSortMethod.Ascending,      // Lower is better
     LeaderboardDisplayType.TimeMilliseconds
@@ -642,7 +642,7 @@ async function speedRunExample() {
   const secretsFound = 5;
 
   // Upload time with detailed stats
-  const result = await steam.uploadLeaderboardScore(
+  const result = await steam.leaderboards.uploadLeaderboardScore(
     leaderboard.handle,
     timeInMilliseconds,
     LeaderboardUploadScoreMethod.KeepBest,
@@ -655,7 +655,7 @@ async function speedRunExample() {
   }
 
   // View top times with details
-  const topRuns = await steam.downloadLeaderboardEntries(
+  const topRuns = await steam.leaderboards.downloadLeaderboardEntries(
     leaderboard.handle,
     LeaderboardDataRequest.Global,
     0,
@@ -689,12 +689,12 @@ import Steam, {
   LeaderboardDisplayType
 } from 'steamworks-ffi-node';
 
-const steam = Steam.getInstance();
+const steam = new SteamworksSDK();
 
 async function friendComparisonExample() {
   steam.init({ appId: YOUR_APP_ID });
 
-  const leaderboard = await steam.findOrCreateLeaderboard(
+  const leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
     'HighScores',
     LeaderboardSortMethod.Descending,
     LeaderboardDisplayType.Numeric
@@ -703,7 +703,7 @@ async function friendComparisonExample() {
   if (!leaderboard) return;
 
   // Get all friend scores
-  const friendScores = await steam.downloadLeaderboardEntries(
+  const friendScores = await steam.leaderboards.downloadLeaderboardEntries(
     leaderboard.handle,
     LeaderboardDataRequest.Friends,
     0,
@@ -725,7 +725,7 @@ async function friendComparisonExample() {
     '76561198000000001'
   ];
 
-  const friendEntries = await steam.downloadLeaderboardEntriesForUsers(
+  const friendEntries = await steam.leaderboards.downloadLeaderboardEntriesForUsers(
     leaderboard.handle,
     specificFriends
   );
@@ -762,14 +762,14 @@ friendComparisonExample();
 ### 2. Score Upload Strategy
 ```typescript
 // ✅ Good: Only update when score is better
-await steam.uploadLeaderboardScore(
+await steam.leaderboards.uploadLeaderboardScore(
   handle,
   newScore,
   LeaderboardUploadScoreMethod.KeepBest
 );
 
 // ⚠️ Use with caution: Force update (for testing only)
-await steam.uploadLeaderboardScore(
+await steam.leaderboards.uploadLeaderboardScore(
   handle,
   testScore,
   LeaderboardUploadScoreMethod.ForceUpdate
@@ -787,7 +787,7 @@ const details = [
   difficultyLevel    // Game settings
 ];
 
-await steam.uploadLeaderboardScore(handle, score, method, details);
+await steam.leaderboards.uploadLeaderboardScore(handle, score, method, details);
 
 // ❌ Bad: Random or meaningless data
 const details = [1, 2, 3, 4]; // What do these mean?
@@ -796,13 +796,13 @@ const details = [1, 2, 3, 4]; // What do these mean?
 ### 4. Error Handling
 ```typescript
 // ✅ Good: Check for null returns
-const leaderboard = await steam.findLeaderboard('HighScores');
+const leaderboard = await steam.leaderboards.findLeaderboard('HighScores');
 if (!leaderboard) {
   console.error('Leaderboard not found');
   return;
 }
 
-const result = await steam.uploadLeaderboardScore(/*...*/);
+const result = await steam.leaderboards.uploadLeaderboardScore(/*...*/);
 if (!result) {
   console.error('Failed to upload score');
   return;
@@ -810,7 +810,7 @@ if (!result) {
 
 // ✅ Good: Handle network issues gracefully
 try {
-  const entries = await steam.downloadLeaderboardEntries(/*...*/);
+  const entries = await steam.leaderboards.downloadLeaderboardEntries(/*...*/);
   if (entries.length === 0) {
     console.log('No entries found or network error');
   }
@@ -830,7 +830,7 @@ class LeaderboardCache {
       return this.handles.get(name)!;
     }
 
-    const leaderboard = await steam.findLeaderboard(name);
+    const leaderboard = await steam.leaderboards.findLeaderboard(name);
     if (leaderboard) {
       this.handles.set(name, leaderboard.handle);
       return leaderboard.handle;
@@ -857,9 +857,9 @@ class LeaderboardCache {
 
 ```typescript
 // Try to find, fallback to create
-let leaderboard = await steam.findLeaderboard('HighScores');
+let leaderboard = await steam.leaderboards.findLeaderboard('HighScores');
 if (!leaderboard) {
-  leaderboard = await steam.findOrCreateLeaderboard(
+  leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
     'HighScores',
     LeaderboardSortMethod.Descending,
     LeaderboardDisplayType.Numeric
@@ -877,7 +877,7 @@ if (!leaderboard) {
 3. Check `scoreChanged` in result object
 
 ```typescript
-const result = await steam.uploadLeaderboardScore(
+const result = await steam.leaderboards.uploadLeaderboardScore(
   handle,
   newScore,
   LeaderboardUploadScoreMethod.KeepBest
@@ -900,7 +900,7 @@ if (result && !result.scoreChanged) {
 4. No friends have scores (for Friends request)
 
 ```typescript
-const entries = await steam.downloadLeaderboardEntries(
+const entries = await steam.leaderboards.downloadLeaderboardEntries(
   handle,
   LeaderboardDataRequest.Global,
   0,
@@ -909,7 +909,7 @@ const entries = await steam.downloadLeaderboardEntries(
 
 if (entries.length === 0) {
   console.log('No entries found. Upload a score first!');
-  await steam.uploadLeaderboardScore(handle, 100, KeepBest);
+  await steam.leaderboards.uploadLeaderboardScore(handle, 100, KeepBest);
 }
 ```
 
@@ -925,9 +925,9 @@ if (entries.length === 0) {
 
 ```typescript
 // Good: Wait between operations
-await steam.uploadLeaderboardScore(/*...*/);
+await steam.leaderboards.uploadLeaderboardScore(/*...*/);
 await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
-const entries = await steam.downloadLeaderboardEntries(/*...*/);
+const entries = await steam.leaderboards.downloadLeaderboardEntries(/*...*/);
 ```
 
 ---
@@ -940,24 +940,24 @@ Steam provides a test game (Spacewar) for development:
 
 ```typescript
 // Test leaderboards without a published game
-const steam = Steam.getInstance();
+const steam = new SteamworksSDK();
 steam.init({ appId: 480 }); // Spacewar
 
-const leaderboard = await steam.findOrCreateLeaderboard(
+const leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
   'Test_HighScores',
   LeaderboardSortMethod.Descending,
   LeaderboardDisplayType.Numeric
 );
 
 // Upload test scores
-await steam.uploadLeaderboardScore(
+await steam.leaderboards.uploadLeaderboardScore(
   leaderboard.handle,
   1000,
   LeaderboardUploadScoreMethod.ForceUpdate
 );
 
 // View results
-const entries = await steam.downloadLeaderboardEntries(
+const entries = await steam.leaderboards.downloadLeaderboardEntries(
   leaderboard.handle,
   LeaderboardDataRequest.Global,
   0,
@@ -975,7 +975,7 @@ To clear test data, use `ForceUpdate` with 0:
 
 ```typescript
 // Clear your score (development only)
-await steam.uploadLeaderboardScore(
+await steam.leaderboards.uploadLeaderboardScore(
   leaderboard.handle,
   0,
   LeaderboardUploadScoreMethod.ForceUpdate

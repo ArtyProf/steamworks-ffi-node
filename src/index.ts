@@ -1,49 +1,12 @@
 import SteamworksSDK from './steam';
-import { 
-  SteamAchievement, 
-  SteamInitOptions, 
-  SteamStatus,
-  AchievementProgressLimits,
-  UserAchievement,
-  AchievementGlobalStats,
-  AchievementWithIcon,
-  SteamStat,
-  GlobalStat,
-  GlobalStatHistory,
-  UserStat,
-  LeaderboardEntry,
-  LeaderboardInfo,
-  LeaderboardScoreUploadResult,
-  LeaderboardSortMethod,
-  LeaderboardDisplayType,
-  LeaderboardDataRequest,
-  LeaderboardUploadScoreMethod
-} from './types';
 
-// Export types
-export { 
-  SteamAchievement, 
-  SteamInitOptions, 
-  SteamStatus,
-  AchievementProgressLimits,
-  UserAchievement,
-  AchievementGlobalStats,
-  AchievementWithIcon,
-  SteamStat,
-  GlobalStat,
-  GlobalStatHistory,
-  UserStat,
-  LeaderboardEntry,
-  LeaderboardInfo,
-  LeaderboardScoreUploadResult,
-  LeaderboardSortMethod,
-  LeaderboardDisplayType,
-  LeaderboardDataRequest,
-  LeaderboardUploadScoreMethod
-};
+// Export manager classes for advanced usage
+export { SteamAchievementManager } from './internal/SteamAchievementManager';
+export { SteamStatsManager } from './internal/SteamStatsManager';
+export { SteamLeaderboardManager } from './internal/SteamLeaderboardManager';
+
+// Export all types from organized structure
+export * from './types';
 
 // Export main Steam class
 export default SteamworksSDK;
-
-// For convenience, also export as named export
-export { SteamworksSDK as Steam };
