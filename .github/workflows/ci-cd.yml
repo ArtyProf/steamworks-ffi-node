@@ -141,7 +141,7 @@ jobs:
         echo "Checking build output..."
         
         # Check required files exist
-        FILES=("dist/index.js" "dist/index.d.ts" "dist/steam.js" "dist/types.js")
+        FILES=("dist/index.js" "dist/index.d.ts" "dist/steam.js" "dist/steam.d.ts")
         for file in "${FILES[@]}"; do
           if [ -f "$file" ]; then
             echo "✅ $file exists"
@@ -150,6 +150,21 @@ jobs:
             exit 1
           fi
         done
+        
+        # Check types folder exists
+        if [ -d "dist/types" ]; then
+          echo "✅ dist/types/ folder exists"
+          # Check if types folder has files
+          if [ "$(ls -A dist/types)" ]; then
+            echo "✅ dist/types/ contains files"
+          else
+            echo "❌ dist/types/ is empty"
+            exit 1
+          fi
+        else
+          echo "❌ dist/types/ folder missing"
+          exit 1
+        fi
         
         echo "✅ All required files present"
     
