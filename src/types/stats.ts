@@ -38,3 +38,13 @@ export interface UserStat {
   value: number;
   type: 'int' | 'float';
 }
+
+/**
+ * NumberOfCurrentPlayers_t - Result of GetNumberOfCurrentPlayers
+ * Callback ID: k_iSteamUserStatsCallbacks + 7 = 1107
+ * @internal
+ */
+export interface NumberOfCurrentPlayersType {
+  m_bSuccess: number;  // 1 if successful
+  m_cPlayers: number;  // Number of players currently playing
+}

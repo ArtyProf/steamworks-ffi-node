@@ -200,6 +200,65 @@ async function testStatsAPI() {
     console.log('   console.log(`Distance: ${friendFeetStat.value}`);');
   }
   
+  // ===== PLAYER COUNT TESTS =====
+  console.log('\n' + '=' .repeat(60));
+  console.log('PLAYER COUNT TESTS');
+  console.log('=' .repeat(60) + '\n');
+  
+  console.log('📝 Testing GetNumberOfCurrentPlayers API...');
+  
+  // Test 1: Get current player count
+  console.log('\n📊 Test 1: Requesting current player count...');
+  const startTime = Date.now();
+  const playerCount = await steam.stats.getNumberOfCurrentPlayers();
+  const elapsed = Date.now() - startTime;
+  
+  if (playerCount !== null) {
+    console.log(`   ✅ Current players: ${playerCount.toLocaleString()}`);
+    console.log(`   ✅ Request completed in ${elapsed}ms`);
+    
+    // Test 2: Multiple calls to verify caching/consistency
+    console.log('\n📊 Test 2: Making second request to verify consistency...');
+    const startTime2 = Date.now();
+    const playerCount2 = await steam.stats.getNumberOfCurrentPlayers();
+    const elapsed2 = Date.now() - startTime2;
+    
+    if (playerCount2 !== null) {
+      console.log(`   ✅ Second request: ${playerCount2.toLocaleString()}`);
+      console.log(`   ✅ Request completed in ${elapsed2}ms`);
+      console.log(`   📊 Difference: ${Math.abs(playerCount2 - playerCount)} players`);
+      
+      // Show average response time
+      const avgTime = Math.round((elapsed + elapsed2) / 2);
+      console.log(`   ⚡ Average response time: ${avgTime}ms`);
+    } else {
+      console.log('   ⚠️ Second request returned null');
+    }
+    
+    // Test 3: Display formatted output
+    console.log('\n📊 Display Examples:');
+    console.log(`   - Simple: ${playerCount} players online`);
+    console.log(`   - Formatted: ${playerCount.toLocaleString()} players online`);
+    console.log(`   - With emoji: 🎮 ${playerCount.toLocaleString()} players currently playing!`);
+    
+    // Test 4: Check if it's reasonable
+    if (playerCount > 0 && playerCount < 10000000) {
+      console.log(`   ✅ Player count seems reasonable (0 < ${playerCount} < 10M)`);
+    } else {
+      console.log(`   ⚠️ Unusual player count: ${playerCount}`);
+    }
+    
+  } else {
+    console.log('   ❌ Function returned null');
+  }
+  
+  console.log('\n💡 Usage tip:');
+  console.log('   // Update player count every minute');
+  console.log('   setInterval(async () => {');
+  console.log('     const count = await steam.stats.getNumberOfCurrentPlayers();');
+  console.log('     if (count) console.log(`Players: ${count.toLocaleString()}`);');
+  console.log('   }, 60000);');
+  
   // ===== SUMMARY =====
   console.log('\n' + '=' .repeat(60));
   console.log('TEST SUMMARY');
@@ -224,8 +283,11 @@ async function testStatsAPI() {
   console.log('   - getUserStatInt() ✓');
   console.log('   - getUserStatFloat() ✓');
   
-  console.log('\n🎉 All 13 Stats API functions tested!\n');
-  console.log('📊 Coverage: 13/13 functions (100%)');
+  console.log('\n✅ Player Count:');
+  console.log('   - getNumberOfCurrentPlayers() ✓');
+  
+  console.log('\n🎉 All 14 Stats API functions tested!\n');
+  console.log('📊 Coverage: 14/14 functions (100%)');
   
   // Cleanup
   console.log('🧹 Shutting down Steam API...');

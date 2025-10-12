@@ -47,7 +47,7 @@ This design:
 
 ### Statistics System
 - **[Stats Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)**
-  - **13 Functions** - 100% Stats API coverage
+  - **14 Functions** - 100% Stats API coverage
   - User stats (get/set int/float, average rate tracking)
   - Friend comparisons (compare stats with friends)
   - Global statistics (worldwide aggregated data with history)

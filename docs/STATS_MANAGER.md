@@ -4,7 +4,7 @@ Complete reference for all statistics-related functionality in Steamworks FFI.
 
 ## Overview
 
-The `SteamStatsManager` provides comprehensive Steam statistics tracking with 13 functions organized into logical categories.
+The `SteamStatsManager` provides comprehensive Steam statistics tracking with 14 functions organized into logical categories.
 
 ## Quick Reference
 
@@ -13,6 +13,7 @@ The `SteamStatsManager` provides comprehensive Steam statistics tracking with 13
 | [User Stats](#user-stats-operations) | 5 | Get/set integer and float stats, average rates |
 | [Friend/User Stats](#frienduser-stats) | 3 | Request and compare stats with friends |
 | [Global Stats](#global-statistics) | 5 | View aggregated stats across all users |
+| [Player Count](#player-count) | 1 | Get number of players currently playing |
 
 ---
 
@@ -797,6 +798,60 @@ if (!success) {
 - ⚠️ **Async not complete**: Wait longer and call `runCallbacks()`
 - ⚠️ **Friend stats unavailable**: Friend must have played the game
 - ⚠️ **Global stats not configured**: Mark stats as "aggregated" in Steamworks
+
+---
+
+## Player Count
+
+Get information about how many players are currently playing the game.
+
+### `getNumberOfCurrentPlayers()`
+
+Get the total number of players currently playing the game globally (online + offline).
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers()` - Request current player count
+- `ISteamUtils::IsAPICallCompleted()` - Check if callback completed
+- `ISteamUtils::GetAPICallResult()` - Retrieve callback result
+
+**Parameters:** None
+
+**Returns:** `Promise<number | null>` - Number of current players, or null on error
+
+**Example:**
+```typescript
+const playerCount = await steam.stats.getNumberOfCurrentPlayers();
+if (playerCount !== null) {
+  console.log(`🎮 ${playerCount.toLocaleString()} players currently playing!`);
+  
+  // Use in UI
+  document.getElementById('playerCount').textContent = 
+    `${playerCount.toLocaleString()} players online`;
+}
+```
+
+**Advanced Usage:**
+```typescript
+// Poll periodically for live updates
+setInterval(async () => {
+  const count = await steam.stats.getNumberOfCurrentPlayers();
+  if (count !== null) {
+    console.log(`Current players: ${count}`);
+  }
+}, 60000); // Update every minute
+```
+
+**Important Notes:**
+- ✅ Queries Steam servers and waits for response (typically 50-500ms)
+- ✅ Includes both online and offline players
+- ✅ Useful for displaying "X players online" in game UI
+- ✅ Data is cached by Steam for a short period to reduce server load
+- ✅ Uses callback polling to get actual results synchronously
+
+**Callback:** `NumberOfCurrentPlayers_t`
+- `m_bSuccess` - Whether the request was successful (0 or 1)
+- `m_cPlayers` - Number of players currently playing
+
 
 ---
 

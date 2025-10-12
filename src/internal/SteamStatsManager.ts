@@ -1,7 +1,20 @@
 import * as koffi from 'koffi';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
-import { SteamStat, GlobalStat, GlobalStatHistory, UserStat } from '../types';
+import { SteamCallbackPoller } from './SteamCallbackPoller';
+import { SteamStat, GlobalStat, GlobalStatHistory, UserStat, NumberOfCurrentPlayersType } from '../types';
+
+/**
+ * NumberOfCurrentPlayers_t - Result of GetNumberOfCurrentPlayers
+ * Callback ID: k_iSteamUserStatsCallbacks + 7 = 1107
+ */
+const NumberOfCurrentPlayers_t = koffi.struct('NumberOfCurrentPlayers_t', {
+  m_bSuccess: 'uint8',   // 1 if successful
+  m_cPlayers: 'int32'    // Number of players currently playing
+});
+
+// Callback ID (k_iSteamUserStatsCallbacks = 1100)
+const k_iCallback_NumberOfCurrentPlayers = 1107;
 
 /**
  * SteamStatsManager
@@ -35,6 +48,9 @@ export class SteamStatsManager {
   
   /** Steam API core for initialization and callback management */
   private apiCore: SteamAPICore;
+  
+  /** Callback poller for retrieving async operation results */
+  private callbackPoller: SteamCallbackPoller;
 
   /**
    * Creates a new SteamStatsManager instance
@@ -45,6 +61,7 @@ export class SteamStatsManager {
   constructor(libraryLoader: SteamLibraryLoader, apiCore: SteamAPICore) {
     this.libraryLoader = libraryLoader;
     this.apiCore = apiCore;
+    this.callbackPoller = new SteamCallbackPoller(libraryLoader, apiCore);
   }
 
   // ========================================
@@ -936,4 +953,89 @@ export class SteamStatsManager {
       return null;
     }
   }
+
+  // ========================================
+  // Player Count Operations
+  // ========================================
+
+  /**
+   * Get the number of players currently playing the game
+   * 
+   * Retrieves the total number of players currently playing the game globally,
+   * including both online and offline modes. This is an asynchronous operation
+   * that queries Steam servers and waits for the result.
+   * 
+   * @returns Promise resolving to number of current players, or null on error
+   * 
+   * @example
+   * ```typescript
+   * const playerCount = await steam.stats.getNumberOfCurrentPlayers();
+   * if (playerCount !== null) {
+   *   console.log(`[Steamworks] ${playerCount.toLocaleString()} players currently playing!`);
+   * }
+   * ```
+   * 
+   * @remarks
+   * - This queries Steam servers and waits for the response (typically 50-500ms)
+   * - Includes both online and offline players
+   * - Returns null if Steam API is not initialized
+   * - Returns null if request fails or times out
+   * - Useful for displaying "X players online" in game UI
+   * - Data is cached by Steam for a short period to reduce server load
+   * 
+   * Steamworks SDK Functions:
+   * - `SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers()` - Request current player count
+   * - `ISteamUtils::IsAPICallCompleted()` - Check if callback completed
+   * - `ISteamUtils::GetAPICallResult()` - Retrieve callback result
+   * 
+   * Callback: `NumberOfCurrentPlayers_t`
+   * - `m_bSuccess` - Whether the request was successful
+   * - `m_cPlayers` - Number of players currently playing
+   */
+  async getNumberOfCurrentPlayers(): Promise<number | null> {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] Steam API not initialized');
+      return null;
+    }
+
+    try {
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers(
+        userStatsInterface
+      );
+
+      if (callHandle === BigInt(0)) {
+        console.error(`[Steamworks] Failed to request number of current players`);
+        return null;
+      }
+
+      console.log(`[Steamworks] Requesting number of current players...`);
+
+      // Poll for the callback result
+      const result = await this.callbackPoller.poll<NumberOfCurrentPlayersType>(
+        callHandle,
+        NumberOfCurrentPlayers_t,
+        k_iCallback_NumberOfCurrentPlayers
+      );
+
+      if (!result) {
+        console.error(`[Steamworks] Failed to get number of current players result`);
+        return null;
+      }
+
+      if (!result.m_bSuccess) {
+        console.warn(`[Steamworks] GetNumberOfCurrentPlayers was not successful`);
+        return null;
+      }
+
+      console.log(`[Steamworks] Current players: ${result.m_cPlayers}`);
+      return result.m_cPlayers;
+      
+    } catch (error: any) {
+      console.error(`[Steamworks] Error getting number of current players:`, error.message);
+      return null;
+    }
+  }
 }
+

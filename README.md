@@ -22,7 +22,7 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
   - ✅ Friend comparisons (see friend achievements)
   - ✅ Global statistics (unlock percentages, popularity sorting)
   - ✅ Testing tools (reset stats/achievements)
-- **Complete Stats API**: 100% coverage of Steam User Stats functionality (13/13 functions)
+- **Complete Stats API**: 100% coverage of Steam User Stats functionality (14/14 functions)
   - ✅ User stats (get/set int/float, average rate tracking)
   - ✅ Friend comparisons (compare stats with friends)
   - ✅ Global statistics (worldwide aggregated data with history)

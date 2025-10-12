@@ -70,6 +70,9 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUserStats_GetGlobalStatDouble!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble!: koffi.KoffiFunction;
+  
+  // Player count
+  public SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers!: koffi.KoffiFunction;
 
   // ========================================
   // Leaderboard API Functions
@@ -221,6 +224,9 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUserStats_GetGlobalStatDouble = this.steamLib.func('SteamAPI_ISteamUserStats_GetGlobalStatDouble', 'bool', ['void*', 'str', 'double*']);
     this.SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64 = this.steamLib.func('SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64', 'int32', ['void*', 'str', 'int64*', 'uint32']);
     this.SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble = this.steamLib.func('SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble', 'int32', ['void*', 'str', 'double*', 'uint32']);
+    
+    // Player count
+    this.SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers = this.steamLib.func('SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers', 'uint64', ['void*']);
     
     // ========================================
     // Leaderboard API Functions
