@@ -1,7 +1,7 @@
 {
   "name": "steamworks-ffi-node",
   "version": "0.5.1",
-  "description": "Real Steamworks SDK wrapper using FFI for Node.js/Electron - Full Steam Integration",
+  "description": "Steamworks SDK wrapper using FFI for Node.js/Electron - Full Steam Integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -50,7 +50,7 @@
   "bugs": {
     "url": "https://github.com/ArtyProf/steamworks-ffi-node/issues"
   },
-  "homepage": "https://github.com/ArtyProf/steamworks-ffi-node#readme",
+  "homepage": "https://github.com/ArtyProf/steamworks-ffi-node",
   "author": "ArtyProf",
   "license": "MIT",
   "engines": {
