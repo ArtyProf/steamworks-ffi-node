@@ -127,6 +127,23 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamFriends_GetFriendRelationship!: koffi.KoffiFunction;
   public SteamAPI_ISteamFriends_GetFriendSteamLevel!: koffi.KoffiFunction;
   public SteamAPI_ISteamFriends_GetFriendGamePlayed!: koffi.KoffiFunction;
+  
+  // Rich Presence
+  public SteamAPI_ISteamFriends_SetRichPresence!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_ClearRichPresence!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendRichPresence!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendRichPresenceKeyCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendRichPresenceKeyByIndex!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_RequestFriendRichPresence!: koffi.KoffiFunction;
+  
+  // Overlay
+  public SteamAPI_ISteamFriends_ActivateGameOverlay!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayToUser!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayToWebPage!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayToStore!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayRemotePlayTogetherInviteDialog!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialogConnectString!: koffi.KoffiFunction;
 
   /**
    * Get platform-specific Steam library path
@@ -303,6 +320,23 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamFriends_GetFriendRelationship = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendRelationship', 'int', ['void*', 'uint64']);
     this.SteamAPI_ISteamFriends_GetFriendSteamLevel = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendSteamLevel', 'int', ['void*', 'uint64']);
     this.SteamAPI_ISteamFriends_GetFriendGamePlayed = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendGamePlayed', 'bool', ['void*', 'uint64', 'void*']);
+    
+    // Rich Presence
+    this.SteamAPI_ISteamFriends_SetRichPresence = this.steamLib.func('SteamAPI_ISteamFriends_SetRichPresence', 'bool', ['void*', 'str', 'str']);
+    this.SteamAPI_ISteamFriends_ClearRichPresence = this.steamLib.func('SteamAPI_ISteamFriends_ClearRichPresence', 'void', ['void*']);
+    this.SteamAPI_ISteamFriends_GetFriendRichPresence = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendRichPresence', 'str', ['void*', 'uint64', 'str']);
+    this.SteamAPI_ISteamFriends_GetFriendRichPresenceKeyCount = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendRichPresenceKeyCount', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamFriends_GetFriendRichPresenceKeyByIndex = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendRichPresenceKeyByIndex', 'str', ['void*', 'uint64', 'int']);
+    this.SteamAPI_ISteamFriends_RequestFriendRichPresence = this.steamLib.func('SteamAPI_ISteamFriends_RequestFriendRichPresence', 'void', ['void*', 'uint64']);
+    
+    // Overlay
+    this.SteamAPI_ISteamFriends_ActivateGameOverlay = this.steamLib.func('SteamAPI_ISteamFriends_ActivateGameOverlay', 'void', ['void*', 'str']);
+    this.SteamAPI_ISteamFriends_ActivateGameOverlayToUser = this.steamLib.func('SteamAPI_ISteamFriends_ActivateGameOverlayToUser', 'void', ['void*', 'str', 'uint64']);
+    this.SteamAPI_ISteamFriends_ActivateGameOverlayToWebPage = this.steamLib.func('SteamAPI_ISteamFriends_ActivateGameOverlayToWebPage', 'void', ['void*', 'str', 'int']);
+    this.SteamAPI_ISteamFriends_ActivateGameOverlayToStore = this.steamLib.func('SteamAPI_ISteamFriends_ActivateGameOverlayToStore', 'void', ['void*', 'uint32', 'int']);
+    this.SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog = this.steamLib.func('SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog', 'void', ['void*', 'uint64']);
+    this.SteamAPI_ISteamFriends_ActivateGameOverlayRemotePlayTogetherInviteDialog = this.steamLib.func('SteamAPI_ISteamFriends_ActivateGameOverlayRemotePlayTogetherInviteDialog', 'void', ['void*', 'uint64']);
+    this.SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialogConnectString = this.steamLib.func('SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialogConnectString', 'void', ['void*', 'str']);
   }
 
   /**

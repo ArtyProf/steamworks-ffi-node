@@ -15,6 +15,10 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 > 🎉 **NEW: Friends API** - 10 essential Steam friends and social functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)
 
+> 🎉 **NEW: Rich Presence API** - 6 functions for custom status display and friend join functionality! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/RICH_PRESENCE_MANAGER.md)
+
+> 🎉 **NEW: Overlay API** - 7 functions for complete Steam overlay control! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)
+
 ## 🎯 Features
 
 - **Complete Achievement API**: 100% coverage of Steam Achievement functionality (20/20 functions)
@@ -38,6 +42,17 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
   - ✅ Friends list management (count, iterate, get all friends)
   - ✅ Friend information (names, states, relationships, Steam levels)
   - ✅ Friend activity (check games being played)
+- **Rich Presence API**: Complete Rich Presence support (6 functions)
+  - ✅ Set/clear rich presence key/value pairs
+  - ✅ Query friend rich presence data
+  - ✅ Display custom status in friends list
+  - ✅ Enable friend join functionality
+- **Overlay API**: Complete Steam overlay control (7 functions)
+  - ✅ Open overlay dialogs (friends, achievements, settings, etc.)
+  - ✅ Open user profiles, stats, and achievements
+  - ✅ Open overlay web browser to URLs
+  - ✅ Open store pages with purchase options
+  - ✅ Show invite dialogs for multiplayer sessions
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Batteries Included**: All Steamworks redistributables bundled - no SDK download needed!
@@ -139,6 +154,14 @@ if (initialized) {
       console.log(`  Playing: ${gameInfo.gameName} (AppID: ${gameInfo.gameId})`);
     }
   });
+  
+  // Set rich presence for custom status
+  steam.richPresence.setRichPresence('status', 'In Main Menu');
+  steam.richPresence.setRichPresence('connect', '+connect server:27015');
+  
+  // Open Steam overlay
+  steam.overlay.activateGameOverlay('Friends'); // Open friends list
+  steam.overlay.activateGameOverlayToWebPage('https://example.com/wiki'); // Open wiki
 }
 
 // Cleanup
@@ -188,6 +211,8 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Stats Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)** - User and global statistics (14 functions)
 - **[Leaderboard Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)** - Leaderboard operations (7 functions)
 - **[Friends Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)** - Friends and social features (10 functions)
+- **[Rich Presence Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/RICH_PRESENCE_MANAGER.md)** - Custom status display and join functionality (6 functions)
+- **[Overlay Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)** - Steam overlay control (7 functions)
 
 ## 🎮 Steamworks Integration
 

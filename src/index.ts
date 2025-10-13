@@ -4,6 +4,9 @@ import SteamworksSDK from './steam';
 export { SteamAchievementManager } from './internal/SteamAchievementManager';
 export { SteamStatsManager } from './internal/SteamStatsManager';
 export { SteamLeaderboardManager } from './internal/SteamLeaderboardManager';
+export { SteamFriendsManager } from './internal/SteamFriendsManager';
+export { SteamRichPresenceManager } from './internal/SteamRichPresenceManager';
+export { SteamOverlayManager } from './internal/SteamOverlayManager';
 
 // Export all types from organized structure
 export * from './types';
