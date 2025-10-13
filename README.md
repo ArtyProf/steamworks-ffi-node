@@ -3,9 +3,11 @@
 
 # Steamworks FFI - Steamworks SDK Integration
 
-A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed for Node.js and Electron applications with **Steamworks SDK integration**.
+A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed for Node.js and Electron applications with **Steamworks SDK v1.62 integration**.
 
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
+
+> ⚡ **Latest Steamworks SDK**: Built with Steamworks SDK v1.62 - includes all latest Steam features and improvements!
 
 > 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)
 
@@ -315,6 +317,8 @@ This ensures native libraries work correctly in packaged Electron apps!
 - ✅ **Windows**: Included (steam_api64.dll / steam_api.dll)
 - ✅ **macOS**: Included (libsteam_api.dylib)
 - ✅ **Linux**: Included (libsteam_api.so)
+
+**Steamworks SDK Version**: v1.62 (Latest)
 
 All redistributable binaries are included in the package - no manual SDK download required!
 

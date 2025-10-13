@@ -51,7 +51,7 @@
     "url": "https://github.com/ArtyProf/steamworks-ffi-node/issues"
   },
   "homepage": "https://github.com/ArtyProf/steamworks-ffi-node",
-  "author": "ArtyProf",
+  "author": "Artur Khutak (Arty_Prof)",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
