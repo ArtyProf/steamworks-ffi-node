@@ -8,6 +8,8 @@ import { SteamAchievementManager } from './internal/SteamAchievementManager';
 import { SteamStatsManager } from './internal/SteamStatsManager';
 import { SteamLeaderboardManager } from './internal/SteamLeaderboardManager';
 import { SteamFriendsManager } from './internal/SteamFriendsManager';
+import { SteamRichPresenceManager } from './internal/SteamRichPresenceManager';
+import { SteamOverlayManager } from './internal/SteamOverlayManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -17,6 +19,9 @@ import { SteamFriendsManager } from './internal/SteamFriendsManager';
  * - achievements: SteamAchievementManager - All achievement operations
  * - stats: SteamStatsManager - All stats operations
  * - leaderboards: SteamLeaderboardManager - All leaderboard operations
+ * - friends: SteamFriendsManager - All friends and social operations
+ * - richPresence: SteamRichPresenceManager - Rich presence operations
+ * - overlay: SteamOverlayManager - Overlay control operations
  * 
  * @example
  * ```typescript
@@ -27,6 +32,9 @@ import { SteamFriendsManager } from './internal/SteamFriendsManager';
  * await steam.achievements.unlockAchievement('ACH_WIN_ONE_GAME');
  * await steam.stats.setStatInt('NumGames', 1);
  * await steam.leaderboards.uploadScore(handle, 1000, KeepBest);
+ * const friends = steam.friends.getAllFriends();
+ * steam.richPresence.setRichPresence('status', 'In Menu');
+ * steam.overlay.activateGameOverlay('Friends');
  * ```
  */
 class SteamworksSDK {
@@ -170,6 +178,63 @@ class SteamworksSDK {
    */
   public readonly friends!: SteamFriendsManager;
 
+  /**
+   * Rich Presence Manager - Handle Steam Rich Presence operations
+   * 
+   * Provides Rich Presence functionality including:
+   * - Set/clear rich presence key/value pairs
+   * - Query friend rich presence data
+   * - Display custom status in Steam friends list
+   * - Enable friend join functionality
+   * 
+   * @example
+   * ```typescript
+   * // Set rich presence
+   * steam.richPresence.setRichPresence('status', 'In Deathmatch');
+   * steam.richPresence.setRichPresence('connect', '+connect 192.168.1.100');
+   * 
+   * // Read friend's rich presence
+   * steam.richPresence.requestFriendRichPresence(friendId);
+   * const status = steam.richPresence.getFriendRichPresence(friendId, 'status');
+   * 
+   * // Clear all
+   * steam.richPresence.clearRichPresence();
+   * ```
+   * 
+   * @see {@link SteamRichPresenceManager} for complete API documentation
+   */
+  public readonly richPresence!: SteamRichPresenceManager;
+
+  /**
+   * Overlay Manager - Handle Steam Overlay operations
+   * 
+   * Provides overlay functionality including:
+   * - Open overlay to various dialogs (friends, achievements, etc.)
+   * - Open overlay to user profiles
+   * - Open overlay browser to URLs
+   * - Open store pages
+   * - Show invite dialogs
+   * 
+   * @example
+   * ```typescript
+   * // Open overlay dialogs
+   * steam.overlay.activateGameOverlay('Friends');
+   * steam.overlay.activateGameOverlay('Achievements');
+   * 
+   * // Open user profile
+   * steam.overlay.activateGameOverlayToUser('steamid', friendId);
+   * 
+   * // Open web page
+   * steam.overlay.activateGameOverlayToWebPage('https://example.com');
+   * 
+   * // Open store page
+   * steam.overlay.activateGameOverlayToStore(480);
+   * ```
+   * 
+   * @see {@link SteamOverlayManager} for complete API documentation
+   */
+  public readonly overlay!: SteamOverlayManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -180,6 +245,8 @@ class SteamworksSDK {
     this.stats = new SteamStatsManager(this.libraryLoader, this.apiCore);
     this.leaderboards = new SteamLeaderboardManager(this.libraryLoader, this.apiCore);
     this.friends = new SteamFriendsManager(this.libraryLoader, this.apiCore);
+    this.richPresence = new SteamRichPresenceManager(this.libraryLoader, this.apiCore);
+    this.overlay = new SteamOverlayManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {
