@@ -144,6 +144,24 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog!: koffi.KoffiFunction;
   public SteamAPI_ISteamFriends_ActivateGameOverlayRemotePlayTogetherInviteDialog!: koffi.KoffiFunction;
   public SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialogConnectString!: koffi.KoffiFunction;
+  
+  // Avatars
+  public SteamAPI_ISteamFriends_GetSmallFriendAvatar!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetMediumFriendAvatar!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetLargeFriendAvatar!: koffi.KoffiFunction;
+  
+  // Friend Groups
+  public SteamAPI_ISteamFriends_GetFriendsGroupCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendsGroupName!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendsGroupMembersCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendsGroupMembersList!: koffi.KoffiFunction;
+  
+  // Coplay (Recently Played With)
+  public SteamAPI_ISteamFriends_GetCoplayFriendCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetCoplayFriend!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendCoplayTime!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendCoplayGame!: koffi.KoffiFunction;
 
   /**
    * Get platform-specific Steam library path
@@ -337,6 +355,24 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog = this.steamLib.func('SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog', 'void', ['void*', 'uint64']);
     this.SteamAPI_ISteamFriends_ActivateGameOverlayRemotePlayTogetherInviteDialog = this.steamLib.func('SteamAPI_ISteamFriends_ActivateGameOverlayRemotePlayTogetherInviteDialog', 'void', ['void*', 'uint64']);
     this.SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialogConnectString = this.steamLib.func('SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialogConnectString', 'void', ['void*', 'str']);
+    
+    // Avatars
+    this.SteamAPI_ISteamFriends_GetSmallFriendAvatar = this.steamLib.func('SteamAPI_ISteamFriends_GetSmallFriendAvatar', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamFriends_GetMediumFriendAvatar = this.steamLib.func('SteamAPI_ISteamFriends_GetMediumFriendAvatar', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamFriends_GetLargeFriendAvatar = this.steamLib.func('SteamAPI_ISteamFriends_GetLargeFriendAvatar', 'int', ['void*', 'uint64']);
+    
+    // Friend Groups
+    this.SteamAPI_ISteamFriends_GetFriendsGroupCount = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendsGroupCount', 'int', ['void*']);
+    this.SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex', 'int16', ['void*', 'int']);
+    this.SteamAPI_ISteamFriends_GetFriendsGroupName = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendsGroupName', 'str', ['void*', 'int16']);
+    this.SteamAPI_ISteamFriends_GetFriendsGroupMembersCount = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendsGroupMembersCount', 'int', ['void*', 'int16']);
+    this.SteamAPI_ISteamFriends_GetFriendsGroupMembersList = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendsGroupMembersList', 'void', ['void*', 'int16', 'uint64*', 'int']);
+    
+    // Coplay (Recently Played With)
+    this.SteamAPI_ISteamFriends_GetCoplayFriendCount = this.steamLib.func('SteamAPI_ISteamFriends_GetCoplayFriendCount', 'int', ['void*']);
+    this.SteamAPI_ISteamFriends_GetCoplayFriend = this.steamLib.func('SteamAPI_ISteamFriends_GetCoplayFriend', 'uint64', ['void*', 'int']);
+    this.SteamAPI_ISteamFriends_GetFriendCoplayTime = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendCoplayTime', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamFriends_GetFriendCoplayGame = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendCoplayGame', 'uint32', ['void*', 'uint64']);
   }
 
   /**

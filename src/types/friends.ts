@@ -70,3 +70,22 @@ export interface FriendGameInfo {
   queryPort: number;
   steamIDLobby: string;
 }
+
+/**
+ * Friend group ID type
+ */
+export type FriendsGroupID_t = number;
+
+/**
+ * Invalid friends group ID constant
+ */
+export const INVALID_FRIENDS_GROUP_ID: FriendsGroupID_t = -1;
+
+/**
+ * Coplay friend information
+ */
+export interface CoplayFriendInfo {
+  steamId: string;
+  coplayTime: number;  // Unix timestamp of when last played together
+  coplayGame: number;  // App ID of game played together
+}

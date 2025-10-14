@@ -4,7 +4,7 @@ Complete reference for Steam Friends and social functionality in Steamworks FFI.
 
 ## Overview
 
-The `SteamFriendsManager` provides implementation of the Steamworks Friends API with 10 essential functions for managing friends and social features.
+The `SteamFriendsManager` provides implementation of the Steamworks Friends API with 22 essential functions for managing friends and social features.
 
 ## Quick Reference
 
@@ -14,6 +14,9 @@ The `SteamFriendsManager` provides implementation of the Steamworks Friends API 
 | [Friends List](#friends-list-management) | 4 | Count, iterate, and retrieve friends |
 | [Friend Information](#friend-information) | 3 | Get friend details and status |
 | [Friend Activity](#friend-activity) | 1 | Check what games friends are playing |
+| [Avatars](#friend-avatars) | 3 | Get friend avatar image handles |
+| [Friend Groups](#friend-groups-tags) | 5 | Manage Steam friend groups (tags) |
+| [Coplay](#coplay-recently-played-with) | 4 | Track recently played with users |
 
 ---
 
@@ -551,6 +554,508 @@ Array.from(gamesPlayed.entries())
 - Display "Join Game" buttons in UI
 - Track gaming activity patterns
 - Find friends on the same server
+
+---
+
+## Friend Avatars
+
+Get avatar image handles for friends' profile pictures.
+
+### `getSmallFriendAvatar(steamId)`
+
+Gets the handle for a friend's small (32x32) avatar image.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetSmallFriendAvatar()` - Get 32x32 avatar handle
+
+**Parameters:**
+- `steamId: string` - Friend's Steam ID
+
+**Returns:** `number` - Image handle for use with ISteamUtils, or 0 if unavailable
+
+**Example:**
+```typescript
+const friends = steam.friends.getAllFriends();
+
+friends.slice(0, 5).forEach(friend => {
+  const avatarHandle = steam.friends.getSmallFriendAvatar(friend.steamId);
+  
+  if (avatarHandle > 0) {
+    console.log(`${friend.personaName}: Small avatar handle = ${avatarHandle}`);
+    // Use handle with ISteamUtils::GetImageRGBA() to get actual image data
+  } else {
+    console.log(`${friend.personaName}: Avatar not available yet`);
+  }
+});
+```
+
+**Note:** The handle can be used with ISteamUtils functions to retrieve the actual image data. If 0 is returned, the image might still be loading - try again after a short delay.
+
+---
+
+### `getMediumFriendAvatar(steamId)`
+
+Gets the handle for a friend's medium (64x64) avatar image.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetMediumFriendAvatar()` - Get 64x64 avatar handle
+
+**Parameters:**
+- `steamId: string` - Friend's Steam ID
+
+**Returns:** `number` - Image handle for use with ISteamUtils, or 0 if unavailable
+
+**Example:**
+```typescript
+const friendId = steam.friends.getFriendByIndex(0, EFriendFlags.Immediate);
+
+if (friendId) {
+  const mediumAvatar = steam.friends.getMediumFriendAvatar(friendId);
+  
+  if (mediumAvatar > 0) {
+    console.log(`Medium avatar handle: ${mediumAvatar}`);
+    // Ideal for profile displays and lobby lists
+  }
+}
+```
+
+**Use Cases:**
+- User profile displays
+- Game lobby player lists
+- Standard UI elements
+- Chat windows with larger avatars
+
+---
+
+### `getLargeFriendAvatar(steamId)`
+
+Gets the handle for a friend's large (184x184) avatar image.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetLargeFriendAvatar()` - Get 184x184 avatar handle
+
+**Parameters:**
+- `steamId: string` - Friend's Steam ID
+
+**Returns:** `number` - Image handle for use with ISteamUtils, or 0 if unavailable
+
+**Example:**
+```typescript
+const friends = steam.friends.getAllFriends();
+
+friends.forEach(friend => {
+  const small = steam.friends.getSmallFriendAvatar(friend.steamId);
+  const medium = steam.friends.getMediumFriendAvatar(friend.steamId);
+  const large = steam.friends.getLargeFriendAvatar(friend.steamId);
+  
+  console.log(`${friend.personaName} avatars:`);
+  console.log(`  Small (32x32): ${small > 0 ? `✓ ${small}` : '✗'}`);
+  console.log(`  Medium (64x64): ${medium > 0 ? `✓ ${medium}` : '✗'}`);
+  console.log(`  Large (184x184): ${large > 0 ? `✓ ${large}` : '✗'}`);
+});
+```
+
+**Use Cases:**
+- Detailed profile views
+- Full-screen overlays
+- High-resolution displays
+- Player cards or detailed info panels
+
+---
+
+## Friend Groups (Tags)
+
+Manage and retrieve information about Steam friend groups (also called friend tags).
+
+### `getFriendsGroupCount()`
+
+Gets the number of Steam friend groups (tags) the user has created.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetFriendsGroupCount()` - Get count of friend groups
+
+**Returns:** `number` - Number of friend groups, or 0 if none
+
+**Example:**
+```typescript
+const groupCount = steam.friends.getFriendsGroupCount();
+console.log(`You have ${groupCount} friend groups`);
+
+if (groupCount > 0) {
+  console.log('Friend groups:');
+  for (let i = 0; i < groupCount; i++) {
+    const groupId = steam.friends.getFriendsGroupIDByIndex(i);
+    const groupName = steam.friends.getFriendsGroupName(groupId);
+    console.log(`  ${i + 1}. ${groupName}`);
+  }
+}
+```
+
+**Note:** Friend groups are created and managed by users in the Steam client to organize their friends into custom categories.
+
+---
+
+### `getFriendsGroupIDByIndex(index)`
+
+Gets a friend group ID by its index.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex()` - Get group ID at index
+
+**Parameters:**
+- `index: number` - Zero-based index (0 to `getFriendsGroupCount()` - 1)
+
+**Returns:** `FriendsGroupID_t` (number) - Group ID, or `INVALID_FRIENDS_GROUP_ID` (-1) if invalid
+
+**Example:**
+```typescript
+import { INVALID_FRIENDS_GROUP_ID } from 'steamworks-ffi-node';
+
+const groupCount = steam.friends.getFriendsGroupCount();
+
+for (let i = 0; i < groupCount; i++) {
+  const groupId = steam.friends.getFriendsGroupIDByIndex(i);
+  
+  if (groupId !== INVALID_FRIENDS_GROUP_ID) {
+    const name = steam.friends.getFriendsGroupName(groupId);
+    const memberCount = steam.friends.getFriendsGroupMembersCount(groupId);
+    
+    console.log(`Group: ${name} (${memberCount} members)`);
+  }
+}
+```
+
+---
+
+### `getFriendsGroupName(groupId)`
+
+Gets the name of a friend group.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetFriendsGroupName()` - Get group name
+
+**Parameters:**
+- `groupId: FriendsGroupID_t` - The friend group ID
+
+**Returns:** `string` - Group name, or empty string if unavailable
+
+**Example:**
+```typescript
+const groupId = steam.friends.getFriendsGroupIDByIndex(0);
+
+if (groupId !== INVALID_FRIENDS_GROUP_ID) {
+  const name = steam.friends.getFriendsGroupName(groupId);
+  console.log(`First group is named: "${name}"`);
+}
+```
+
+---
+
+### `getFriendsGroupMembersCount(groupId)`
+
+Gets the number of members in a friend group.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetFriendsGroupMembersCount()` - Get member count
+
+**Parameters:**
+- `groupId: FriendsGroupID_t` - The friend group ID
+
+**Returns:** `number` - Number of friends in the group, or 0 if none/invalid
+
+**Example:**
+```typescript
+const groupCount = steam.friends.getFriendsGroupCount();
+
+console.log('Friend Group Summary:');
+for (let i = 0; i < groupCount; i++) {
+  const groupId = steam.friends.getFriendsGroupIDByIndex(i);
+  const name = steam.friends.getFriendsGroupName(groupId);
+  const memberCount = steam.friends.getFriendsGroupMembersCount(groupId);
+  
+  console.log(`📁 ${name}: ${memberCount} members`);
+}
+```
+
+---
+
+### `getFriendsGroupMembersList(groupId)`
+
+Gets the list of Steam IDs for all members in a friend group.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetFriendsGroupMembersList()` - Get all member Steam IDs
+
+**Parameters:**
+- `groupId: FriendsGroupID_t` - The friend group ID
+
+**Returns:** `string[]` - Array of Steam IDs (as strings), or empty array if none
+
+**Example:**
+```typescript
+const groupId = steam.friends.getFriendsGroupIDByIndex(0);
+
+if (groupId !== INVALID_FRIENDS_GROUP_ID) {
+  const groupName = steam.friends.getFriendsGroupName(groupId);
+  const members = steam.friends.getFriendsGroupMembersList(groupId);
+  
+  console.log(`\n📁 Group: ${groupName}`);
+  console.log(`Members (${members.length}):`);
+  
+  members.forEach((steamId, index) => {
+    const name = steam.friends.getFriendPersonaName(steamId);
+    const state = steam.friends.getFriendPersonaState(steamId);
+    const status = state === EPersonaState.Online ? '🟢' : '⚫';
+    
+    console.log(`  ${index + 1}. ${status} ${name}`);
+  });
+}
+
+// List all groups with online members
+const groupCount = steam.friends.getFriendsGroupCount();
+
+for (let i = 0; i < groupCount; i++) {
+  const groupId = steam.friends.getFriendsGroupIDByIndex(i);
+  const groupName = steam.friends.getFriendsGroupName(groupId);
+  const members = steam.friends.getFriendsGroupMembersList(groupId);
+  
+  const onlineMembers = members.filter(steamId => {
+    const state = steam.friends.getFriendPersonaState(steamId);
+    return state !== EPersonaState.Offline;
+  });
+  
+  if (onlineMembers.length > 0) {
+    console.log(`\n${groupName}: ${onlineMembers.length} online`);
+    onlineMembers.forEach(steamId => {
+      const name = steam.friends.getFriendPersonaName(steamId);
+      console.log(`  🟢 ${name}`);
+    });
+  }
+}
+```
+
+**Use Cases:**
+- Display organized friend lists
+- Filter friends by custom categories
+- Show online status per group
+- Create custom friend list views
+
+---
+
+## Coplay (Recently Played With)
+
+Track and retrieve information about users you've recently played multiplayer games with.
+
+### `getCoplayFriendCount()`
+
+Gets the number of users you've recently played with.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetCoplayFriendCount()` - Get coplay friend count
+
+**Returns:** `number` - Number of recent coplay users, or 0 if none
+
+**Example:**
+```typescript
+const coplayCount = steam.friends.getCoplayFriendCount();
+console.log(`You've recently played with ${coplayCount} users`);
+
+if (coplayCount > 0) {
+  console.log('\nRecent Players:');
+  for (let i = 0; i < coplayCount; i++) {
+    const steamId = steam.friends.getCoplayFriend(i);
+    const name = steam.friends.getFriendPersonaName(steamId);
+    console.log(`  ${i + 1}. ${name}`);
+  }
+}
+```
+
+**Note:** "Coplay" refers to users you've been in multiplayer games with. Steam tracks these relationships automatically.
+
+---
+
+### `getCoplayFriend(index)`
+
+Gets a coplay friend's Steam ID by their index.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetCoplayFriend()` - Get coplay friend at index
+
+**Parameters:**
+- `index: number` - Zero-based index (0 to `getCoplayFriendCount()` - 1)
+
+**Returns:** `string` - Friend's Steam ID, or empty string if invalid index
+
+**Example:**
+```typescript
+const count = steam.friends.getCoplayFriendCount();
+
+for (let i = 0; i < count; i++) {
+  const steamId = steam.friends.getCoplayFriend(i);
+  
+  if (steamId) {
+    const name = steam.friends.getFriendPersonaName(steamId);
+    const time = steam.friends.getFriendCoplayTime(steamId);
+    const appId = steam.friends.getFriendCoplayGame(steamId);
+    
+    console.log(`${name}:`);
+    console.log(`  Last played: ${new Date(time * 1000).toLocaleDateString()}`);
+    console.log(`  Game: App ${appId}`);
+  }
+}
+```
+
+---
+
+### `getFriendCoplayTime(steamId)`
+
+Gets the last time you played with a specific user.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetFriendCoplayTime()` - Get last coplay timestamp
+
+**Parameters:**
+- `steamId: string` - Friend's Steam ID
+
+**Returns:** `number` - Unix timestamp (seconds since 1970), or 0 if never/unavailable
+
+**Example:**
+```typescript
+const coplayFriends = [];
+const count = steam.friends.getCoplayFriendCount();
+
+for (let i = 0; i < count; i++) {
+  const steamId = steam.friends.getCoplayFriend(i);
+  const name = steam.friends.getFriendPersonaName(steamId);
+  const time = steam.friends.getFriendCoplayTime(steamId);
+  
+  coplayFriends.push({ name, steamId, time });
+}
+
+// Sort by most recent
+coplayFriends.sort((a, b) => b.time - a.time);
+
+console.log('Most Recent Players:');
+coplayFriends.slice(0, 10).forEach((friend, index) => {
+  const date = new Date(friend.time * 1000);
+  const daysSince = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+  
+  console.log(`${index + 1}. ${friend.name}`);
+  console.log(`   ${daysSince} days ago (${date.toLocaleDateString()})`);
+});
+```
+
+---
+
+### `getFriendCoplayGame(steamId)`
+
+Gets the App ID of the game you last played with a specific user.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamFriends_GetFriendCoplayGame()` - Get last coplay game App ID
+
+**Parameters:**
+- `steamId: string` - Friend's Steam ID
+
+**Returns:** `number` - Steam App ID, or 0 if never/unavailable
+
+**Example:**
+```typescript
+const count = steam.friends.getCoplayFriendCount();
+
+// Group by game
+const gameGroups = new Map<number, string[]>();
+
+for (let i = 0; i < count; i++) {
+  const steamId = steam.friends.getCoplayFriend(i);
+  const appId = steam.friends.getFriendCoplayGame(steamId);
+  
+  if (appId > 0) {
+    if (!gameGroups.has(appId)) {
+      gameGroups.set(appId, []);
+    }
+    
+    const name = steam.friends.getFriendPersonaName(steamId);
+    gameGroups.get(appId)!.push(name);
+  }
+}
+
+console.log('Games Played With Others:');
+gameGroups.forEach((names, appId) => {
+  console.log(`\n🎮 App ${appId} (${names.length} players):`);
+  names.forEach(name => console.log(`   - ${name}`));
+});
+
+// Find who you played a specific game with
+const findCoplayersForGame = (targetAppId: number) => {
+  const players = [];
+  
+  for (let i = 0; i < count; i++) {
+    const steamId = steam.friends.getCoplayFriend(i);
+    const appId = steam.friends.getFriendCoplayGame(steamId);
+    
+    if (appId === targetAppId) {
+      const name = steam.friends.getFriendPersonaName(steamId);
+      const time = steam.friends.getFriendCoplayTime(steamId);
+      players.push({ name, steamId, time });
+    }
+  }
+  
+  return players.sort((a, b) => b.time - a.time);
+};
+
+const cs2Players = findCoplayersForGame(730); // Counter-Strike 2
+console.log(`\nYou played CS2 with ${cs2Players.length} people`);
+```
+
+**Complete Coplay Example:**
+```typescript
+// Get all coplay information
+interface CoplayInfo {
+  steamId: string;
+  name: string;
+  time: number;
+  appId: number;
+  daysAgo: number;
+}
+
+const coplayInfo: CoplayInfo[] = [];
+const count = steam.friends.getCoplayFriendCount();
+
+for (let i = 0; i < count; i++) {
+  const steamId = steam.friends.getCoplayFriend(i);
+  const name = steam.friends.getFriendPersonaName(steamId);
+  const time = steam.friends.getFriendCoplayTime(steamId);
+  const appId = steam.friends.getFriendCoplayGame(steamId);
+  const daysAgo = Math.floor((Date.now() / 1000 - time) / (60 * 60 * 24));
+  
+  coplayInfo.push({ steamId, name, time, appId, daysAgo });
+}
+
+// Recent players (last 7 days)
+const recent = coplayInfo.filter(p => p.daysAgo <= 7);
+console.log(`\n📅 Played with ${recent.length} people in the last week`);
+
+// Most frequent game
+const gameCounts = new Map<number, number>();
+coplayInfo.forEach(p => {
+  gameCounts.set(p.appId, (gameCounts.get(p.appId) || 0) + 1);
+});
+
+const mostPlayed = Array.from(gameCounts.entries())
+  .sort((a, b) => b[1] - a[1])[0];
+
+if (mostPlayed) {
+  console.log(`🎮 Most played with others: App ${mostPlayed[0]} (${mostPlayed[1]} players)`);
+}
+```
+
+**Use Cases:**
+- Show recent multiplayer partners
+- Find people to play with again
+- Track multiplayer activity
+- Build social features around gameplay
+- Recommend friends based on shared games
 
 ---
 

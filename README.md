@@ -15,7 +15,7 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 > 🎉 **NEW: 100% Leaderboard API Coverage** - All 7 Steam leaderboard functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)
 
-> 🎉 **NEW: Friends API** - 10 essential Steam friends and social functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)
+> 🎉 **NEW: Friends API** - 22 complete Steam friends and social functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)
 
 > 🎉 **NEW: Rich Presence API** - 6 functions for custom status display and friend join functionality! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/RICH_PRESENCE_MANAGER.md)
 
@@ -39,11 +39,14 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
   - ✅ Score operations (upload with optional details)
   - ✅ Entry download (global, friends, specific users)
   - ✅ UGC integration (attach replays/screenshots to entries)
-- **Friends & Social API**: Essential Steam friends and social features (10 core functions)
+- **Friends & Social API**: Complete Steam friends and social features (22 functions)
   - ✅ Current user info (persona name, online state)
   - ✅ Friends list management (count, iterate, get all friends)
   - ✅ Friend information (names, states, relationships, Steam levels)
   - ✅ Friend activity (check games being played)
+  - ✅ Friend avatars (small/medium/large avatar handles)
+  - ✅ Friend groups (tags/categories management)
+  - ✅ Coplay tracking (recently played with users)
 - **Rich Presence API**: Complete Rich Presence support (6 functions)
   - ✅ Set/clear rich presence key/value pairs
   - ✅ Query friend rich presence data
@@ -150,12 +153,37 @@ if (initialized) {
     const level = steam.friends.getFriendSteamLevel(friend.steamId);
     console.log(`${name}: Level ${level}, Status: ${state}`);
     
+    // Get avatar handles
+    const smallAvatar = steam.friends.getSmallFriendAvatar(friend.steamId);
+    const mediumAvatar = steam.friends.getMediumFriendAvatar(friend.steamId);
+    if (smallAvatar > 0) {
+      console.log(`  Avatar handles: small=${smallAvatar}, medium=${mediumAvatar}`);
+    }
+    
     // Check if playing a game
     const gameInfo = steam.friends.getFriendGamePlayed(friend.steamId);
-    if (gameInfo.playing) {
-      console.log(`  Playing: ${gameInfo.gameName} (AppID: ${gameInfo.gameId})`);
+    if (gameInfo) {
+      console.log(`  Playing: App ${gameInfo.gameId}`);
     }
   });
+  
+  // Check friend groups (tags)
+  const groupCount = steam.friends.getFriendsGroupCount();
+  if (groupCount > 0) {
+    const groupId = steam.friends.getFriendsGroupIDByIndex(0);
+    const groupName = steam.friends.getFriendsGroupName(groupId);
+    const members = steam.friends.getFriendsGroupMembersList(groupId);
+    console.log(`Group "${groupName}" has ${members.length} members`);
+  }
+  
+  // Check recently played with
+  const coplayCount = steam.friends.getCoplayFriendCount();
+  if (coplayCount > 0) {
+    const recentPlayer = steam.friends.getCoplayFriend(0);
+    const playerName = steam.friends.getFriendPersonaName(recentPlayer);
+    const coplayTime = steam.friends.getFriendCoplayTime(recentPlayer);
+    console.log(`Recently played with ${playerName}`);
+  }
   
   // Set rich presence for custom status
   steam.richPresence.setRichPresence('status', 'In Main Menu');
@@ -212,7 +240,7 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Achievement Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)** - Complete achievement system (20 functions)
 - **[Stats Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)** - User and global statistics (14 functions)
 - **[Leaderboard Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)** - Leaderboard operations (7 functions)
-- **[Friends Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)** - Friends and social features (10 functions)
+- **[Friends Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)** - Friends and social features (22 functions)
 - **[Rich Presence Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/RICH_PRESENCE_MANAGER.md)** - Custom status display and join functionality (6 functions)
 - **[Overlay Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)** - Steam overlay control (7 functions)
 
