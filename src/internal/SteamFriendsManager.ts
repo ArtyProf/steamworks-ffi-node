@@ -6,7 +6,10 @@ import {
   EPersonaState, 
   EFriendFlags, 
   FriendInfo, 
-  FriendGameInfo 
+  FriendGameInfo,
+  FriendsGroupID_t,
+  INVALID_FRIENDS_GROUP_ID,
+  CoplayFriendInfo
 } from '../types';
 
 /**
@@ -605,6 +608,643 @@ export class SteamFriendsManager {
     } catch (error) {
       console.error(`[Steamworks] Error getting friend game played for ${steamId}:`, error);
       return null;
+    }
+  }
+
+  // ========================================
+  // Avatar Functions
+  // ========================================
+
+  /**
+   * Gets the handle for a friend's small (32x32) avatar image
+   * 
+   * @param steamId - The friend's Steam ID as a string
+   * @returns Image handle for use with ISteamUtils, or 0 if unavailable
+   * 
+   * @remarks
+   * This returns a handle that can be used with ISteamUtils::GetImageSize() 
+   * and ISteamUtils::GetImageRGBA() to retrieve the actual image data.
+   * 
+   * Small avatars are 32x32 pixels and are suitable for:
+   * - Friend list thumbnails
+   * - Chat message icons
+   * - Compact UI elements
+   * 
+   * The avatar image is cached by Steam. If it returns 0, the image might
+   * still be loading. You can try again after a short delay.
+   * 
+   * @example
+   * ```typescript
+   * const avatarHandle = steam.friends.getSmallFriendAvatar(friendSteamId);
+   * if (avatarHandle > 0) {
+   *   console.log(`Small avatar handle: ${avatarHandle}`);
+   *   // Use with ISteamUtils to get actual image data
+   * }
+   * ```
+   * 
+   * @see {@link getMediumFriendAvatar}
+   * @see {@link getLargeFriendAvatar}
+   */
+  getSmallFriendAvatar(steamId: string): number {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return 0;
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return 0;
+    }
+
+    try {
+      const handle = this.libraryLoader.SteamAPI_ISteamFriends_GetSmallFriendAvatar(friendsInterface, BigInt(steamId));
+      return handle;
+    } catch (error) {
+      console.error(`[Steamworks] Error getting small friend avatar for ${steamId}:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the handle for a friend's medium (64x64) avatar image
+   * 
+   * @param steamId - The friend's Steam ID as a string
+   * @returns Image handle for use with ISteamUtils, or 0 if unavailable
+   * 
+   * @remarks
+   * This returns a handle that can be used with ISteamUtils::GetImageSize() 
+   * and ISteamUtils::GetImageRGBA() to retrieve the actual image data.
+   * 
+   * Medium avatars are 64x64 pixels and are suitable for:
+   * - User profiles
+   * - Game lobby player lists
+   * - Standard UI elements
+   * 
+   * The avatar image is cached by Steam. If it returns 0, the image might
+   * still be loading. You can try again after a short delay.
+   * 
+   * @example
+   * ```typescript
+   * const avatarHandle = steam.friends.getMediumFriendAvatar(friendSteamId);
+   * if (avatarHandle > 0) {
+   *   console.log(`Medium avatar handle: ${avatarHandle}`);
+   *   // Use with ISteamUtils to get actual image data
+   * }
+   * ```
+   * 
+   * @see {@link getSmallFriendAvatar}
+   * @see {@link getLargeFriendAvatar}
+   */
+  getMediumFriendAvatar(steamId: string): number {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return 0;
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return 0;
+    }
+
+    try {
+      const handle = this.libraryLoader.SteamAPI_ISteamFriends_GetMediumFriendAvatar(friendsInterface, BigInt(steamId));
+      return handle;
+    } catch (error) {
+      console.error(`[Steamworks] Error getting medium friend avatar for ${steamId}:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the handle for a friend's large (184x184) avatar image
+   * 
+   * @param steamId - The friend's Steam ID as a string
+   * @returns Image handle for use with ISteamUtils, or 0 if unavailable
+   * 
+   * @remarks
+   * This returns a handle that can be used with ISteamUtils::GetImageSize() 
+   * and ISteamUtils::GetImageRGBA() to retrieve the actual image data.
+   * 
+   * Large avatars are 184x184 pixels and are suitable for:
+   * - Detailed profile views
+   * - Full-screen overlays
+   * - High-resolution displays
+   * 
+   * The avatar image is cached by Steam. If it returns 0, the image might
+   * still be loading. You can try again after a short delay.
+   * 
+   * @example
+   * ```typescript
+   * const avatarHandle = steam.friends.getLargeFriendAvatar(friendSteamId);
+   * if (avatarHandle > 0) {
+   *   console.log(`Large avatar handle: ${avatarHandle}`);
+   *   // Use with ISteamUtils to get actual image data
+   * }
+   * ```
+   * 
+   * @see {@link getSmallFriendAvatar}
+   * @see {@link getMediumFriendAvatar}
+   */
+  getLargeFriendAvatar(steamId: string): number {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return 0;
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return 0;
+    }
+
+    try {
+      const handle = this.libraryLoader.SteamAPI_ISteamFriends_GetLargeFriendAvatar(friendsInterface, BigInt(steamId));
+      return handle;
+    } catch (error) {
+      console.error(`[Steamworks] Error getting large friend avatar for ${steamId}:`, error);
+      return 0;
+    }
+  }
+
+  // ========================================
+  // Friend Groups Functions
+  // ========================================
+
+  /**
+   * Gets the number of Steam friend groups (tags) the user has created
+   * 
+   * @returns The number of friend groups, or 0 if unavailable
+   * 
+   * @remarks
+   * Steam allows users to organize friends into custom groups (also called tags).
+   * This returns the total number of groups the current user has created.
+   * 
+   * Use this with {@link getFriendsGroupIDByIndex} to iterate through all groups.
+   * 
+   * @example
+   * ```typescript
+   * const groupCount = steam.friends.getFriendsGroupCount();
+   * console.log(`You have ${groupCount} friend groups`);
+   * 
+   * for (let i = 0; i < groupCount; i++) {
+   *   const groupId = steam.friends.getFriendsGroupIDByIndex(i);
+   *   const groupName = steam.friends.getFriendsGroupName(groupId);
+   *   console.log(`Group ${i}: ${groupName}`);
+   * }
+   * ```
+   * 
+   * @see {@link getFriendsGroupIDByIndex}
+   * @see {@link getFriendsGroupName}
+   */
+  getFriendsGroupCount(): number {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return 0;
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return 0;
+    }
+
+    try {
+      const count = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendsGroupCount(friendsInterface);
+      return count;
+    } catch (error) {
+      console.error('[Steamworks] Error getting friends group count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Gets a friend group ID by its index
+   * 
+   * @param index - Zero-based index of the group (0 to {@link getFriendsGroupCount}() - 1)
+   * @returns The group ID, or {@link INVALID_FRIENDS_GROUP_ID} if the index is invalid
+   * 
+   * @remarks
+   * Use this method to iterate through all friend groups:
+   * 1. Call {@link getFriendsGroupCount} to get the total number of groups
+   * 2. Loop from 0 to count-1 calling this method to get each group ID
+   * 3. Use the returned ID with {@link getFriendsGroupName} and {@link getFriendsGroupMembersList}
+   * 
+   * @example
+   * ```typescript
+   * const groupCount = steam.friends.getFriendsGroupCount();
+   * for (let i = 0; i < groupCount; i++) {
+   *   const groupId = steam.friends.getFriendsGroupIDByIndex(i);
+   *   if (groupId !== INVALID_FRIENDS_GROUP_ID) {
+   *     const name = steam.friends.getFriendsGroupName(groupId);
+   *     const memberCount = steam.friends.getFriendsGroupMembersCount(groupId);
+   *     console.log(`Group: ${name} (${memberCount} members)`);
+   *   }
+   * }
+   * ```
+   * 
+   * @see {@link getFriendsGroupCount}
+   * @see {@link getFriendsGroupName}
+   * @see {@link INVALID_FRIENDS_GROUP_ID}
+   */
+  getFriendsGroupIDByIndex(index: number): FriendsGroupID_t {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return INVALID_FRIENDS_GROUP_ID;
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return INVALID_FRIENDS_GROUP_ID;
+    }
+
+    try {
+      const groupId = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex(friendsInterface, index);
+      return groupId;
+    } catch (error) {
+      console.error(`[Steamworks] Error getting friends group ID by index ${index}:`, error);
+      return INVALID_FRIENDS_GROUP_ID;
+    }
+  }
+
+  /**
+   * Gets the name of a friend group
+   * 
+   * @param groupId - The ID of the friend group
+   * @returns The group name, or empty string if unavailable
+   * 
+   * @remarks
+   * Returns the user-defined name for the specified friend group.
+   * Group names are created and managed by the user in the Steam client.
+   * 
+   * @example
+   * ```typescript
+   * const groupId = steam.friends.getFriendsGroupIDByIndex(0);
+   * if (groupId !== INVALID_FRIENDS_GROUP_ID) {
+   *   const name = steam.friends.getFriendsGroupName(groupId);
+   *   console.log(`First group is named: ${name}`);
+   * }
+   * ```
+   * 
+   * @see {@link getFriendsGroupIDByIndex}
+   * @see {@link getFriendsGroupMembersCount}
+   */
+  getFriendsGroupName(groupId: FriendsGroupID_t): string {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return '';
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return '';
+    }
+
+    try {
+      const name = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendsGroupName(friendsInterface, groupId);
+      return name || '';
+    } catch (error) {
+      console.error(`[Steamworks] Error getting friends group name for ${groupId}:`, error);
+      return '';
+    }
+  }
+
+  /**
+   * Gets the number of members in a friend group
+   * 
+   * @param groupId - The ID of the friend group
+   * @returns The number of friends in the group, or 0 if unavailable
+   * 
+   * @remarks
+   * Returns how many friends are assigned to the specified group.
+   * Use this with {@link getFriendsGroupMembersList} to retrieve the actual members.
+   * 
+   * @example
+   * ```typescript
+   * const groupId = steam.friends.getFriendsGroupIDByIndex(0);
+   * const memberCount = steam.friends.getFriendsGroupMembersCount(groupId);
+   * console.log(`Group has ${memberCount} members`);
+   * ```
+   * 
+   * @see {@link getFriendsGroupMembersList}
+   * @see {@link getFriendsGroupName}
+   */
+  getFriendsGroupMembersCount(groupId: FriendsGroupID_t): number {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return 0;
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return 0;
+    }
+
+    try {
+      const count = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendsGroupMembersCount(friendsInterface, groupId);
+      return count;
+    } catch (error) {
+      console.error(`[Steamworks] Error getting friends group members count for ${groupId}:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the list of Steam IDs for all members in a friend group
+   * 
+   * @param groupId - The ID of the friend group
+   * @returns Array of Steam IDs (as strings) of friends in the group
+   * 
+   * @remarks
+   * Returns an array containing the Steam ID of each friend assigned to this group.
+   * The array will be empty if the group has no members or if an error occurs.
+   * 
+   * This method allocates memory for the maximum possible members and then
+   * populates it with the actual members. The returned array only contains
+   * the actual members, not the full allocated buffer.
+   * 
+   * @example
+   * ```typescript
+   * const groupId = steam.friends.getFriendsGroupIDByIndex(0);
+   * const groupName = steam.friends.getFriendsGroupName(groupId);
+   * const members = steam.friends.getFriendsGroupMembersList(groupId);
+   * 
+   * console.log(`Group "${groupName}" has ${members.length} members:`);
+   * members.forEach(steamId => {
+   *   const name = steam.friends.getFriendPersonaName(steamId);
+   *   console.log(`  - ${name} (${steamId})`);
+   * });
+   * ```
+   * 
+   * @see {@link getFriendsGroupMembersCount}
+   * @see {@link getFriendsGroupName}
+   */
+  getFriendsGroupMembersList(groupId: FriendsGroupID_t): string[] {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return [];
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return [];
+    }
+
+    try {
+      const memberCount = this.getFriendsGroupMembersCount(groupId);
+      if (memberCount === 0) {
+        return [];
+      }
+
+      const membersPtr = koffi.alloc('uint64', memberCount);
+      this.libraryLoader.SteamAPI_ISteamFriends_GetFriendsGroupMembersList(
+        friendsInterface, 
+        groupId, 
+        membersPtr, 
+        memberCount
+      );
+
+      const membersArray = koffi.decode(membersPtr, koffi.array('uint64', memberCount));
+      return membersArray.map((id: bigint) => id.toString());
+    } catch (error) {
+      console.error(`[Steamworks] Error getting friends group members list for ${groupId}:`, error);
+      return [];
+    }
+  }
+
+  // ========================================
+  // Coplay (Recently Played With) Functions
+  // ========================================
+
+  /**
+   * Gets the number of users the current user has recently played with
+   * 
+   * @returns The number of coplay friends, or 0 if unavailable
+   * 
+   * @remarks
+   * "Coplay" refers to users you've recently been in multiplayer games with.
+   * Steam tracks these relationships automatically when you play games together.
+   * 
+   * Use this with {@link getCoplayFriend} to iterate through all coplay friends.
+   * 
+   * @example
+   * ```typescript
+   * const coplayCount = steam.friends.getCoplayFriendCount();
+   * console.log(`You've recently played with ${coplayCount} users`);
+   * 
+   * for (let i = 0; i < coplayCount; i++) {
+   *   const steamId = steam.friends.getCoplayFriend(i);
+   *   const name = steam.friends.getFriendPersonaName(steamId);
+   *   const time = steam.friends.getFriendCoplayTime(steamId);
+   *   console.log(`Played with ${name} at ${new Date(time * 1000)}`);
+   * }
+   * ```
+   * 
+   * @see {@link getCoplayFriend}
+   * @see {@link getFriendCoplayTime}
+   * @see {@link getFriendCoplayGame}
+   */
+  getCoplayFriendCount(): number {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return 0;
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return 0;
+    }
+
+    try {
+      const count = this.libraryLoader.SteamAPI_ISteamFriends_GetCoplayFriendCount(friendsInterface);
+      return count;
+    } catch (error) {
+      console.error('[Steamworks] Error getting coplay friend count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Gets a coplay friend's Steam ID by their index
+   * 
+   * @param index - Zero-based index of the coplay friend (0 to {@link getCoplayFriendCount}() - 1)
+   * @returns The friend's Steam ID as a string, or empty string if the index is invalid
+   * 
+   * @remarks
+   * Use this method to iterate through all users you've recently played with:
+   * 1. Call {@link getCoplayFriendCount} to get the total number
+   * 2. Loop from 0 to count-1 calling this method to get each Steam ID
+   * 3. Use the returned ID with {@link getFriendCoplayTime} and {@link getFriendCoplayGame}
+   * 
+   * @example
+   * ```typescript
+   * const count = steam.friends.getCoplayFriendCount();
+   * for (let i = 0; i < count; i++) {
+   *   const steamId = steam.friends.getCoplayFriend(i);
+   *   if (steamId) {
+   *     const name = steam.friends.getFriendPersonaName(steamId);
+   *     const appId = steam.friends.getFriendCoplayGame(steamId);
+   *     console.log(`Played with ${name} in app ${appId}`);
+   *   }
+   * }
+   * ```
+   * 
+   * @see {@link getCoplayFriendCount}
+   * @see {@link getFriendCoplayTime}
+   */
+  getCoplayFriend(index: number): string {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return '';
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return '';
+    }
+
+    try {
+      const steamId = this.libraryLoader.SteamAPI_ISteamFriends_GetCoplayFriend(friendsInterface, index);
+      
+      if (steamId && steamId !== 0n) {
+        return steamId.toString();
+      }
+
+      return '';
+    } catch (error) {
+      console.error(`[Steamworks] Error getting coplay friend by index ${index}:`, error);
+      return '';
+    }
+  }
+
+  /**
+   * Gets the last time you played with a specific user
+   * 
+   * @param steamId - The friend's Steam ID as a string
+   * @returns Unix timestamp of when you last played together, or 0 if never/unavailable
+   * 
+   * @remarks
+   * Returns the Unix timestamp (seconds since January 1, 1970) of the most recent
+   * time you were in a multiplayer game with this user.
+   * 
+   * Returns 0 if:
+   * - You've never played with this user
+   * - The information is not available
+   * - The Steam API is not initialized
+   * 
+   * @example
+   * ```typescript
+   * const steamId = steam.friends.getCoplayFriend(0);
+   * const timestamp = steam.friends.getFriendCoplayTime(steamId);
+   * 
+   * if (timestamp > 0) {
+   *   const date = new Date(timestamp * 1000);
+   *   console.log(`Last played together on: ${date.toLocaleDateString()}`);
+   * }
+   * ```
+   * 
+   * @see {@link getCoplayFriend}
+   * @see {@link getFriendCoplayGame}
+   */
+  getFriendCoplayTime(steamId: string): number {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return 0;
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return 0;
+    }
+
+    try {
+      const time = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendCoplayTime(friendsInterface, BigInt(steamId));
+      return time;
+    } catch (error) {
+      console.error(`[Steamworks] Error getting friend coplay time for ${steamId}:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the App ID of the game you last played with a specific user
+   * 
+   * @param steamId - The friend's Steam ID as a string
+   * @returns The Steam App ID of the game, or 0 if never/unavailable
+   * 
+   * @remarks
+   * Returns the Steam App ID of the game you most recently played together with this user.
+   * 
+   * Returns 0 if:
+   * - You've never played with this user
+   * - The information is not available
+   * - The Steam API is not initialized
+   * 
+   * @example
+   * ```typescript
+   * const count = steam.friends.getCoplayFriendCount();
+   * for (let i = 0; i < count; i++) {
+   *   const steamId = steam.friends.getCoplayFriend(i);
+   *   const name = steam.friends.getFriendPersonaName(steamId);
+   *   const appId = steam.friends.getFriendCoplayGame(steamId);
+   *   const time = steam.friends.getFriendCoplayTime(steamId);
+   *   
+   *   console.log(`Played with ${name} in App ${appId}`);
+   *   console.log(`Last played: ${new Date(time * 1000).toLocaleDateString()}`);
+   * }
+   * ```
+   * 
+   * @example Get all coplay information
+   * ```typescript
+   * function getAllCoplayInfo(): CoplayFriendInfo[] {
+   *   const count = steam.friends.getCoplayFriendCount();
+   *   const coplayFriends: CoplayFriendInfo[] = [];
+   *   
+   *   for (let i = 0; i < count; i++) {
+   *     const steamId = steam.friends.getCoplayFriend(i);
+   *     if (steamId) {
+   *       coplayFriends.push({
+   *         steamId,
+   *         coplayTime: steam.friends.getFriendCoplayTime(steamId),
+   *         coplayGame: steam.friends.getFriendCoplayGame(steamId)
+   *       });
+   *     }
+   *   }
+   *   
+   *   return coplayFriends;
+   * }
+   * ```
+   * 
+   * @see {@link getCoplayFriend}
+   * @see {@link getFriendCoplayTime}
+   * @see {@link CoplayFriendInfo}
+   */
+  getFriendCoplayGame(steamId: string): number {
+    if (!this.apiCore.isInitialized()) {
+      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      return 0;
+    }
+
+    const friendsInterface = this.apiCore.getFriendsInterface();
+    if (!friendsInterface) {
+      console.warn('[Steamworks] WARNING: Friends interface not available');
+      return 0;
+    }
+
+    try {
+      const appId = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendCoplayGame(friendsInterface, BigInt(steamId));
+      return appId;
+    } catch (error) {
+      console.error(`[Steamworks] Error getting friend coplay game for ${steamId}:`, error);
+      return 0;
     }
   }
 }
