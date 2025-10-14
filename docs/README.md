@@ -65,12 +65,14 @@ This design:
 
 ### Friends & Social System
 - **[Friends Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)**
-  - **10 Functions** - Essential friends and social features
+  - **22 Functions** - Complete friends and social features
   - Current user info (get persona name, online status)
   - Friends list management (count, iterate, retrieve all)
-  - Friend information (names, status, relationship types)
+  - Friend information (names, status, relationship types, Steam levels)
   - Friend activity (check what games friends are playing)
-  - Steam levels and social features
+  - Friend avatars (small/medium/large avatar handles)
+  - Friend groups (manage and query friend tags/categories)
+  - Coplay tracking (recently played with users)
 
 ### Rich Presence System
 - **[Rich Presence Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/RICH_PRESENCE_MANAGER.md)**
@@ -103,7 +105,7 @@ This design:
 - Run Achievement Tests: `npm run test:achievements:js` - Tests all 20 achievement functions
 - Run Stats Tests: `npm run test:stats:js` - Tests all 14 stats functions
 - Run Leaderboard Tests: `npm run test:leaderboards:js` - Tests all 7 leaderboard functions
-- Run Friends Tests: `npm run test:friends:js` - Tests all 10 friends functions
+- Run Friends Tests: `npm run test:friends:js` - Tests all 22 friends functions
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:js` - Tests 6 rich presence + 7 overlay functions
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
