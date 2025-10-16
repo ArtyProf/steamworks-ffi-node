@@ -163,6 +163,32 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamFriends_GetFriendCoplayTime!: koffi.KoffiFunction;
   public SteamAPI_ISteamFriends_GetFriendCoplayGame!: koffi.KoffiFunction;
 
+  // ========================================
+  // ISteamRemoteStorage API Functions
+  // ========================================
+  
+  // Interface accessor
+  public SteamAPI_SteamRemoteStorage_v016!: koffi.KoffiFunction;
+  
+  // File operations
+  public SteamAPI_ISteamRemoteStorage_FileWrite!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_FileRead!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_FileExists!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_FileDelete!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_GetFileSize!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_GetFileTimestamp!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_FilePersisted!: koffi.KoffiFunction;
+  
+  // File iteration
+  public SteamAPI_ISteamRemoteStorage_GetFileCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_GetFileNameAndSize!: koffi.KoffiFunction;
+  
+  // Quota and settings
+  public SteamAPI_ISteamRemoteStorage_GetQuota!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp!: koffi.KoffiFunction;
+
   /**
    * Get platform-specific Steam library path
    */
@@ -373,6 +399,32 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamFriends_GetCoplayFriend = this.steamLib.func('SteamAPI_ISteamFriends_GetCoplayFriend', 'uint64', ['void*', 'int']);
     this.SteamAPI_ISteamFriends_GetFriendCoplayTime = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendCoplayTime', 'int', ['void*', 'uint64']);
     this.SteamAPI_ISteamFriends_GetFriendCoplayGame = this.steamLib.func('SteamAPI_ISteamFriends_GetFriendCoplayGame', 'uint32', ['void*', 'uint64']);
+    
+    // ========================================
+    // ISteamRemoteStorage Functions
+    // ========================================
+    
+    // Interface accessor
+    this.SteamAPI_SteamRemoteStorage_v016 = this.steamLib.func('SteamAPI_SteamRemoteStorage_v016', 'void*', []);
+    
+    // File operations
+    this.SteamAPI_ISteamRemoteStorage_FileWrite = this.steamLib.func('SteamAPI_ISteamRemoteStorage_FileWrite', 'bool', ['void*', 'str', 'void*', 'int32']);
+    this.SteamAPI_ISteamRemoteStorage_FileRead = this.steamLib.func('SteamAPI_ISteamRemoteStorage_FileRead', 'int32', ['void*', 'str', 'void*', 'int32']);
+    this.SteamAPI_ISteamRemoteStorage_FileExists = this.steamLib.func('SteamAPI_ISteamRemoteStorage_FileExists', 'bool', ['void*', 'str']);
+    this.SteamAPI_ISteamRemoteStorage_FileDelete = this.steamLib.func('SteamAPI_ISteamRemoteStorage_FileDelete', 'bool', ['void*', 'str']);
+    this.SteamAPI_ISteamRemoteStorage_GetFileSize = this.steamLib.func('SteamAPI_ISteamRemoteStorage_GetFileSize', 'int32', ['void*', 'str']);
+    this.SteamAPI_ISteamRemoteStorage_GetFileTimestamp = this.steamLib.func('SteamAPI_ISteamRemoteStorage_GetFileTimestamp', 'int64', ['void*', 'str']);
+    this.SteamAPI_ISteamRemoteStorage_FilePersisted = this.steamLib.func('SteamAPI_ISteamRemoteStorage_FilePersisted', 'bool', ['void*', 'str']);
+    
+    // File iteration
+    this.SteamAPI_ISteamRemoteStorage_GetFileCount = this.steamLib.func('SteamAPI_ISteamRemoteStorage_GetFileCount', 'int32', ['void*']);
+    this.SteamAPI_ISteamRemoteStorage_GetFileNameAndSize = this.steamLib.func('SteamAPI_ISteamRemoteStorage_GetFileNameAndSize', 'str', ['void*', 'int32', 'int32*']);
+    
+    // Quota and settings
+    this.SteamAPI_ISteamRemoteStorage_GetQuota = this.steamLib.func('SteamAPI_ISteamRemoteStorage_GetQuota', 'bool', ['void*', 'uint64*', 'uint64*']);
+    this.SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount = this.steamLib.func('SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount', 'bool', ['void*']);
+    this.SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp = this.steamLib.func('SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp', 'bool', ['void*']);
+    this.SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp = this.steamLib.func('SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp', 'void', ['void*', 'bool']);
   }
 
   /**

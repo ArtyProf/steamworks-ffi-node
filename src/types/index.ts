@@ -9,6 +9,7 @@
  * - friends.ts - Friends-related types
  * - richpresence.ts - Rich Presence-related types
  * - overlay.ts - Overlay-related types
+ * - cloud.ts - Steam Cloud/Remote Storage types
  */
 
 // Core types
@@ -31,3 +32,6 @@ export * from './richpresence';
 
 // Overlay types
 export * from './overlay';
+
+// Cloud types
+export * from './cloud';
