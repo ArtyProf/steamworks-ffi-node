@@ -21,6 +21,8 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 
 > 🎉 **NEW: Overlay API** - 7 functions for complete Steam overlay control! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)
 
+> 🎉 **NEW: Cloud Storage API** - 14 functions for complete Steam Cloud (Remote Storage) integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)
+
 ## 🎯 Features
 
 - **Complete Achievement API**: 100% coverage of Steam Achievement functionality (20/20 functions)
@@ -58,6 +60,12 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
   - ✅ Open overlay web browser to URLs
   - ✅ Open store pages with purchase options
   - ✅ Show invite dialogs for multiplayer sessions
+- **Cloud Storage API**: Complete Steam Cloud (Remote Storage) integration (14 functions)
+  - ✅ File operations (write, read, delete, check existence)
+  - ✅ File metadata (size, timestamp, persistence status)
+  - ✅ File listing (count, iterate, get all with details)
+  - ✅ Quota management (track storage usage and limits)
+  - ✅ Cloud settings (check/toggle cloud sync for account and app)
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Batteries Included**: All Steamworks redistributables bundled - no SDK download needed!
@@ -192,6 +200,38 @@ if (initialized) {
   // Open Steam overlay
   steam.overlay.activateGameOverlay('Friends'); // Open friends list
   steam.overlay.activateGameOverlayToWebPage('https://example.com/wiki'); // Open wiki
+  
+  // Steam Cloud storage operations
+  const saveData = { level: 5, score: 1000, inventory: ['sword', 'shield'] };
+  const buffer = Buffer.from(JSON.stringify(saveData));
+  
+  // Write save file to Steam Cloud
+  const written = steam.cloud.fileWrite('savegame.json', buffer);
+  if (written) {
+    console.log('✅ Save uploaded to Steam Cloud');
+  }
+  
+  // Check cloud quota
+  const quota = steam.cloud.getQuota();
+  console.log(`Cloud storage: ${quota.usedBytes}/${quota.totalBytes} bytes (${quota.percentUsed.toFixed(2)}%)`);
+  
+  // Read save file from Steam Cloud
+  if (steam.cloud.fileExists('savegame.json')) {
+    const result = steam.cloud.fileRead('savegame.json');
+    if (result.success && result.data) {
+      const loadedSave = JSON.parse(result.data.toString());
+      console.log(`Loaded save: Level ${loadedSave.level}, Score ${loadedSave.score}`);
+    }
+  }
+  
+  // List all cloud files
+  const cloudFiles = steam.cloud.getAllFiles();
+  console.log(`Steam Cloud contains ${cloudFiles.length} files:`);
+  cloudFiles.forEach(file => {
+    const kb = (file.size / 1024).toFixed(2);
+    const status = file.persisted ? '☁️' : '⏳';
+    console.log(`${status} ${file.name} - ${kb} KB`);
+  });
 }
 
 // Cleanup
@@ -243,6 +283,7 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Friends Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)** - Friends and social features (22 functions)
 - **[Rich Presence Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/RICH_PRESENCE_MANAGER.md)** - Custom status display and join functionality (6 functions)
 - **[Overlay Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)** - Steam overlay control (7 functions)
+- **[Cloud Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)** - Steam Cloud storage operations (14 functions)
 
 ## 🎮 Steamworks Integration
 

@@ -19,6 +19,7 @@ steam.leaderboards.*   // Leaderboard operations
 steam.friends.*        // Friends and social operations
 steam.richPresence.*   // Rich Presence operations
 steam.overlay.*        // Overlay control operations
+steam.cloud.*          // Cloud storage operations
 ```
 
 This design:
@@ -92,6 +93,15 @@ This design:
   - Open store pages with purchase options
   - Show invite dialogs for multiplayer
 
+### Cloud Storage System
+- **[Cloud Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)**
+  - **14 Functions** - Complete Steam Cloud (Remote Storage) support
+  - File operations (write, read, delete, check existence)
+  - File metadata (size, timestamp, persistence status)
+  - File listing (count, iterate, get all with details)
+  - Quota management (track storage usage and limits)
+  - Cloud settings (check/toggle cloud sync for account and app)
+
 ## 🚀 Quick Links
 
 ### Getting Started
@@ -106,6 +116,7 @@ This design:
 - Run Stats Tests: `npm run test:stats:js` - Tests all 14 stats functions
 - Run Leaderboard Tests: `npm run test:leaderboards:js` - Tests all 7 leaderboard functions
 - Run Friends Tests: `npm run test:friends:js` - Tests all 22 friends functions
+- Run Cloud Tests: `npm run test:cloud:js` - Tests all 14 cloud storage functions
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:js` - Tests 6 rich presence + 7 overlay functions
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
@@ -113,6 +124,7 @@ This design:
 - Run Stats Tests: `npm run test:stats:ts` - With type safety ✨
 - Run Leaderboard Tests: `npm run test:leaderboards:ts` - With type safety ✨
 - Run Friends Tests: `npm run test:friends:ts` - With type safety ✨
+- Run Cloud Tests: `npm run test:cloud:ts` - With type safety ✨
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:ts` - With type safety ✨
 
 📁 All tests are in `tests/` folder with separate `js/` and `ts/` subfolders.
