@@ -49,6 +49,9 @@ export class SteamAPICore {
   
   /** Pointer to the ISteamFriends interface */
   private friendsInterface: any = null;
+  
+  /** Pointer to the ISteamRemoteStorage interface */
+  private remoteStorageInterface: any = null;
 
   /**
    * Creates a new SteamAPICore instance
@@ -146,6 +149,12 @@ export class SteamAPICore {
       this.friendsInterface = this.libraryLoader.SteamAPI_SteamFriends_v018();
       if (!this.friendsInterface || this.friendsInterface === null) {
         console.warn('[Steamworks] WARNING: Failed to get SteamFriends interface');
+      }
+      
+      // Get Remote Storage interface
+      this.remoteStorageInterface = this.libraryLoader.SteamAPI_SteamRemoteStorage_v016();
+      if (!this.remoteStorageInterface || this.remoteStorageInterface === null) {
+        console.warn('[Steamworks] WARNING: Failed to get SteamRemoteStorage interface');
       }
 
       // Request current stats from Steam servers
@@ -431,5 +440,29 @@ export class SteamAPICore {
    */
   getFriendsInterface(): any {
     return this.friendsInterface;
+  }
+
+  /**
+   * Gets the ISteamRemoteStorage interface pointer
+   * 
+   * The Remote Storage interface provides access to Steam Cloud file operations,
+   * allowing you to save and sync game data across devices.
+   * 
+   * @returns Pointer to ISteamRemoteStorage interface, or null if not initialized
+   * 
+   * @example
+   * ```typescript
+   * const remoteStorage = apiCore.getRemoteStorageInterface();
+   * if (remoteStorage) {
+   *   // Use interface for cloud storage operations
+   * }
+   * ```
+   * 
+   * @remarks
+   * - Returns null if Steam API is not initialized
+   * - This is a native pointer for use with FFI calls
+   */
+  getRemoteStorageInterface(): any {
+    return this.remoteStorageInterface;
   }
 }

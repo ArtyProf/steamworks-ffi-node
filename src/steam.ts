@@ -10,6 +10,7 @@ import { SteamLeaderboardManager } from './internal/SteamLeaderboardManager';
 import { SteamFriendsManager } from './internal/SteamFriendsManager';
 import { SteamRichPresenceManager } from './internal/SteamRichPresenceManager';
 import { SteamOverlayManager } from './internal/SteamOverlayManager';
+import { SteamCloudManager } from './internal/SteamCloudManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -22,6 +23,7 @@ import { SteamOverlayManager } from './internal/SteamOverlayManager';
  * - friends: SteamFriendsManager - All friends and social operations
  * - richPresence: SteamRichPresenceManager - Rich presence operations
  * - overlay: SteamOverlayManager - Overlay control operations
+ * - cloud: SteamCloudManager - Steam Cloud / Remote Storage operations
  * 
  * @example
  * ```typescript
@@ -35,6 +37,7 @@ import { SteamOverlayManager } from './internal/SteamOverlayManager';
  * const friends = steam.friends.getAllFriends();
  * steam.richPresence.setRichPresence('status', 'In Menu');
  * steam.overlay.activateGameOverlay('Friends');
+ * steam.cloud.fileWrite('savegame.json', saveData);
  * ```
  */
 class SteamworksSDK {
@@ -235,6 +238,40 @@ class SteamworksSDK {
    */
   public readonly overlay!: SteamOverlayManager;
 
+  /**
+   * Cloud Manager - Handle Steam Cloud / Remote Storage operations
+   * 
+   * Provides Steam Cloud functionality including:
+   * - Read/write files to cloud storage
+   * - Delete and manage cloud files
+   * - Query cloud quota and usage
+   * - List all cloud files with metadata
+   * - Enable/disable cloud for app
+   * 
+   * @example
+   * ```typescript
+   * // Write save file to cloud
+   * const saveData = Buffer.from(JSON.stringify({ level: 5, score: 1000 }));
+   * steam.cloud.fileWrite('savegame.json', saveData);
+   * 
+   * // Read save file
+   * const result = steam.cloud.fileRead('savegame.json');
+   * if (result.success) {
+   *   const data = JSON.parse(result.data.toString());
+   * }
+   * 
+   * // Check quota
+   * const quota = steam.cloud.getQuota();
+   * console.log(`Using ${quota.percentUsed}% of cloud storage`);
+   * 
+   * // List all files
+   * const files = steam.cloud.getAllFiles();
+   * ```
+   * 
+   * @see {@link SteamCloudManager} for complete API documentation
+   */
+  public readonly cloud!: SteamCloudManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -247,6 +284,7 @@ class SteamworksSDK {
     this.friends = new SteamFriendsManager(this.libraryLoader, this.apiCore);
     this.richPresence = new SteamRichPresenceManager(this.libraryLoader, this.apiCore);
     this.overlay = new SteamOverlayManager(this.libraryLoader, this.apiCore);
+    this.cloud = new SteamCloudManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {
