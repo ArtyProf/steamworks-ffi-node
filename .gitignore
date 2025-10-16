@@ -8,6 +8,9 @@ yarn-error.log*
 dist/
 build/
 
+# Steamworks SDK
+steamworks_sdk/public/
+
 # Environment files
 .env
 .env.local
