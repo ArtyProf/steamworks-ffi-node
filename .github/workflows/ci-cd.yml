@@ -283,3 +283,10 @@ jobs:
         echo '```bash' >> $GITHUB_STEP_SUMMARY
         echo "npm install steamworks-ffi-node" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
+    
+    - name: Notify Discord
+      run: |
+        curl -H "Content-Type: application/json" \
+          -X POST \
+          -d "{\"content\": \"🚀 steamworks-ffi-node v${{ needs.check-version.outputs.version }} published to npm!\\nhttps://www.npmjs.com/package/steamworks-ffi-node\\nRelease notes: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v${{ needs.check-version.outputs.version }}\"}" \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}

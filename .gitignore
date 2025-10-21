@@ -4,12 +4,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# NPM lockfile (for libraries, do not commit)
+package-lock.json
+
 # Build output
 dist/
 build/
 
-# Steamworks SDK
-steamworks_sdk/public/
+# Steamworks SDK (users must download separately due to licensing)
+steamworks_sdk/
 
 # Environment files
 .env

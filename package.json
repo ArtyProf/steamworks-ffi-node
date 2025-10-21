@@ -1,11 +1,14 @@
 {
   "name": "steamworks-ffi-node",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "Steamworks SDK wrapper using FFI for Node.js/Electron - Full Steam Integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "postinstall": "node postinstall.js",
+    "verify-sdk": "node verify-sdk-setup.js",
+    "test:discord": "node test-discord-integration.js",
     "test:achievements:js": "node tests/js/test-complete-achievements.js",
     "test:stats:js": "node tests/js/test-complete-stats.js",
     "test:leaderboards:js": "node tests/js/test-complete-leaderboards.js",
@@ -30,10 +33,11 @@
   },
   "files": [
     "dist/**/*",
-    "steamworks_sdk/redistributable_bin/**/*",
     "README.md",
     "LICENSE",
-    "THIRD_PARTY_LICENSES.md"
+    "docs/STEAMWORKS_SDK_SETUP.md",
+    "verify-sdk-setup.js",
+    "postinstall.js"
   ],
   "keywords": [
     "steam",
