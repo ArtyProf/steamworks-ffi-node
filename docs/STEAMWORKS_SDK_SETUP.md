@@ -15,6 +15,8 @@ This guide explains how to properly set up the Steamworks SDK redistributables f
 3. Download the latest Steamworks SDK
 4. Extract the downloaded archive
 
+> **Note**: This package was built and tested with Steamworks SDK v1.62. While newer versions should be compatible, v1.62 or later is recommended for optimal compatibility.
+
 ### 2. Install SDK Redistributables
 
 Copy the `redistributable_bin` folder from the Steamworks SDK to your project:
@@ -139,27 +141,6 @@ my-monorepo/
 └── steam_appid.txt
 ```
 
-## Environment Variables (Optional)
-
-You can also specify a custom SDK path using environment variables:
-
-```bash
-# Windows
-set STEAMWORKS_SDK_PATH=C:\path\to\your\steamworks_sdk
-
-# macOS/Linux
-export STEAMWORKS_SDK_PATH=/path/to/your/steamworks_sdk
-```
-
-## Gitignore Configuration
-
-**Always add the Steamworks SDK to your `.gitignore`:**
-
-```gitignore
-# Steamworks SDK (must be downloaded separately)
-steamworks_sdk/
-```
-
 ## Troubleshooting
 
 ### "Steamworks SDK library not found" Error
@@ -179,24 +160,6 @@ This usually indicates:
 - Incompatible SDK version
 
 **Solution**: Re-download the latest Steamworks SDK and replace the redistributables.
-
-### Electron Packaging Issues
-
-When packaging Electron apps:
-
-1. **Include redistributables** in your packaged app using `extraResources`:
-   ```json
-   {
-     "build": {
-       "extraResources": [
-         {
-           "from": "steamworks_sdk/redistributable_bin",
-           "to": "steamworks_sdk/redistributable_bin"
-         }
-       ]
-     }
-   }
-   ```
 
 ### Permission Issues (macOS/Linux)
 

@@ -3,7 +3,7 @@
 
 # Steamworks FFI - Steamworks SDK Integration
 
-A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed for Node.js and Electron applications with **Steamworks SDK v1.62 integration**.
+A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed for Node.js and Electron applications with **Steamworks SDK v1.62 integration**.
 
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
 

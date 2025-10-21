@@ -197,7 +197,6 @@ export class SteamLibraryLoader {
     const platform = process.platform;
     const arch = process.arch;
     
-    let libPath: string;
     let steamworksSdkPaths: string[] = [];
     
     // Define possible Steamworks SDK locations (user must install these)
