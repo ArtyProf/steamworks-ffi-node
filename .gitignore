@@ -8,8 +8,8 @@ yarn-error.log*
 dist/
 build/
 
-# Steamworks SDK
-steamworks_sdk/public/
+# Steamworks SDK (users must download separately due to licensing)
+steamworks_sdk/
 
 # Environment files
 .env

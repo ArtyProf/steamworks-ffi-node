@@ -68,7 +68,7 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
   - ✅ Cloud settings (check/toggle cloud sync for account and app)
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
-- **Batteries Included**: All Steamworks redistributables bundled - no SDK download needed!
+- **Easy Setup**: Simple installation with clear SDK setup guide
 - **Electron Ready**: Perfect for Electron applications
 - **TypeScript Support**: Complete TypeScript definitions included
 - **No C++ Compilation**: Uses Koffi FFI for seamless installation
@@ -78,18 +78,25 @@ A production-ready TypeScript/JavaScript wrapper for the Steamworks SDK using Ko
 ### Installation
 
 ```bash
-# Install the package - includes all Steam redistributables!
+# Install the package
 npm install steamworks-ffi-node
 ```
 
 ### Setup
 
-1. **Create `steam_appid.txt`** in your project root:
+1. **Download Steamworks SDK** (required separately due to licensing):
+   - Visit [Steamworks Partner site](https://partner.steamgames.com/)
+   - Download the latest Steamworks SDK
+   - Extract and copy `redistributable_bin` folder to your project
+   - See [STEAMWORKS_SDK_SETUP.md](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAMWORKS_SDK_SETUP.md) for detailed instructions
+
+2. **Create `steam_appid.txt` (optional)** in your project root:
    ```bash
    echo "480" > steam_appid.txt  # Use 480 for testing, or your Steam App ID
    ```
+   *Note: You can skip this file and pass the App ID directly to `steam.init(appId)` instead*
 
-2. **Make sure Steam is running** and you're logged in
+3. **Make sure Steam is running** and you're logged in
 
 ### Basic Usage
 
@@ -336,66 +343,33 @@ app.on('before-quit', () => {
 });
 ```
 
-### 📦 Packaging with ASAR
+### 📦 Electron Packaging
 
-When packaging your Electron app with ASAR archives, **native modules must be unpacked**. The library automatically detects ASAR and looks for files in `.asar.unpacked`.
+For Electron applications, the library will automatically detect the Steamworks SDK files in your project directory. No special packaging configuration is needed - just ensure your `steamworks_sdk/redistributable_bin` folder is present in your project.
 
-#### electron-builder Configuration
-
-Add to your `package.json` or `electron-builder.yml`:
-
-```json
-{
-  "build": {
-    "asarUnpack": [
-      "node_modules/steamworks-ffi-node/**/*"
-    ]
-  }
-}
-```
-
-#### electron-forge Configuration
-
-Add to your `forge.config.js`:
-
-```javascript
-module.exports = {
-  packagerConfig: {
-    asar: {
-      unpack: "**/{node_modules/steamworks-ffi-node}/**/*"
-    }
-  }
-};
-```
-
-The library will automatically:
-1. Detect if running inside an ASAR archive
-2. Replace `.asar` with `.asar.unpacked` in the library path
-3. Load the Steamworks SDK from the unpacked directory
-
-This ensures native libraries work correctly in packaged Electron apps!
+The library searches for the SDK in standard locations within your Electron app bundle.
 
 ## 🔧 Requirements
 
 - **Node.js**: 18+ 
 - **Steam Client**: Must be running and logged in
 - **Steam App ID**: Get yours at [Steamworks Partner](https://partner.steamgames.com/)
-- **steam_appid.txt**: Create in your project root with your App ID
+- **steam_appid.txt**: Optional - create in your project root OR pass to `steam.init(appId)`
 
 ### Platform Support
-- ✅ **Windows**: Included (steam_api64.dll / steam_api.dll)
-- ✅ **macOS**: Included (libsteam_api.dylib)
-- ✅ **Linux**: Included (libsteam_api.so)
+- ✅ **Windows**: steam_api64.dll / steam_api.dll
+- ✅ **macOS**: libsteam_api.dylib  
+- ✅ **Linux**: libsteam_api.so
 
 **Steamworks SDK Version**: v1.62 (Latest)
 
-All redistributable binaries are included in the package - no manual SDK download required!
+*Note: You must download and install the SDK redistributables separately as described in the Setup section above.*
 
 ## 🔧 Troubleshooting
 
 ### "SteamAPI_Init failed"
 - ❌ Steam client not running → **Solution**: Start Steam and log in
-- ❌ `steam_appid.txt` missing → **Solution**: Create file in project root with your App ID
+- ❌ No App ID specified → **Solution**: Create `steam_appid.txt` in project root OR pass App ID to `steam.init(appId)`
 - ❌ Invalid App ID → **Solution**: Use 480 for testing, or your registered App ID
 
 ### "Cannot find module 'steamworks-ffi-node'"
@@ -409,16 +383,11 @@ All redistributable binaries are included in the package - no manual SDK downloa
 ### Electron-specific issues
 - ❌ Initialized in renderer → **Solution**: Only initialize in main process
 - ❌ Not cleaning up → **Solution**: Call `shutdown()` in `before-quit` event
-- ❌ "cannot open shared object file: Not a directory" (Linux) → **Solution**: Add `asarUnpack` configuration (see Electron Integration section above)
-- ❌ Native module errors in packaged app → **Solution**: Ensure `steamworks-ffi-node` is in `asarUnpack` list
+- ❌ "Steamworks SDK library not found" in packaged app → **Solution**: Include SDK redistributables in your build (see Electron Packaging section above)
+- ❌ Native module errors in packaged app → **Solution**: Ensure Steamworks SDK files are properly included in your app bundle
 
 ## 📄 License
 
 MIT License - see LICENSE file for details.
 
-### Steamworks SDK Redistributables
-
-This package includes redistributable binaries from the Steamworks SDK (© Valve Corporation).
-These are distributed under the Steamworks SDK Access Agreement in accordance with Section 1.1(b).
-
-See [THIRD_PARTY_LICENSES.md](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/THIRD_PARTY_LICENSES.md) for full details.
+**Note**: This package requires the Steamworks SDK redistributables to be installed separately by users. Users are responsible for complying with Valve's Steamworks SDK Access Agreement when downloading and using the SDK.

@@ -191,47 +191,79 @@ export class SteamLibraryLoader {
 
   /**
    * Get platform-specific Steam library path
+   * Users must download and install Steamworks SDK redistributables separately
    */
-  private getSteamLibraryPath(): string {
+  private getSteamLibraryPath(): string | null {
     const platform = process.platform;
     const arch = process.arch;
     
     let libPath: string;
-    let basePath = __dirname;
+    let steamworksSdkPaths: string[] = [];
     
-    // Handle ASAR archives in Electron
-    // When packaged in .asar, native modules need to be in .asar.unpacked
-    if (basePath.includes('.asar')) {
-      // Replace .asar with .asar.unpacked
-      basePath = basePath.replace(/\.asar([/\\])/, '.asar.unpacked$1');
-      console.log(`[Steamworks] Detected ASAR archive, using unpacked path`);
-    }
-    
-    if (platform === 'win32') {
-      if (arch === 'x64') {
-        libPath = path.join(basePath, '../../steamworks_sdk/redistributable_bin/win64/steam_api64.dll');
+    // Define possible Steamworks SDK locations (user must install these)
+    const possibleBasePaths = [
+      // Current working directory (most common for Node.js projects)
+      process.cwd(),
+      // Project root (if running from subdirectory)
+      path.resolve(process.cwd(), '..'),
+      path.resolve(process.cwd(), '../..'),
+      // Parent directories relative to this module
+      path.resolve(__dirname, '../..'),
+      path.resolve(__dirname, '../../..'),
+      path.resolve(__dirname, '../../../..'),
+    ];
+
+    // Build platform-specific library paths
+    for (const basePath of possibleBasePaths) {
+      let platformLibPath: string;
+      
+      if (platform === 'win32') {
+        if (arch === 'x64') {
+          platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/win64/steam_api64.dll');
+        } else {
+          platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/steam_api.dll');
+        }
+      } else if (platform === 'darwin') {
+        platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/osx/libsteam_api.dylib');
+      } else if (platform === 'linux') {
+        platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/linux64/libsteam_api.so');
       } else {
-        libPath = path.join(basePath, '../../steamworks_sdk/redistributable_bin/steam_api.dll');
+        throw new Error(`Unsupported platform: ${platform}`);
       }
-    } else if (platform === 'darwin') {
-      libPath = path.join(basePath, '../../steamworks_sdk/redistributable_bin/osx/libsteam_api.dylib');
-    } else if (platform === 'linux') {
-      libPath = path.join(basePath, '../../steamworks_sdk/redistributable_bin/linux64/libsteam_api.so');
-    } else {
-      throw new Error(`Unsupported platform: ${platform}`);
+      
+      steamworksSdkPaths.push(path.resolve(platformLibPath));
     }
     
-    // Resolve to absolute path
-    libPath = path.resolve(libPath);
-    
-    // Check if the library exists
-    if (!fs.existsSync(libPath)) {
-      throw new Error(`Steamworks SDK library not found at: ${libPath}\n` +
-        'Please download Steamworks SDK and place it in the steamworks_sdk/ directory.\n' +
-        'For Electron apps, make sure native modules are in the .asar.unpacked directory.');
+    // Check each possible path
+    for (const checkPath of steamworksSdkPaths) {
+      if (fs.existsSync(checkPath)) {
+        return checkPath;
+      }
     }
     
-    return libPath;
+    // If no library found, provide detailed error message
+    const expectedPath = steamworksSdkPaths[0]; // Use the first (most common) path for error message
+    
+    console.error(
+      `[Steamworks] Steamworks SDK library not found!\n\n` +
+      `   Expected location: ${expectedPath}\n\n` +
+      `   To fix this issue:\n` +
+      `     1. Download the Steamworks SDK from: https://partner.steamgames.com/\n` +
+      `     2. Extract the SDK to your project root directory\n` +
+      `     3. Ensure the following structure exists:\n` +
+      `        steamworks_sdk/\n` +
+      `         └── redistributable_bin/\n` +
+      `            ├── win64/steam_api64.dll (Windows 64-bit)\n` +
+      `            ├── steam_api.dll (Windows 32-bit)\n` +
+      `            ├── osx/libsteam_api.dylib (macOS)\n` +
+      `            └── linux64/libsteam_api.so (Linux)\n\n` +
+      `   Note: Due to Valve's licensing terms, the Steamworks SDK redistributables\n` +
+      `   cannot be bundled with this package and must be downloaded separately.\n\n` +
+      `   Quick verification: Run 'npm run verify-sdk' to check your setup\n\n` +
+      `   Searched paths:\n${steamworksSdkPaths.map(p => `  - ${p}`).join('\n')}`
+    );
+    
+    return null;
   }
 
   /**
@@ -239,6 +271,12 @@ export class SteamLibraryLoader {
    */
   load(): void {
     const libPath = this.getSteamLibraryPath();
+    
+    if (!libPath) {
+      console.error('[Steamworks] Cannot load Steamworks library: SDK not found');
+      return;
+    }
+    
     console.log(`[Steamworks] Loading library: ${libPath}`);
     
     this.steamLib = koffi.load(libPath);

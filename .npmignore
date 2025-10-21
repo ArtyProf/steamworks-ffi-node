@@ -16,11 +16,8 @@ docs/
 .git/
 .gitignore
 
-# SDK files - exclude everything except redistributables
-steamworks_sdk/public/
-steamworks_sdk/README.md
-steamworks_sdk/Readme.txt
-steamworks_sdk/*.txt
+# SDK files - users must install their own SDK
+steamworks_sdk/
 
 # Node modules
 node_modules/
