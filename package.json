@@ -37,9 +37,7 @@
     "LICENSE",
     "docs/STEAMWORKS_SDK_SETUP.md",
     "verify-sdk-setup.js",
-    "postinstall.js",
-    "test-discord-integration.js",
-    ".github/DISCORD_INTEGRATION.md"
+    "postinstall.js"
   ],
   "keywords": [
     "steam",
