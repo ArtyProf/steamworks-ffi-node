@@ -23,23 +23,11 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-// Enhanced logging
-const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  dim: '\x1b[2m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-};
+// Test configuration
+const TEST_APP_ID = 480; // Spacewar
+const TEST_TIMEOUT = 30000; // 30 seconds for async operations
 
-function log(message, color = 'reset') {
-  console.log(`${colors[color]}${message}${colors.reset}`);
-}
-
+// Helper to wait for async operations
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -52,9 +40,6 @@ async function waitWithCallbacks(steam, ms) {
     await sleep(100);
   }
 }
-
-// Test configuration
-const TEST_APP_ID = 480; // Spacewar
 
 // Helper to create temporary test content
 function createTestContent() {
@@ -109,8 +94,8 @@ Test Content:
 }
 
 async function testCompleteWorkshopLifecycle() {
-  log('🛠️  Complete Workshop Item Lifecycle Test (JavaScript)', 'bright');
-  log('====================================================\n', 'bright');
+  console.log('🛠️  Complete Workshop Item Lifecycle Test');
+  console.log('==========================================\n');
   
   const steam = SteamworksSDK.getInstance();
   let createdItemId = null;
@@ -121,32 +106,32 @@ async function testCompleteWorkshopLifecycle() {
     // ============================================================
     // STEP 1: INITIALIZE STEAM API
     // ============================================================
-    log('📋 STEP 1: Initialize Steam API', 'cyan');
-    log('================================', 'cyan');
+    console.log('📋 STEP 1: Initialize Steam API');
+    console.log('================================');
     
     const initialized = steam.init({ appId: TEST_APP_ID });
     if (!initialized) {
       throw new Error('Failed to initialize Steam API. Make sure Steam is running!');
     }
-    log('✅ Steam API initialized\n', 'green');
+    console.log('✅ Steam API initialized\n');
     
     // ============================================================
     // STEP 2: CREATE TEST CONTENT
     // ============================================================
-    log('📋 STEP 2: Create Test Content', 'cyan');
-    log('===============================', 'cyan');
+    console.log('📋 STEP 2: Create Test Content');
+    console.log('===============================');
     
     testContent = createTestContent();
-    log(`✅ Content directory: ${testContent.contentPath}`, 'green');
-    log(`✅ Preview image: ${testContent.previewPath}\n`, 'green');
+    console.log(`✅ Content directory: ${testContent.contentPath}`);
+    console.log(`✅ Preview image: ${testContent.previewPath}\n`);
     
     // ============================================================
     // STEP 3: CREATE WORKSHOP ITEM
     // ============================================================
-    log('📋 STEP 3: Create Workshop Item', 'cyan');
-    log('================================', 'cyan');
+    console.log('📋 STEP 3: Create Workshop Item');
+    console.log('================================');
     
-    log('🔨 Creating new Workshop item...', 'cyan');
+    console.log('🔨 Creating new Workshop item...');
     createdItemId = await steam.workshop.createItem(
       TEST_APP_ID,
       EWorkshopFileType.Community
@@ -154,29 +139,29 @@ async function testCompleteWorkshopLifecycle() {
     
     if (createdItemId) {
       itemCreated = true;
-      log(`✅ Successfully created new Workshop item: ${createdItemId}`, 'green');
+      console.log(`✅ Successfully created new Workshop item: ${createdItemId}`);
     } else {
-      log('⚠️  Failed to create new item, checking for subscribed items as fallback...', 'yellow');
+      console.log('⚠️  Failed to create new item, checking for subscribed items as fallback...');
       
       const subscribedItems = steam.workshop.getSubscribedItems();
       if (subscribedItems.length > 0) {
         createdItemId = subscribedItems[0];
         itemCreated = true;
-        log(`📝 Using existing subscribed item: ${createdItemId}`, 'magenta');
+        console.log(`📝 Using existing subscribed item: ${createdItemId}`);
       } else {
-        log('❌ No items available for testing', 'red');
-        log('   Please subscribe to at least one Workshop item first\n', 'dim');
+        console.log('❌ No items available for testing');
+        console.log('   Please subscribe to at least one Workshop item first\n');
         return;
       }
     }
     
-    log(`✅ Testing with item ID: ${createdItemId}\n`, 'green');
+    console.log(`✅ Testing with item ID: ${createdItemId}\n`);
     
     // ============================================================
     // STEP 4: UPDATE WORKSHOP ITEM
     // ============================================================
-    log('📋 STEP 4: Update Workshop Item', 'cyan');
-    log('================================', 'cyan');
+    console.log('📋 STEP 4: Update Workshop Item');
+    console.log('================================');
     
     if (!createdItemId) {
       throw new Error('No item ID available for testing');
@@ -188,16 +173,16 @@ async function testCompleteWorkshopLifecycle() {
       throw new Error('Failed to start item update');
     }
     
-    log(`✅ Item update started (handle: ${updateHandle})`, 'green');
+    console.log(`✅ Item update started (handle: ${updateHandle})`);
     
     // Set item properties
-    log('\n📝 Setting item properties...', 'cyan');
+    console.log('\n📝 Setting item properties...');
     
     const titleSet = steam.workshop.setItemTitle(
       updateHandle,
       `Test Workshop Item - ${new Date().toLocaleString()}`
     );
-    log(`   ${titleSet ? '✅' : '❌'} Title set`, titleSet ? 'green' : 'red');
+    console.log(`   ${titleSet ? '✅' : '❌'} Title set`);
     
     const descriptionSet = steam.workshop.setItemDescription(
       updateHandle,
@@ -208,38 +193,38 @@ async function testCompleteWorkshopLifecycle() {
       '- Will be deleted after testing\n\n' +
       `Created: ${new Date().toISOString()}`
     );
-    log(`   ${descriptionSet ? '✅' : '❌'} Description set`, descriptionSet ? 'green' : 'red');
+    console.log(`   ${descriptionSet ? '✅' : '❌'} Description set`);
     
     const visibilitySet = steam.workshop.setItemVisibility(
       updateHandle,
-      ERemoteStoragePublishedFileVisibility.Private
+      ERemoteStoragePublishedFileVisibility.Private // Keep private for testing
     );
-    log(`   ${visibilitySet ? '✅' : '❌'} Visibility set to Private`, visibilitySet ? 'green' : 'red');
+    console.log(`   ${visibilitySet ? '✅' : '❌'} Visibility set to Private`);
     
     const contentSet = steam.workshop.setItemContent(
       updateHandle,
       testContent.contentPath
     );
-    log(`   ${contentSet ? '✅' : '❌'} Content folder set`, contentSet ? 'green' : 'red');
+    console.log(`   ${contentSet ? '✅' : '❌'} Content folder set`);
     
     const previewSet = steam.workshop.setItemPreview(
       updateHandle,
       testContent.previewPath
     );
-    log(`   ${previewSet ? '✅' : '❌'} Preview image set`, previewSet ? 'green' : 'red');
+    console.log(`   ${previewSet ? '✅' : '❌'} Preview image set`);
     
     // Submit the update
-    log('\n📤 Submitting item update...', 'cyan');
+    console.log('\n📤 Submitting item update...');
     const submitted = await steam.workshop.submitItemUpdate(
       updateHandle,
       'Test update from Steamworks FFI test suite'
     );
     
     if (submitted) {
-      log(`✅ Item update submitted successfully!`, 'green');
+      console.log(`✅ Item update submitted successfully!`);
       
       // Track upload progress
-      log('\n⏳ Tracking upload progress...', 'yellow');
+      console.log('\n⏳ Tracking upload progress...');
       for (let i = 0; i < 30; i++) {
         steam.runCallbacks();
         await sleep(1000);
@@ -247,42 +232,42 @@ async function testCompleteWorkshopLifecycle() {
         const progress = steam.workshop.getItemUpdateProgress(updateHandle);
         const statusName = EItemUpdateStatus[progress.status] || 'Unknown';
         
-        log(`   Status: ${statusName} | Progress: ${progress.percentComplete.toFixed(1)}% | ${progress.bytesProcessed}/${progress.bytesTotal} bytes`, 'dim');
+        console.log(`   Status: ${statusName} | Progress: ${progress.percentComplete.toFixed(1)}% | ${progress.bytesProcessed}/${progress.bytesTotal} bytes`);
         
         if (progress.status === EItemUpdateStatus.Invalid) {
-          log('   ✅ Upload complete!\n', 'green');
+          console.log('   ✅ Upload complete!\n');
           break;
         }
       }
     } else {
-      log('❌ Failed to submit item update', 'red');
+      console.log('❌ Failed to submit item update');
     }
     
     // ============================================================
     // STEP 5: QUERY AND VERIFY ITEM
     // ============================================================
-    log('📋 STEP 5: Query and Verify Item', 'cyan');
-    log('=================================', 'cyan');
+    console.log('📋 STEP 5: Query and Verify Item');
+    console.log('=================================');
     
     // Get item state
     const state = steam.workshop.getItemState(createdItemId);
-    log('\n📊 Item State:', 'magenta');
-    if (state & EItemState.Subscribed) log('   ✅ Subscribed', 'green');
-    if (state & EItemState.Installed) log('   ✅ Installed', 'green');
-    if (state & EItemState.Downloading) log('   ⬇️  Downloading', 'blue');
-    if (state & EItemState.NeedsUpdate) log('   🔄 Needs Update', 'yellow');
+    console.log('\n📊 Item State:');
+    if (state & EItemState.Subscribed) console.log('   ✅ Subscribed');
+    if (state & EItemState.Installed) console.log('   ✅ Installed');
+    if (state & EItemState.Downloading) console.log('   ⬇️  Downloading');
+    if (state & EItemState.NeedsUpdate) console.log('   🔄 Needs Update');
     
     // Get installation info
     const installInfo = steam.workshop.getItemInstallInfo(createdItemId);
     if (installInfo) {
-      log('\n💾 Installation Info:', 'magenta');
-      log(`   Folder: ${installInfo.folder}`, 'dim');
-      log(`   Size: ${installInfo.sizeOnDisk} bytes`, 'dim');
-      log(`   Timestamp: ${new Date(installInfo.timestamp * 1000).toLocaleString()}`, 'dim');
+      console.log('\n💾 Installation Info:');
+      console.log(`   Folder: ${installInfo.folder}`);
+      console.log(`   Size: ${installInfo.sizeOnDisk} bytes`);
+      console.log(`   Timestamp: ${new Date(installInfo.timestamp * 1000).toLocaleString()}`);
     }
     
     // Query the item
-    log('\n🔍 Querying Workshop items...', 'cyan');
+    console.log('\n🔍 Querying Workshop items...');
     const query = steam.workshop.createQueryAllUGCRequest(
       EUGCQuery.RankedByPublicationDate,
       EUGCMatchingUGCType.Items,
@@ -295,133 +280,142 @@ async function testCompleteWorkshopLifecycle() {
       const queryResult = await steam.workshop.sendQueryUGCRequest(query);
       
       if (queryResult) {
-        log(`✅ Query completed successfully!`, 'green');
-        log(`   Found ${queryResult.numResults} results (${queryResult.totalResults} total)`, 'dim');
-        log(`   Cached data: ${queryResult.cachedData}`, 'dim');
+        console.log(`✅ Query completed successfully!`);
+        console.log(`   Found ${queryResult.numResults} results (${queryResult.totalResults} total)`);
+        console.log(`   Cached data: ${queryResult.cachedData}`);
         
-        log('\n📄 Query Results (first 5 items):', 'magenta');
+        console.log('\n📄 Query Results (first 5 items):');
         for (let i = 0; i < Math.min(5, queryResult.numResults); i++) {
           const item = steam.workshop.getQueryUGCResult(query, i);
           if (item) {
-            log(`\n   Item ${i + 1}:`, 'bright');
-            log(`   ID: ${item.publishedFileId}`, 'dim');
-            log(`   Title: ${item.title}`, 'dim');
-            log(`   Votes: 👍 ${item.votesUp} 👎 ${item.votesDown}`, 'dim');
-            log(`   Owner: ${item.steamIDOwner}`, 'dim');
+            console.log(`\n   Item ${i + 1}:`);
+            console.log(`   ID: ${item.publishedFileId}`);
+            console.log(`   Title: ${item.title}`);
+            console.log(`   Votes: 👍 ${item.votesUp} 👎 ${item.votesDown}`);
+            console.log(`   Owner: ${item.steamIDOwner}`);
           }
         }
       } else {
-        log('❌ Query failed', 'red');
+        console.log('❌ Query failed');
       }
       
       steam.workshop.releaseQueryUGCRequest(query);
-      log('\n✅ Query handle released', 'green');
+      console.log('\n✅ Query handle released');
     }
     
     // ============================================================
     // STEP 6: SUBSCRIPTION MANAGEMENT
     // ============================================================
-    log('\n📋 STEP 6: Subscription Management', 'cyan');
-    log('==================================', 'cyan');
+    console.log('\n📋 STEP 6: Subscription Management');
+    console.log('==================================');
     
+    // Get current subscriptions
     const subCount = steam.workshop.getNumSubscribedItems();
-    log(`📦 Currently subscribed to ${subCount} items`);
+    console.log(`📦 Currently subscribed to ${subCount} items`);
     
     const allSubs = steam.workshop.getSubscribedItems();
-    log(`   Retrieved ${allSubs.length} subscribed item IDs`, 'dim');
+    console.log(`   Retrieved ${allSubs.length} subscribed item IDs`);
     
-    log(`\n📥 Subscribing to item ${createdItemId}...`, 'cyan');
+    // Subscribe to the item (if not already)
+    console.log(`\n📥 Subscribing to item ${createdItemId}...`);
     const subscribed = await steam.workshop.subscribeItem(createdItemId);
     if (subscribed) {
-      log(`✅ Successfully subscribed to item`, 'green');
+      console.log(`✅ Successfully subscribed to item`);
     } else {
-      log(`ℹ️  Already subscribed or subscription failed`, 'dim');
+      console.log(`ℹ️  Already subscribed or subscription failed`);
     }
     
     await sleep(1000);
     
-    log('\n⬇️  Downloading item...', 'cyan');
+    // Download the item
+    console.log('\n⬇️  Downloading item...');
     const downloadStarted = steam.workshop.downloadItem(createdItemId, true);
     if (downloadStarted) {
-      log('✅ Download started', 'green');
+      console.log('✅ Download started');
       
+      // Monitor download progress
       for (let i = 0; i < 10; i++) {
         steam.runCallbacks();
         await sleep(500);
         const downloadInfo = steam.workshop.getItemDownloadInfo(createdItemId);
         if (downloadInfo) {
-          log(`   Progress: ${downloadInfo.percentComplete.toFixed(1)}% (${downloadInfo.bytesDownloaded}/${downloadInfo.bytesTotal} bytes)`, 'dim');
+          console.log(`   Progress: ${downloadInfo.percentComplete.toFixed(1)}% (${downloadInfo.bytesDownloaded}/${downloadInfo.bytesTotal} bytes)`);
         } else {
-          log('   ℹ️  Download complete or not active', 'dim');
+          console.log('   ℹ️  Download complete or not active');
           break;
         }
       }
     } else {
-      log('ℹ️  Item already downloaded', 'dim');
+      console.log('ℹ️  Item already downloaded');
     }
     
     // ============================================================
     // STEP 7: VOTING AND FAVORITES
     // ============================================================
-    log('\n📋 STEP 7: Voting and Favorites', 'cyan');
-    log('================================', 'cyan');
+    console.log('\n📋 STEP 7: Voting and Favorites');
+    console.log('================================');
     
-    log('\n👍 Voting up on item...', 'cyan');
+    // Vote on the item
+    console.log('\n👍 Voting up on item...');
     const voted = await steam.workshop.setUserItemVote(createdItemId, true);
     if (voted) {
-      log(`✅ Vote registered successfully`, 'green');
+      console.log(`✅ Vote registered successfully`);
     } else {
-      log(`ℹ️  Vote failed or already voted`, 'dim');
+      console.log(`ℹ️  Vote failed or already voted`);
     }
     
     await sleep(1000);
     
-    log('\n❓ Getting user vote status...', 'cyan');
+    // Get vote status
+    console.log('\n❓ Getting user vote status...');
     const voteStatus = await steam.workshop.getUserItemVote(createdItemId);
     if (voteStatus) {
-      log(`✅ Vote status retrieved:`, 'green');
-      log(`   Voted Up: ${voteStatus.votedUp}`, 'dim');
-      log(`   Voted Down: ${voteStatus.votedDown}`, 'dim');
-      log(`   Vote Skipped: ${voteStatus.voteSkipped}`, 'dim');
+      console.log(`✅ Vote status retrieved:`);
+      console.log(`   Voted Up: ${voteStatus.votedUp}`);
+      console.log(`   Voted Down: ${voteStatus.votedDown}`);
+      console.log(`   Vote Skipped: ${voteStatus.voteSkipped}`);
     } else {
-      log(`ℹ️  Could not retrieve vote status`, 'dim');
+      console.log(`ℹ️  Could not retrieve vote status`);
     }
     
     await sleep(1000);
     
-    log('\n⭐ Adding to favorites...', 'cyan');
+    // Add to favorites
+    console.log('\n⭐ Adding to favorites...');
     const addedToFavorites = await steam.workshop.addItemToFavorites(TEST_APP_ID, createdItemId);
     if (addedToFavorites) {
-      log(`✅ Added to favorites successfully`, 'green');
+      console.log(`✅ Added to favorites successfully`);
     } else {
-      log(`ℹ️  Already in favorites or operation failed`, 'dim');
+      console.log(`ℹ️  Already in favorites or operation failed`);
     }
     
     await sleep(1000);
     
     // ============================================================
-    // STEP 8: CLEANUP
+    // STEP 8: CLEANUP - UNSUBSCRIBE
     // ============================================================
-    log('\n📋 STEP 8: Cleanup and Unsubscribe', 'cyan');
-    log('===================================', 'cyan');
+    console.log('\n📋 STEP 8: Cleanup and Unsubscribe');
+    console.log('===================================');
     
-    log('\n🗑️  Removing from favorites...', 'yellow');
+    // Remove from favorites
+    console.log('\n🗑️  Removing from favorites...');
     const removedFromFavorites = await steam.workshop.removeItemFromFavorites(TEST_APP_ID, createdItemId);
     if (removedFromFavorites) {
-      log(`✅ Removed from favorites successfully`, 'green');
+      console.log(`✅ Removed from favorites successfully`);
     } else {
-      log(`ℹ️  Not in favorites or operation failed`, 'dim');
+      console.log(`ℹ️  Not in favorites or operation failed`);
     }
     
     await sleep(1000);
     
-    log('\n📤 Unsubscribing from item...', 'yellow');
+    // Unsubscribe
+    console.log('\n📤 Unsubscribing from item...');
     const unsubscribed = await steam.workshop.unsubscribeItem(createdItemId);
     if (unsubscribed) {
-      log(`✅ Successfully unsubscribed from item`, 'green');
-      log('   Note: Item will be uninstalled when game quits', 'dim');
+      console.log(`✅ Successfully unsubscribed from item`);
+      console.log('   Note: Item will be uninstalled when game quits');
     } else {
-      log(`ℹ️  Already unsubscribed or operation failed`, 'dim');
+      console.log(`ℹ️  Already unsubscribed or operation failed`);
     }
     
     await sleep(1000);
@@ -429,57 +423,56 @@ async function testCompleteWorkshopLifecycle() {
     // ============================================================
     // SUMMARY
     // ============================================================
-    log('\n\n📊 TEST SUMMARY', 'bright');
-    log('===============', 'bright');
-    log('✅ Complete Workshop lifecycle tested successfully!', 'green');
-    log('\nSteps completed:');
-    log('  1. ✅ Steam API initialized', 'green');
-    log('  2. ✅ Test content created', 'green');
-    log('  3. ✅ Workshop item creation initiated', 'green');
-    log('  4. ✅ Item updated with properties and content', 'green');
-    log('  5. ✅ Item queried and verified', 'green');
-    log('  6. ✅ Subscription management tested', 'green');
-    log('  7. ✅ Voting and favorites tested', 'green');
-    log('  8. ✅ Cleanup completed', 'green');
+    console.log('\n\n📊 TEST SUMMARY');
+    console.log('===============');
+    console.log('✅ Complete Workshop lifecycle tested successfully!');
+    console.log('\nSteps completed:');
+    console.log('  1. ✅ Steam API initialized');
+    console.log('  2. ✅ Test content created');
+    console.log('  3. ✅ Workshop item creation initiated');
+    console.log('  4. ✅ Item updated with properties and content');
+    console.log('  5. ✅ Item queried and verified');
+    console.log('  6. ✅ Subscription management tested');
+    console.log('  7. ✅ Voting and favorites tested');
+    console.log('  8. ✅ Cleanup completed');
     
-    log('\n💡 NOTES:', 'yellow');
-    log('  • Workshop item was kept private for testing', 'dim');
-    log('  • Item unsubscribed but not deleted (requires web browser)', 'dim');
-    log('  • To delete: Visit https://steamcommunity.com/sharedfiles/filedetails/?id=' + createdItemId, 'dim');
-    log('  • All async operations now use built-in async/await callbacks!', 'dim');
+    console.log('\n💡 NOTES:');
+    console.log('  • Workshop item was kept private for testing');
+    console.log('  • Item unsubscribed but not deleted (requires web browser)');
+    console.log('  • To delete: Visit https://steamcommunity.com/sharedfiles/filedetails/?id=' + createdItemId);
+    console.log('  • All async operations now use built-in async/await callbacks!');
     
     // Final callback processing
-    log('\n⏳ Processing final callbacks...', 'yellow');
+    console.log('\n⏳ Processing final callbacks...');
     for (let i = 0; i < 10; i++) {
       steam.runCallbacks();
       await sleep(100);
     }
     
   } catch (error) {
-    log('\n❌ TEST FAILED:', 'red');
-    console.error(error);
+    console.error('\n❌ TEST FAILED:', error);
     throw error;
   } finally {
+    // Cleanup
     if (testContent) {
-      log('\n🧹 Cleaning up temporary files...', 'yellow');
+      console.log('\n🧹 Cleaning up temporary files...');
       testContent.cleanup();
-      log('✅ Temporary files removed', 'green');
+      console.log('✅ Temporary files removed');
     }
     
     steam.shutdown();
-    log('✅ Steam API shut down\n', 'green');
+    console.log('✅ Steam API shut down\n');
   }
 }
 
 // Run the test
-log('⚠️  WARNING: This test creates a real Workshop item!', 'yellow');
-log('⚠️  Make sure you have creator permissions for AppID 480 (Spacewar)', 'yellow');
-log('⚠️  Press Ctrl+C within 5 seconds to cancel...\n', 'yellow');
+console.log('⚠️  WARNING: This test creates a real Workshop item!');
+console.log('⚠️  Make sure you have creator permissions for AppID 480 (Spacewar)');
+console.log('⚠️  Press Ctrl+C within 5 seconds to cancel...\n');
 
 setTimeout(() => {
   testCompleteWorkshopLifecycle().catch(error => {
-    log('Test failed:', 'red');
-    console.error(error);
+    console.error('Test failed:', error);
     process.exit(1);
   });
 }, 5000);

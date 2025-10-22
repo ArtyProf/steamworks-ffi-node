@@ -788,7 +788,7 @@ export class SteamWorkshopManager {
         BigInt(callHandle),
         SteamUGCQueryCompleted_t,
         K_I_STEAM_UGC_QUERY_COMPLETED,
-        50, // max retries (5 seconds total)
+        600, // max retries (60 seconds total)
         100 // delay ms
       );
 
@@ -1116,7 +1116,7 @@ export class SteamWorkshopManager {
         BigInt(callHandle),
         CreateItemResult_t,
         K_I_CREATE_ITEM_RESULT,
-        300, // max retries (30 seconds total - item creation can be slow)
+        600, // max retries (60 seconds total - item creation can be slow)
         100 // delay ms
       );
 
