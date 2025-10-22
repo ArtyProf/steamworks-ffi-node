@@ -13,10 +13,10 @@
 // ========================================
 
 /** Callback for RemoteStorageSubscribePublishedFileResult_t */
-export const K_I_REMOTE_STORAGE_SUBSCRIBE_PUBLISHED_FILE_RESULT = 1309;
+export const K_I_REMOTE_STORAGE_SUBSCRIBE_PUBLISHED_FILE_RESULT = 1313;
 
 /** Callback for RemoteStorageUnsubscribePublishedFileResult_t */
-export const K_I_REMOTE_STORAGE_UNSUBSCRIBE_PUBLISHED_FILE_RESULT = 1310;
+export const K_I_REMOTE_STORAGE_UNSUBSCRIBE_PUBLISHED_FILE_RESULT = 1315;
 
 // ========================================
 // Steam UGC (Workshop) Callback IDs
@@ -35,7 +35,7 @@ export const K_I_SUBMIT_ITEM_UPDATE_RESULT = 3404;
 export const K_I_USER_FAVORITE_ITEMS_LIST_CHANGED = 3407;
 
 /** Callback for SetUserItemVoteResult_t */
-export const K_I_SET_USER_ITEM_VOTE_RESULT = 3412;
+export const K_I_SET_USER_ITEM_VOTE_RESULT = 3408;
 
 /** Callback for GetUserItemVoteResult_t */
-export const K_I_GET_USER_ITEM_VOTE_RESULT = 3413;
+export const K_I_GET_USER_ITEM_VOTE_RESULT = 3409;

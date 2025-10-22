@@ -54,18 +54,18 @@ const SubmitItemUpdateResult_t = koffi.struct('SubmitItemUpdateResult_t', {
   rawBytes: koffi.array('uint8', 16)
 });
 
-// Koffi struct for RemoteStorageSubscribePublishedFileResult_t callback
+// Manual buffer parsing for RemoteStorageSubscribePublishedFileResult_t callback
+// Steam uses #pragma pack causing tight packing - Koffi can't handle this properly
+// Layout: [int32:0-3][uint64:4-11] = 12 bytes (NO padding!)
 const RemoteStorageSubscribePublishedFileResult_t = koffi.struct('RemoteStorageSubscribePublishedFileResult_t', {
-  m_eResult: 'int',                     // EResult (4 bytes)
-  _padding: 'int',                      // Padding for alignment (4 bytes)
-  m_nPublishedFileId: 'uint64'          // PublishedFileId_t (8 bytes)
+  rawBytes: koffi.array('uint8', 12)
 });
 
-// Koffi struct for RemoteStorageUnsubscribePublishedFileResult_t callback
+// Manual buffer parsing for RemoteStorageUnsubscribePublishedFileResult_t callback
+// Steam uses #pragma pack causing tight packing - Koffi can't handle this properly
+// Layout: [int32:0-3][uint64:4-11] = 12 bytes (NO padding!)
 const RemoteStorageUnsubscribePublishedFileResult_t = koffi.struct('RemoteStorageUnsubscribePublishedFileResult_t', {
-  m_eResult: 'int',                     // EResult (4 bytes)
-  _padding: 'int',                      // Padding for alignment (4 bytes)
-  m_nPublishedFileId: 'uint64'          // PublishedFileId_t (8 bytes)
+  rawBytes: koffi.array('uint8', 12)
 });
 
 // Koffi struct for SteamUGCQueryCompleted_t callback
@@ -77,20 +77,18 @@ const SteamUGCQueryCompleted_t = koffi.struct('SteamUGCQueryCompleted_t', {
   m_bCachedData: 'bool'
 });
 
-// Koffi struct for SetUserItemVoteResult_t callback
+// Manual buffer parsing for SetUserItemVoteResult_t callback
+// Steam uses #pragma pack causing tight packing - Koffi can't handle this properly
+// Layout: [uint64:0-7][int32:8-11][bool:12] = 13 bytes
 const SetUserItemVoteResult_t = koffi.struct('SetUserItemVoteResult_t', {
-  m_nPublishedFileId: 'uint64',         // PublishedFileId_t (8 bytes)
-  m_eResult: 'int',                     // EResult (4 bytes)
-  m_bVoteUp: 'bool'                     // bool (1 byte)
+  rawBytes: koffi.array('uint8', 13)
 });
 
-// Koffi struct for GetUserItemVoteResult_t callback
+// Manual buffer parsing for GetUserItemVoteResult_t callback
+// Steam uses #pragma pack causing tight packing - Koffi can't handle this properly
+// Layout: [uint64:0-7][int32:8-11][bool×3:12-14] = 15 bytes
 const GetUserItemVoteResult_t = koffi.struct('GetUserItemVoteResult_t', {
-  m_nPublishedFileId: 'uint64',         // PublishedFileId_t (8 bytes)
-  m_eResult: 'int',                     // EResult (4 bytes)
-  m_bVotedUp: 'bool',                   // bool (1 byte)
-  m_bVotedDown: 'bool',                 // bool (1 byte)
-  m_bVoteSkipped: 'bool'                // bool (1 byte)
+  rawBytes: koffi.array('uint8', 15)
 });
 
 // Koffi struct for UserFavoriteItemsListChanged_t callback

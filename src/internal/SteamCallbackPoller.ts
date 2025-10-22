@@ -4,8 +4,16 @@ import { SteamAPICore } from './SteamAPICore';
 import {
   K_I_CREATE_ITEM_RESULT,
   K_I_SUBMIT_ITEM_UPDATE_RESULT,
+  K_I_REMOTE_STORAGE_SUBSCRIBE_PUBLISHED_FILE_RESULT,
+  K_I_REMOTE_STORAGE_UNSUBSCRIBE_PUBLISHED_FILE_RESULT,
+  K_I_SET_USER_ITEM_VOTE_RESULT,
+  K_I_GET_USER_ITEM_VOTE_RESULT,
   CreateItemResultType,
-  SubmitItemUpdateResultType
+  SubmitItemUpdateResultType,
+  RemoteStorageSubscribePublishedFileResultType,
+  RemoteStorageUnsubscribePublishedFileResultType,
+  SetUserItemVoteResultType,
+  GetUserItemVoteResultType
 } from './callbackTypes';
 
 /**
@@ -124,7 +132,7 @@ export class SteamCallbackPoller {
             utilsInterface,
             callHandle
           );
-          console.error(`[Steamworks] API call failed. Reason: ${failureReason}`);
+          console.error(`[Steamworks] API call failed. Callback ID: ${callbackId}, Struct size: ${koffi.sizeof(resultStruct)}, Reason: ${failureReason}`);
           return null;
         }
       }
@@ -153,6 +161,18 @@ export class SteamCallbackPoller {
       
       case K_I_SUBMIT_ITEM_UPDATE_RESULT:
         return this.parseSubmitItemUpdateResult(result) as unknown as T;
+      
+      case K_I_REMOTE_STORAGE_SUBSCRIBE_PUBLISHED_FILE_RESULT:
+        return this.parseSubscribeResult(result) as unknown as T;
+      
+      case K_I_REMOTE_STORAGE_UNSUBSCRIBE_PUBLISHED_FILE_RESULT:
+        return this.parseUnsubscribeResult(result) as unknown as T;
+      
+      case K_I_SET_USER_ITEM_VOTE_RESULT:
+        return this.parseSetUserItemVoteResult(result) as unknown as T;
+      
+      case K_I_GET_USER_ITEM_VOTE_RESULT:
+        return this.parseGetUserItemVoteResult(result) as unknown as T;
       
       default:
         // Standard Koffi decoding for non-packed structs
@@ -197,6 +217,86 @@ export class SteamCallbackPoller {
       m_eResult: buffer.readInt32LE(0),
       m_bUserNeedsToAcceptWorkshopLegalAgreement: buffer.readUInt8(4) !== 0,
       m_nPublishedFileId: buffer.readBigUInt64LE(8)
+    };
+  }
+
+  /**
+   * Manually parses RemoteStorageSubscribePublishedFileResult_t from raw bytes
+   * 
+   * Layout: [int32:0-3][uint64:4-11] = 12 bytes (NO padding!)
+   * Steam's packed struct has no padding between int32 and uint64
+   * 
+   * @param result - Koffi-allocated result buffer
+   * @returns Parsed RemoteStorageSubscribePublishedFileResult_t object
+   */
+  private parseSubscribeResult(result: any): RemoteStorageSubscribePublishedFileResultType {
+    const rawBytes = koffi.decode(result, koffi.array('uint8', 12));
+    const buffer = Buffer.from(rawBytes);
+    
+    return {
+      m_eResult: buffer.readInt32LE(0),
+      m_nPublishedFileId: buffer.readBigUInt64LE(4)
+    };
+  }
+
+  /**
+   * Manually parses RemoteStorageUnsubscribePublishedFileResult_t from raw bytes
+   * 
+   * Layout: [int32:0-3][uint64:4-11] = 12 bytes (NO padding!)
+   * Steam's packed struct has no padding between int32 and uint64
+   * 
+   * @param result - Koffi-allocated result buffer
+   * @returns Parsed RemoteStorageUnsubscribePublishedFileResult_t object
+   */
+  private parseUnsubscribeResult(result: any): RemoteStorageUnsubscribePublishedFileResultType {
+    const rawBytes = koffi.decode(result, koffi.array('uint8', 12));
+    const buffer = Buffer.from(rawBytes);
+    
+    return {
+      m_eResult: buffer.readInt32LE(0),
+      m_nPublishedFileId: buffer.readBigUInt64LE(4)
+    };
+  }
+
+  /**
+   * Manually parses SetUserItemVoteResult_t from raw bytes
+   * 
+   * Layout: [uint64:0-7][int32:8-11][bool:12] = 13 bytes
+   * Steam's packed struct has no padding after bool
+   * 
+   * @param result - Koffi-allocated result buffer
+   * @returns Parsed SetUserItemVoteResult_t object
+   */
+  private parseSetUserItemVoteResult(result: any): SetUserItemVoteResultType {
+    const rawBytes = koffi.decode(result, koffi.array('uint8', 13));
+    const buffer = Buffer.from(rawBytes);
+    
+    return {
+      m_nPublishedFileId: buffer.readBigUInt64LE(0),
+      m_eResult: buffer.readInt32LE(8),
+      m_bVoteUp: buffer.readUInt8(12) !== 0
+    };
+  }
+
+  /**
+   * Manually parses GetUserItemVoteResult_t from raw bytes
+   * 
+   * Layout: [uint64:0-7][int32:8-11][bool×3:12-14] = 15 bytes
+   * Steam's packed struct has no padding after bools
+   * 
+   * @param result - Koffi-allocated result buffer
+   * @returns Parsed GetUserItemVoteResult_t object
+   */
+  private parseGetUserItemVoteResult(result: any): GetUserItemVoteResultType {
+    const rawBytes = koffi.decode(result, koffi.array('uint8', 15));
+    const buffer = Buffer.from(rawBytes);
+    
+    return {
+      m_nPublishedFileId: buffer.readBigUInt64LE(0),
+      m_eResult: buffer.readInt32LE(8),
+      m_bVotedUp: buffer.readUInt8(12) !== 0,
+      m_bVotedDown: buffer.readUInt8(13) !== 0,
+      m_bVoteSkipped: buffer.readUInt8(14) !== 0
     };
   }
 }
