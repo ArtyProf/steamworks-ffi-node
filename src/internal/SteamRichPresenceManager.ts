@@ -124,13 +124,13 @@ export class SteamRichPresenceManager {
    */
   setRichPresence(key: string, value: string | null): boolean {
     if (!this.apiCore.isInitialized()) {
-      console.error('[SteamRichPresence] Cannot set rich presence: Steam not initialized');
+      console.error('[Steamworks] Cannot set rich presence: Steam not initialized');
       return false;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[SteamRichPresence] Friends interface not available');
+      console.error('[Steamworks] Friends interface not available');
       return false;
     }
 
@@ -142,7 +142,7 @@ export class SteamRichPresenceManager {
       );
       return result as boolean;
     } catch (error) {
-      console.error('[SteamRichPresence] Error setting rich presence:', error);
+      console.error('[Steamworks] Error setting rich presence:', error);
       return false;
     }
   }
@@ -169,20 +169,20 @@ export class SteamRichPresenceManager {
    */
   clearRichPresence(): void {
     if (!this.apiCore.isInitialized()) {
-      console.error('[SteamRichPresence] Cannot clear rich presence: Steam not initialized');
+      console.error('[Steamworks] Cannot clear rich presence: Steam not initialized');
       return;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[SteamRichPresence] Friends interface not available');
+      console.error('[Steamworks] Friends interface not available');
       return;
     }
 
     try {
       this.libraryLoader.SteamAPI_ISteamFriends_ClearRichPresence(friendsInterface);
     } catch (error) {
-      console.error('[SteamRichPresence] Error clearing rich presence:', error);
+      console.error('[Steamworks] Error clearing rich presence:', error);
     }
   }
 
@@ -222,13 +222,13 @@ export class SteamRichPresenceManager {
    */
   getFriendRichPresence(steamId: string, key: string): string {
     if (!this.apiCore.isInitialized()) {
-      console.error('[SteamRichPresence] Cannot get friend rich presence: Steam not initialized');
+      console.error('[Steamworks] Cannot get friend rich presence: Steam not initialized');
       return '';
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[SteamRichPresence] Friends interface not available');
+      console.error('[Steamworks] Friends interface not available');
       return '';
     }
 
@@ -241,7 +241,7 @@ export class SteamRichPresenceManager {
       );
       return value as string || '';
     } catch (error) {
-      console.error('[SteamRichPresence] Error getting friend rich presence:', error);
+      console.error('[Steamworks] Error getting friend rich presence:', error);
       return '';
     }
   }
@@ -276,13 +276,13 @@ export class SteamRichPresenceManager {
    */
   getFriendRichPresenceKeyCount(steamId: string): number {
     if (!this.apiCore.isInitialized()) {
-      console.error('[SteamRichPresence] Cannot get key count: Steam not initialized');
+      console.error('[Steamworks] Cannot get key count: Steam not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[SteamRichPresence] Friends interface not available');
+      console.error('[Steamworks] Friends interface not available');
       return 0;
     }
 
@@ -294,7 +294,7 @@ export class SteamRichPresenceManager {
       );
       return count as number;
     } catch (error) {
-      console.error('[SteamRichPresence] Error getting key count:', error);
+      console.error('[Steamworks] Error getting key count:', error);
       return 0;
     }
   }
@@ -328,13 +328,13 @@ export class SteamRichPresenceManager {
    */
   getFriendRichPresenceKeyByIndex(steamId: string, index: number): string {
     if (!this.apiCore.isInitialized()) {
-      console.error('[SteamRichPresence] Cannot get key by index: Steam not initialized');
+      console.error('[Steamworks] Cannot get key by index: Steam not initialized');
       return '';
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[SteamRichPresence] Friends interface not available');
+      console.error('[Steamworks] Friends interface not available');
       return '';
     }
 
@@ -347,7 +347,7 @@ export class SteamRichPresenceManager {
       );
       return key as string || '';
     } catch (error) {
-      console.error('[SteamRichPresence] Error getting key by index:', error);
+      console.error('[Steamworks] Error getting key by index:', error);
       return '';
     }
   }
@@ -386,13 +386,13 @@ export class SteamRichPresenceManager {
    */
   requestFriendRichPresence(steamId: string): void {
     if (!this.apiCore.isInitialized()) {
-      console.error('[SteamRichPresence] Cannot request rich presence: Steam not initialized');
+      console.error('[Steamworks] Cannot request rich presence: Steam not initialized');
       return;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[SteamRichPresence] Friends interface not available');
+      console.error('[Steamworks] Friends interface not available');
       return;
     }
 
@@ -403,7 +403,7 @@ export class SteamRichPresenceManager {
         steamId64
       );
     } catch (error) {
-      console.error('[SteamRichPresence] Error requesting rich presence:', error);
+      console.error('[Steamworks] Error requesting rich presence:', error);
     }
   }
 }

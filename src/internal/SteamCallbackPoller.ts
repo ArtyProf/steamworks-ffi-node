@@ -1,6 +1,12 @@
 import * as koffi from 'koffi';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import {
+  K_I_CREATE_ITEM_RESULT,
+  K_I_SUBMIT_ITEM_UPDATE_RESULT,
+  CreateItemResultType,
+  SubmitItemUpdateResultType
+} from './callbackTypes';
 
 /**
  * SteamCallbackPoller
@@ -110,7 +116,9 @@ export class SteamCallbackPoller {
         );
 
         if (success && !koffi.decode(failedResult, 'bool')) {
-          return koffi.decode(result, resultStruct) as T;
+          // Use custom parsing for packed structs, otherwise use standard Koffi decoding
+          const decoded = this.decodeCallbackResult<T>(callbackId, result, resultStruct);
+          return decoded;
         } else {
           const failureReason = this.libraryLoader.SteamAPI_ISteamUtils_GetAPICallFailureReason(
             utilsInterface,
@@ -124,5 +132,71 @@ export class SteamCallbackPoller {
 
     console.warn(`[Steamworks] API call timed out after ${maxRetries * delayMs}ms`);
     return null;
+  }
+
+  /**
+   * Decodes a callback result, using custom parsing for packed structs
+   * 
+   * Steam SDK uses #pragma pack which causes tight struct packing without natural alignment.
+   * Koffi doesn't support custom pack alignment, so we manually parse bytes for affected callbacks.
+   * 
+   * @param callbackId - The callback ID to identify the struct type
+   * @param result - Koffi-allocated result buffer
+   * @param resultStruct - Koffi struct type definition
+   * @returns Decoded result object
+   */
+  private decodeCallbackResult<T>(callbackId: number, result: any, resultStruct: any): T {
+    // Special handling for packed structs - manual byte parsing
+    switch (callbackId) {
+      case K_I_CREATE_ITEM_RESULT:
+        return this.parseCreateItemResult(result) as unknown as T;
+      
+      case K_I_SUBMIT_ITEM_UPDATE_RESULT:
+        return this.parseSubmitItemUpdateResult(result) as unknown as T;
+      
+      default:
+        // Standard Koffi decoding for non-packed structs
+        return koffi.decode(result, resultStruct) as T;
+    }
+  }
+
+  /**
+   * Manually parses CreateItemResult_t from raw bytes
+   * 
+   * Layout: [int32:0-3][uint64:4-11][uint8:12] = 13 bytes, padded to 16
+   * Steam's packed struct has no padding between int32 and uint64
+   * 
+   * @param result - Koffi-allocated result buffer
+   * @returns Parsed CreateItemResult_t object
+   */
+  private parseCreateItemResult(result: any): CreateItemResultType {
+    const rawBytes = koffi.decode(result, koffi.array('uint8', 16));
+    const buffer = Buffer.from(rawBytes);
+    
+    return {
+      m_eResult: buffer.readInt32LE(0),
+      m_nPublishedFileId: buffer.readBigUInt64LE(4),
+      m_bUserNeedsToAcceptWorkshopLegalAgreement: buffer.readUInt8(12) !== 0
+    };
+  }
+
+  /**
+   * Manually parses SubmitItemUpdateResult_t from raw bytes
+   * 
+   * Layout: [int32:0-3][bool:4][padding:5-7][uint64:8-15] = 16 bytes
+   * Steam's packed struct has 3 bytes padding after bool to align uint64
+   * 
+   * @param result - Koffi-allocated result buffer
+   * @returns Parsed SubmitItemUpdateResult_t object
+   */
+  private parseSubmitItemUpdateResult(result: any): SubmitItemUpdateResultType {
+    const rawBytes = koffi.decode(result, koffi.array('uint8', 16));
+    const buffer = Buffer.from(rawBytes);
+    
+    return {
+      m_eResult: buffer.readInt32LE(0),
+      m_bUserNeedsToAcceptWorkshopLegalAgreement: buffer.readUInt8(4) !== 0,
+      m_nPublishedFileId: buffer.readBigUInt64LE(8)
+    };
   }
 }

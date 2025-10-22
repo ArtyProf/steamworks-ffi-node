@@ -1,5 +1,6 @@
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import { SteamCallbackPoller } from './SteamCallbackPoller';
 import {
   PublishedFileId,
   UGCQueryHandle,
@@ -19,6 +20,85 @@ import {
   K_UGC_QUERY_HANDLE_INVALID,
   K_UGC_UPDATE_HANDLE_INVALID
 } from '../types';
+import {
+  K_I_STEAM_UGC_QUERY_COMPLETED,
+  K_I_CREATE_ITEM_RESULT,
+  K_I_SUBMIT_ITEM_UPDATE_RESULT,
+  K_I_USER_FAVORITE_ITEMS_LIST_CHANGED,
+  K_I_SET_USER_ITEM_VOTE_RESULT,
+  K_I_GET_USER_ITEM_VOTE_RESULT,
+  K_I_REMOTE_STORAGE_SUBSCRIBE_PUBLISHED_FILE_RESULT,
+  K_I_REMOTE_STORAGE_UNSUBSCRIBE_PUBLISHED_FILE_RESULT,
+  CreateItemResultType,
+  SubmitItemUpdateResultType,
+  RemoteStorageSubscribePublishedFileResultType,
+  RemoteStorageUnsubscribePublishedFileResultType,
+  SteamUGCQueryCompletedType,
+  SetUserItemVoteResultType,
+  GetUserItemVoteResultType,
+  UserFavoriteItemsListChangedType
+} from './callbackTypes';
+import * as koffi from 'koffi';
+
+// Manual buffer parsing for CreateItemResult_t callback
+// Steam uses #pragma pack causing tight packing - Koffi can't handle this properly
+// Layout: [int32:0-3][uint64:4-11][uint8:12] = 13 bytes, padded to 16
+const CreateItemResult_t = koffi.struct('CreateItemResult_t', {
+  rawBytes: koffi.array('uint8', 16)
+});
+
+// Manual buffer parsing for SubmitItemUpdateResult_t callback
+// Steam uses #pragma pack causing tight packing - Koffi can't handle this properly
+// Layout: [int32:0-3][bool:4][padding:5-7][uint64:8-15] = 16 bytes
+const SubmitItemUpdateResult_t = koffi.struct('SubmitItemUpdateResult_t', {
+  rawBytes: koffi.array('uint8', 16)
+});
+
+// Koffi struct for RemoteStorageSubscribePublishedFileResult_t callback
+const RemoteStorageSubscribePublishedFileResult_t = koffi.struct('RemoteStorageSubscribePublishedFileResult_t', {
+  m_eResult: 'int',                     // EResult (4 bytes)
+  _padding: 'int',                      // Padding for alignment (4 bytes)
+  m_nPublishedFileId: 'uint64'          // PublishedFileId_t (8 bytes)
+});
+
+// Koffi struct for RemoteStorageUnsubscribePublishedFileResult_t callback
+const RemoteStorageUnsubscribePublishedFileResult_t = koffi.struct('RemoteStorageUnsubscribePublishedFileResult_t', {
+  m_eResult: 'int',                     // EResult (4 bytes)
+  _padding: 'int',                      // Padding for alignment (4 bytes)
+  m_nPublishedFileId: 'uint64'          // PublishedFileId_t (8 bytes)
+});
+
+// Koffi struct for SteamUGCQueryCompleted_t callback
+const SteamUGCQueryCompleted_t = koffi.struct('SteamUGCQueryCompleted_t', {
+  m_handle: 'uint64',                   // UGCQueryHandle_t
+  m_eResult: 'int',                     // EResult
+  m_unNumResultsReturned: 'uint32',
+  m_unTotalMatchingResults: 'uint32',
+  m_bCachedData: 'bool'
+});
+
+// Koffi struct for SetUserItemVoteResult_t callback
+const SetUserItemVoteResult_t = koffi.struct('SetUserItemVoteResult_t', {
+  m_nPublishedFileId: 'uint64',         // PublishedFileId_t (8 bytes)
+  m_eResult: 'int',                     // EResult (4 bytes)
+  m_bVoteUp: 'bool'                     // bool (1 byte)
+});
+
+// Koffi struct for GetUserItemVoteResult_t callback
+const GetUserItemVoteResult_t = koffi.struct('GetUserItemVoteResult_t', {
+  m_nPublishedFileId: 'uint64',         // PublishedFileId_t (8 bytes)
+  m_eResult: 'int',                     // EResult (4 bytes)
+  m_bVotedUp: 'bool',                   // bool (1 byte)
+  m_bVotedDown: 'bool',                 // bool (1 byte)
+  m_bVoteSkipped: 'bool'                // bool (1 byte)
+});
+
+// Koffi struct for UserFavoriteItemsListChanged_t callback
+const UserFavoriteItemsListChanged_t = koffi.struct('UserFavoriteItemsListChanged_t', {
+  m_nPublishedFileId: 'uint64',         // PublishedFileId_t (8 bytes)
+  m_eResult: 'int',                     // EResult (4 bytes)
+  m_bWasAddRequest: 'bool'              // bool (1 byte)
+});
 
 /**
  * Manager for Steam Workshop / User Generated Content (UGC) operations
@@ -77,18 +157,16 @@ export class SteamWorkshopManager {
   /** Steam library loader for FFI function calls */
   private libraryLoader: SteamLibraryLoader;
   
-  /** Steam API core for initialization and callback management */
+  /** Steam API core for accessing interfaces */
   private apiCore: SteamAPICore;
-
-  /**
-   * Creates a new SteamWorkshopManager instance
-   * 
-   * @param libraryLoader - The Steam library loader for FFI calls
-   * @param apiCore - The Steam API core for lifecycle management
-   */
+  
+  /** Callback poller for async operations */
+  private callbackPoller: SteamCallbackPoller;
+  
   constructor(libraryLoader: SteamLibraryLoader, apiCore: SteamAPICore) {
     this.libraryLoader = libraryLoader;
     this.apiCore = apiCore;
+    this.callbackPoller = new SteamCallbackPoller(libraryLoader, apiCore);
   }
 
   // ========================================
@@ -99,75 +177,124 @@ export class SteamWorkshopManager {
    * Subscribes to a Workshop item
    * 
    * @param publishedFileId - The Workshop item ID to subscribe to
-   * @returns API call handle (for tracking callback completion)
+   * @returns True if subscription was successful, false otherwise
    * 
    * @remarks
-   * - Item will be downloaded and installed automatically
-   * - Listen for DownloadItemResult_t callback for completion
-   * - Item will stay subscribed across game sessions
+   * - Item will be automatically downloaded and installed
+   * - Use getItemInstallInfo() to check installation status
+   * - Use getItemDownloadInfo() to track download progress
    * 
    * @example
    * ```typescript
    * const itemId = BigInt('123456789');
-   * const callHandle = steam.workshop.subscribeItem(itemId);
-   * // Wait for callback to confirm subscription
+   * const success = await steam.workshop.subscribeItem(itemId);
+   * 
+   * if (success) {
+   *   console.log('Successfully subscribed!');
+   *   // Check download progress
+   *   const progress = steam.workshop.getItemDownloadInfo(itemId);
+   *   if (progress) {
+   *     console.log(`Downloading: ${progress.percentComplete}%`);
+   *   }
+   * }
    * ```
    */
-  subscribeItem(publishedFileId: PublishedFileId): bigint {
+  async subscribeItem(publishedFileId: PublishedFileId): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.error('Steam API not initialized');
-      return BigInt(0);
+      console.error('[Steamworks] Steam API not initialized');
+      return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('ISteamUGC interface not available');
-      return BigInt(0);
+      console.error('[Steamworks] ISteamUGC interface not available');
+      return false;
     }
 
     try {
-      const handle = this.libraryLoader.SteamAPI_ISteamUGC_SubscribeItem(ugc, publishedFileId);
-      return BigInt(handle);
-    } catch (error) {
-      console.error('Error subscribing to item:', error);
-      return BigInt(0);
-    }
-  }
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_SubscribeItem(ugc, publishedFileId);
+      
+      if (callHandle === BigInt(0)) {
+        console.error('[Steamworks] Failed to initiate item subscription');
+        return false;
+      }
 
-  /**
+      // Wait for the callback result
+      const result = await this.callbackPoller.poll<RemoteStorageSubscribePublishedFileResultType>(
+        BigInt(callHandle),
+        RemoteStorageSubscribePublishedFileResult_t,
+        K_I_REMOTE_STORAGE_SUBSCRIBE_PUBLISHED_FILE_RESULT,
+        50, // max retries (5 seconds total)
+        100 // delay ms
+      );
+
+      if (result && result.m_eResult === 1) { // k_EResultOK = 1
+        return true;
+      }
+
+      console.error(`[Steamworks] Subscribe item failed with result: ${result?.m_eResult || 'unknown'}`);
+      return false;
+    } catch (error) {
+      console.error('[Steamworks] Error subscribing to item:', error);
+      return false;
+    }
+  }  /**
    * Unsubscribes from a Workshop item
    * 
    * @param publishedFileId - The Workshop item ID to unsubscribe from
-   * @returns API call handle (for tracking callback completion)
+   * @returns True if unsubscription was successful, false otherwise
    * 
    * @remarks
    * - Item will be uninstalled after the game quits
-   * - Listen for RemoteStorageUnsubscribePublishedFileResult_t callback
    * 
    * @example
    * ```typescript
    * const itemId = BigInt('123456789');
-   * steam.workshop.unsubscribeItem(itemId);
+   * const success = await steam.workshop.unsubscribeItem(itemId);
+   * 
+   * if (success) {
+   *   console.log('Successfully unsubscribed!');
+   * }
    * ```
    */
-  unsubscribeItem(publishedFileId: PublishedFileId): bigint {
+  async unsubscribeItem(publishedFileId: PublishedFileId): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.error('Steam API not initialized');
-      return BigInt(0);
+      console.error('[Steamworks] Steam API not initialized');
+      return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('ISteamUGC interface not available');
-      return BigInt(0);
+      console.error('[Steamworks] ISteamUGC interface not available');
+      return false;
     }
 
     try {
-      const handle = this.libraryLoader.SteamAPI_ISteamUGC_UnsubscribeItem(ugc, publishedFileId);
-      return BigInt(handle);
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_UnsubscribeItem(ugc, publishedFileId);
+      
+      if (callHandle === BigInt(0)) {
+        console.error('[Steamworks] Failed to initiate item unsubscription');
+        return false;
+      }
+
+      // Wait for the callback result
+      const result = await this.callbackPoller.poll<RemoteStorageUnsubscribePublishedFileResultType>(
+        BigInt(callHandle),
+        RemoteStorageUnsubscribePublishedFileResult_t,
+        K_I_REMOTE_STORAGE_UNSUBSCRIBE_PUBLISHED_FILE_RESULT,
+        50, // max retries (5 seconds total)
+        100 // delay ms
+      );
+
+      if (result && result.m_eResult === 1) { // k_EResultOK = 1
+        return true;
+      }
+
+      console.error(`[Steamworks] Unsubscribe item failed with result: ${result?.m_eResult || 'unknown'}`);
+      return false;
     } catch (error) {
-      console.error('Error unsubscribing from item:', error);
-      return BigInt(0);
+      console.error('[Steamworks] Error unsubscribing from item:', error);
+      return false;
     }
   }
 
@@ -195,7 +322,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_GetNumSubscribedItems(ugc);
     } catch (error) {
-      console.error('Error getting subscribed items count:', error);
+      console.error('[Steamworks] Error getting subscribed items count:', error);
       return 0;
     }
   }
@@ -250,7 +377,7 @@ export class SteamWorkshopManager {
 
       return items;
     } catch (error) {
-      console.error('Error getting subscribed items:', error);
+      console.error('[Steamworks] Error getting subscribed items:', error);
       return [];
     }
   }
@@ -304,7 +431,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_GetItemState(ugc, publishedFileId);
     } catch (error) {
-      console.error('Error getting item state:', error);
+      console.error('[Steamworks] Error getting item state:', error);
       return EItemState.None;
     }
   }
@@ -368,7 +495,7 @@ export class SteamWorkshopManager {
         timestamp: timestampBuffer.readUInt32LE(0)
       };
     } catch (error) {
-      console.error('Error getting item install info:', error);
+      console.error('[Steamworks] Error getting item install info:', error);
       return null;
     }
   }
@@ -430,7 +557,7 @@ export class SteamWorkshopManager {
         percentComplete
       };
     } catch (error) {
-      console.error('Error getting item download info:', error);
+      console.error('[Steamworks] Error getting item download info:', error);
       return null;
     }
   }
@@ -471,7 +598,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_DownloadItem(ugc, publishedFileId, highPriority);
     } catch (error) {
-      console.error('Error downloading item:', error);
+      console.error('[Steamworks] Error downloading item:', error);
       return false;
     }
   }
@@ -541,7 +668,7 @@ export class SteamWorkshopManager {
       );
       return BigInt(handle);
     } catch (error) {
-      console.error('Error creating user UGC query:', error);
+      console.error('[Steamworks] Error creating user UGC query:', error);
       return K_UGC_QUERY_HANDLE_INVALID;
     }
   }
@@ -598,44 +725,88 @@ export class SteamWorkshopManager {
       );
       return BigInt(handle);
     } catch (error) {
-      console.error('Error creating all UGC query:', error);
+      console.error('[Steamworks] Error creating all UGC query:', error);
       return K_UGC_QUERY_HANDLE_INVALID;
     }
   }
 
   /**
-   * Sends a UGC query to Steam
+   * Sends a UGC query to Steam and waits for results
    * 
    * @param queryHandle - Handle from createQueryUserUGCRequest or createQueryAllUGCRequest
-   * @returns API call handle (for tracking callback completion)
+   * @returns Query result with number of results and metadata, or null if failed
    * 
    * @remarks
-   * Listen for SteamUGCQueryCompleted_t callback for results
    * After processing results, call releaseQueryUGCRequest to free memory
+   * Use getQueryUGCResult to retrieve individual item details
    * 
    * @example
    * ```typescript
    * const query = steam.workshop.createQueryAllUGCRequest(...);
-   * const callHandle = steam.workshop.sendQueryUGCRequest(query);
-   * // Wait for callback, then call getQueryUGCResult and releaseQueryUGCRequest
+   * const result = await steam.workshop.sendQueryUGCRequest(query);
+   * 
+   * if (result) {
+   *   console.log(`Found ${result.numResults} items (${result.totalResults} total)`);
+   *   
+   *   // Get individual results
+   *   for (let i = 0; i < result.numResults; i++) {
+   *     const item = steam.workshop.getQueryUGCResult(query, i);
+   *     if (item) {
+   *       console.log(`Item: ${item.title}`);
+   *     }
+   *   }
+   *   
+   *   // Clean up
+   *   steam.workshop.releaseQueryUGCRequest(query);
+   * }
    * ```
    */
-  sendQueryUGCRequest(queryHandle: UGCQueryHandle): bigint {
+  async sendQueryUGCRequest(queryHandle: UGCQueryHandle): Promise<{
+    numResults: number;
+    totalResults: number;
+    cachedData: boolean;
+  } | null> {
     if (!this.apiCore.isInitialized()) {
-      return BigInt(0);
+      console.error('[Steamworks] Steam API not initialized');
+      return null;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      return BigInt(0);
+      console.error('[Steamworks] ISteamUGC interface not available');
+      return null;
     }
 
     try {
-      const handle = this.libraryLoader.SteamAPI_ISteamUGC_SendQueryUGCRequest(ugc, queryHandle);
-      return BigInt(handle);
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_SendQueryUGCRequest(ugc, queryHandle);
+      
+      if (callHandle === BigInt(0)) {
+        console.error('[Steamworks] Failed to initiate UGC query');
+        return null;
+      }
+
+      // Wait for the callback result
+      const result = await this.callbackPoller.poll<SteamUGCQueryCompletedType>(
+        BigInt(callHandle),
+        SteamUGCQueryCompleted_t,
+        K_I_STEAM_UGC_QUERY_COMPLETED,
+        50, // max retries (5 seconds total)
+        100 // delay ms
+      );
+
+      if (result && result.m_eResult === 1) { // k_EResultOK = 1
+        return {
+          numResults: result.m_unNumResultsReturned,
+          totalResults: result.m_unTotalMatchingResults,
+          cachedData: result.m_bCachedData
+        };
+      }
+
+      console.error(`[Steamworks] UGC query failed with result: ${result?.m_eResult || 'unknown'}`);
+      return null;
     } catch (error) {
-      console.error('Error sending UGC query:', error);
-      return BigInt(0);
+      console.error('[Steamworks] Error sending UGC query:', error);
+      return null;
     }
   }
 
@@ -681,8 +852,8 @@ export class SteamWorkshopManager {
 
     try {
       // Allocate buffer for SteamUGCDetails_t struct
-      // The struct is quite large, allocating 2KB to be safe
-      const detailsBuffer = Buffer.alloc(2048);
+      // Struct size: ~10KB (8KB description + 1KB tags + other fields)
+      const detailsBuffer = Buffer.alloc(10240);
       
       const success = this.libraryLoader.SteamAPI_ISteamUGC_GetQueryUGCResult(
         ugc,
@@ -847,7 +1018,7 @@ export class SteamWorkshopManager {
         totalFilesSize
       };
     } catch (error) {
-      console.error('Error getting query UGC result:', error);
+      console.error('[Steamworks] Error getting query UGC result:', error);
       return null;
     }
   }
@@ -882,7 +1053,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_ReleaseQueryUGCRequest(ugc, queryHandle);
     } catch (error) {
-      console.error('Error releasing UGC query:', error);
+      console.error('[Steamworks] Error releasing UGC query:', error);
       return false;
     }
   }
@@ -892,41 +1063,78 @@ export class SteamWorkshopManager {
   // ========================================
 
   /**
-   * Creates a new Workshop item
+   * Creates a new Workshop item and waits for the result
    * 
    * @param consumerAppId - App ID that will consume this item
    * @param fileType - Type of Workshop file
-   * @returns API call handle (for tracking callback completion)
+   * @returns The published file ID of the newly created item, or null if failed
    * 
    * @remarks
-   * Listen for CreateItemResult_t callback for the new item's Published File ID
-   * Once created, use startItemUpdate to set content and properties
+   * This method automatically waits for the CreateItemResult_t callback.
+   * Once created, use startItemUpdate to set content and properties.
+   * Blocks until result is ready or times out (default 5 seconds).
    * 
    * @example
    * ```typescript
-   * const callHandle = steam.workshop.createItem(
+   * const publishedFileId = await steam.workshop.createItem(
    *   480,
    *   EWorkshopFileType.Community
    * );
-   * // Wait for CreateItemResult_t callback to get publishedFileId
+   * 
+   * if (publishedFileId) {
+   *   console.log(`Created item with ID: ${publishedFileId}`);
+   *   
+   *   // Now you can update the item
+   *   const updateHandle = steam.workshop.startItemUpdate(480, publishedFileId);
+   *   steam.workshop.setItemTitle(updateHandle, 'My Awesome Mod');
+   *   steam.workshop.setItemContent(updateHandle, '/path/to/content');
+   *   steam.workshop.submitItemUpdate(updateHandle, 'Initial release');
+   * }
    * ```
    */
-  createItem(consumerAppId: number, fileType: EWorkshopFileType): bigint {
+  async createItem(consumerAppId: number, fileType: EWorkshopFileType): Promise<PublishedFileId | null> {
     if (!this.apiCore.isInitialized()) {
-      return BigInt(0);
+      console.error('[Steamworks] Steam API not initialized');
+      return null;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      return BigInt(0);
+      console.error('[Steamworks] ISteamUGC interface not available');
+      return null;
     }
 
     try {
-      const handle = this.libraryLoader.SteamAPI_ISteamUGC_CreateItem(ugc, consumerAppId, fileType);
-      return BigInt(handle);
+      // Call Steam API to create the item
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_CreateItem(ugc, consumerAppId, fileType);
+      
+      if (callHandle === BigInt(0)) {
+        console.error('[Steamworks] Failed to initiate item creation');
+        return null;
+      }
+
+      // Wait for the callback result (longer timeout for item creation)
+      const result = await this.callbackPoller.poll<CreateItemResultType>(
+        BigInt(callHandle),
+        CreateItemResult_t,
+        K_I_CREATE_ITEM_RESULT,
+        300, // max retries (30 seconds total - item creation can be slow)
+        100 // delay ms
+      );
+
+      if (result && result.m_eResult === 1) { // k_EResultOK = 1
+        if (result.m_bUserNeedsToAcceptWorkshopLegalAgreement) {
+          console.warn('[Steamworks] User needs to accept Workshop Legal Agreement');
+          console.warn('[Steamworks] Visit: https://steamcommunity.com/sharedfiles/workshoplegalagreement');
+        }
+        return BigInt(result.m_nPublishedFileId);
+      }
+
+      console.error(`[Steamworks] Create item failed with result: ${result?.m_eResult || 'unknown'}`);
+      return null;
     } catch (error) {
-      console.error('Error creating item:', error);
-      return BigInt(0);
+      console.error('[Steamworks] Error creating item:', error);
+      return null;
     }
   }
 
@@ -966,7 +1174,7 @@ export class SteamWorkshopManager {
       const handle = this.libraryLoader.SteamAPI_ISteamUGC_StartItemUpdate(ugc, consumerAppId, publishedFileId);
       return BigInt(handle);
     } catch (error) {
-      console.error('Error starting item update:', error);
+      console.error('[Steamworks] Error starting item update:', error);
       return K_UGC_UPDATE_HANDLE_INVALID;
     }
   }
@@ -991,7 +1199,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemTitle(ugc, updateHandle, title);
     } catch (error) {
-      console.error('Error setting item title:', error);
+      console.error('[Steamworks] Error setting item title:', error);
       return false;
     }
   }
@@ -1016,7 +1224,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemDescription(ugc, updateHandle, description);
     } catch (error) {
-      console.error('Error setting item description:', error);
+      console.error('[Steamworks] Error setting item description:', error);
       return false;
     }
   }
@@ -1041,7 +1249,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemVisibility(ugc, updateHandle, visibility);
     } catch (error) {
-      console.error('Error setting item visibility:', error);
+      console.error('[Steamworks] Error setting item visibility:', error);
       return false;
     }
   }
@@ -1069,7 +1277,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemContent(ugc, updateHandle, contentFolder);
     } catch (error) {
-      console.error('Error setting item content:', error);
+      console.error('[Steamworks] Error setting item content:', error);
       return false;
     }
   }
@@ -1094,46 +1302,74 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemPreview(ugc, updateHandle, previewFile);
     } catch (error) {
-      console.error('Error setting item preview:', error);
+      console.error('[Steamworks] Error setting item preview:', error);
       return false;
     }
   }
 
   /**
-   * Submits an item update to Steam Workshop
+   * Submits an item update to Steam Workshop and waits for completion
    * 
    * @param updateHandle - Handle from startItemUpdate
    * @param changeNote - Description of changes (shown in update history)
-   * @returns API call handle (for tracking callback completion)
+   * @returns True if update was submitted successfully, false otherwise
    * 
    * @remarks
-   * Listen for SubmitItemUpdateResult_t callback for completion
    * Use getItemUpdateProgress to track upload progress
    * 
    * @example
    * ```typescript
    * const updateHandle = steam.workshop.startItemUpdate(480, itemId);
    * steam.workshop.setItemTitle(updateHandle, 'Updated Title');
-   * const callHandle = steam.workshop.submitItemUpdate(updateHandle, 'Fixed bugs');
-   * // Wait for SubmitItemUpdateResult_t callback
+   * const success = await steam.workshop.submitItemUpdate(updateHandle, 'Fixed bugs');
+   * 
+   * if (success) {
+   *   console.log('Update submitted successfully!');
+   * }
    * ```
    */
-  submitItemUpdate(updateHandle: UGCUpdateHandle, changeNote: string): bigint {
+  async submitItemUpdate(updateHandle: UGCUpdateHandle, changeNote: string): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      return BigInt(0);
+      console.error('[Steamworks] Steam API not initialized');
+      return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      return BigInt(0);
+      console.error('[Steamworks] ISteamUGC interface not available');
+      return false;
     }
 
     try {
-      const handle = this.libraryLoader.SteamAPI_ISteamUGC_SubmitItemUpdate(ugc, updateHandle, changeNote);
-      return BigInt(handle);
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_SubmitItemUpdate(ugc, updateHandle, changeNote);
+      
+      if (callHandle === BigInt(0)) {
+        console.error('[Steamworks] Failed to initiate item update submission');
+        return false;
+      }
+
+      // Wait for the callback result (longer timeout for uploads)
+      const result = await this.callbackPoller.poll<SubmitItemUpdateResultType>(
+        BigInt(callHandle),
+        SubmitItemUpdateResult_t,
+        K_I_SUBMIT_ITEM_UPDATE_RESULT,
+        300, // max retries (30 seconds total - uploads can be slow)
+        100 // delay ms
+      );
+
+      if (result && result.m_eResult === 1) { // k_EResultOK = 1
+        if (result.m_bUserNeedsToAcceptWorkshopLegalAgreement) {
+          console.warn('[Steamworks] User needs to accept Workshop Legal Agreement');
+          console.warn('[Steamworks] Visit: https://steamcommunity.com/sharedfiles/workshoplegalagreement');
+        }
+        return true;
+      }
+
+      console.error(`[Steamworks] Submit item update failed with result: ${result?.m_eResult || 'timeout'}`);
+      return false;
     } catch (error) {
-      console.error('Error submitting item update:', error);
-      return BigInt(0);
+      console.error('[Steamworks] Error submitting item update:', error);
+      return false;
     }
   }
 
@@ -1195,7 +1431,7 @@ export class SteamWorkshopManager {
 
       return result;
     } catch (error) {
-      console.error('Error getting item update progress:', error);
+      console.error('[Steamworks] Error getting item update progress:', error);
       return result;
     }
   }
@@ -1209,33 +1445,56 @@ export class SteamWorkshopManager {
    * 
    * @param publishedFileId - Workshop item ID
    * @param voteUp - True to vote up, false to vote down
-   * @returns API call handle (for tracking callback completion)
-   * 
-   * @remarks
-   * Listen for SetUserItemVoteResult_t callback
+   * @returns True if vote was successful, false otherwise
    * 
    * @example
    * ```typescript
    * const itemId = BigInt('123456789');
-   * steam.workshop.setUserItemVote(itemId, true); // Vote up
+   * const success = await steam.workshop.setUserItemVote(itemId, true); // Vote up
+   * 
+   * if (success) {
+   *   console.log('Vote registered!');
+   * }
    * ```
    */
-  setUserItemVote(publishedFileId: PublishedFileId, voteUp: boolean): bigint {
+  async setUserItemVote(publishedFileId: PublishedFileId, voteUp: boolean): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      return BigInt(0);
+      console.error('[Steamworks] Steam API not initialized');
+      return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      return BigInt(0);
+      console.error('[Steamworks] ISteamUGC interface not available');
+      return false;
     }
 
     try {
-      const handle = this.libraryLoader.SteamAPI_ISteamUGC_SetUserItemVote(ugc, publishedFileId, voteUp);
-      return BigInt(handle);
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_SetUserItemVote(ugc, publishedFileId, voteUp);
+      
+      if (callHandle === BigInt(0)) {
+        console.error('[Steamworks] Failed to initiate vote');
+        return false;
+      }
+
+      // Wait for the callback result
+      const result = await this.callbackPoller.poll<SetUserItemVoteResultType>(
+        BigInt(callHandle),
+        SetUserItemVoteResult_t,
+        K_I_SET_USER_ITEM_VOTE_RESULT,
+        50, // max retries (5 seconds total)
+        100 // delay ms
+      );
+
+      if (result && result.m_eResult === 1) { // k_EResultOK = 1
+        return true;
+      }
+
+      console.error(`[Steamworks] Set user item vote failed with result: ${result?.m_eResult || 'unknown'}`);
+      return false;
     } catch (error) {
-      console.error('Error setting item vote:', error);
-      return BigInt(0);
+      console.error('[Steamworks] Error setting item vote:', error);
+      return false;
     }
   }
 
@@ -1243,34 +1502,70 @@ export class SteamWorkshopManager {
    * Gets the user's vote on a Workshop item
    * 
    * @param publishedFileId - Workshop item ID
-   * @returns API call handle (for tracking callback completion)
-   * 
-   * @remarks
-   * Listen for GetUserItemVoteResult_t callback for vote status
+   * @returns Vote status object, or null if failed
    * 
    * @example
    * ```typescript
    * const itemId = BigInt('123456789');
-   * steam.workshop.getUserItemVote(itemId);
-   * // Wait for GetUserItemVoteResult_t callback
+   * const vote = await steam.workshop.getUserItemVote(itemId);
+   * 
+   * if (vote) {
+   *   if (vote.votedUp) {
+   *     console.log('You voted up');
+   *   } else if (vote.votedDown) {
+   *     console.log('You voted down');
+   *   } else {
+   *     console.log('You have not voted');
+   *   }
+   * }
    * ```
    */
-  getUserItemVote(publishedFileId: PublishedFileId): bigint {
+  async getUserItemVote(publishedFileId: PublishedFileId): Promise<{
+    votedUp: boolean;
+    votedDown: boolean;
+    voteSkipped: boolean;
+  } | null> {
     if (!this.apiCore.isInitialized()) {
-      return BigInt(0);
+      console.error('[Steamworks] Steam API not initialized');
+      return null;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      return BigInt(0);
+      console.error('[Steamworks] ISteamUGC interface not available');
+      return null;
     }
 
     try {
-      const handle = this.libraryLoader.SteamAPI_ISteamUGC_GetUserItemVote(ugc, publishedFileId);
-      return BigInt(handle);
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_GetUserItemVote(ugc, publishedFileId);
+      
+      if (callHandle === BigInt(0)) {
+        console.error('[Steamworks] Failed to initiate get vote');
+        return null;
+      }
+
+      // Wait for the callback result
+      const result = await this.callbackPoller.poll<GetUserItemVoteResultType>(
+        BigInt(callHandle),
+        GetUserItemVoteResult_t,
+        K_I_GET_USER_ITEM_VOTE_RESULT,
+        50, // max retries (5 seconds total)
+        100 // delay ms
+      );
+
+      if (result && result.m_eResult === 1) { // k_EResultOK = 1
+        return {
+          votedUp: result.m_bVotedUp,
+          votedDown: result.m_bVotedDown,
+          voteSkipped: result.m_bVoteSkipped
+        };
+      }
+
+      console.error(`[Steamworks] Get user item vote failed with result: ${result?.m_eResult || 'unknown'}`);
+      return null;
     } catch (error) {
-      console.error('Error getting item vote:', error);
-      return BigInt(0);
+      console.error('[Steamworks] Error getting item vote:', error);
+      return null;
     }
   }
 
@@ -1279,33 +1574,56 @@ export class SteamWorkshopManager {
    * 
    * @param appId - App ID
    * @param publishedFileId - Workshop item ID
-   * @returns API call handle (for tracking callback completion)
-   * 
-   * @remarks
-   * Listen for UserFavoriteItemsListChanged_t callback
+   * @returns True if added successfully, false otherwise
    * 
    * @example
    * ```typescript
    * const itemId = BigInt('123456789');
-   * steam.workshop.addItemToFavorites(480, itemId);
+   * const success = await steam.workshop.addItemToFavorites(480, itemId);
+   * 
+   * if (success) {
+   *   console.log('Added to favorites!');
+   * }
    * ```
    */
-  addItemToFavorites(appId: number, publishedFileId: PublishedFileId): bigint {
+  async addItemToFavorites(appId: number, publishedFileId: PublishedFileId): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      return BigInt(0);
+      console.error('[Steamworks] Steam API not initialized');
+      return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      return BigInt(0);
+      console.error('[Steamworks] ISteamUGC interface not available');
+      return false;
     }
 
     try {
-      const handle = this.libraryLoader.SteamAPI_ISteamUGC_AddItemToFavorites(ugc, appId, publishedFileId);
-      return BigInt(handle);
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_AddItemToFavorites(ugc, appId, publishedFileId);
+      
+      if (callHandle === BigInt(0)) {
+        console.error('[Steamworks] Failed to initiate add to favorites');
+        return false;
+      }
+
+      // Wait for the callback result
+      const result = await this.callbackPoller.poll<UserFavoriteItemsListChangedType>(
+        BigInt(callHandle),
+        UserFavoriteItemsListChanged_t,
+        K_I_USER_FAVORITE_ITEMS_LIST_CHANGED,
+        50, // max retries (5 seconds total)
+        100 // delay ms
+      );
+
+      if (result && result.m_eResult === 1) { // k_EResultOK = 1
+        return true;
+      }
+
+      console.error(`[Steamworks] Add item to favorites failed with result: ${result?.m_eResult || 'unknown'}`);
+      return false;
     } catch (error) {
-      console.error('Error adding item to favorites:', error);
-      return BigInt(0);
+      console.error('[Steamworks] Error adding item to favorites:', error);
+      return false;
     }
   }
 
@@ -1314,33 +1632,56 @@ export class SteamWorkshopManager {
    * 
    * @param appId - App ID
    * @param publishedFileId - Workshop item ID
-   * @returns API call handle (for tracking callback completion)
-   * 
-   * @remarks
-   * Listen for UserFavoriteItemsListChanged_t callback
+   * @returns True if removed successfully, false otherwise
    * 
    * @example
    * ```typescript
    * const itemId = BigInt('123456789');
-   * steam.workshop.removeItemFromFavorites(480, itemId);
+   * const success = await steam.workshop.removeItemFromFavorites(480, itemId);
+   * 
+   * if (success) {
+   *   console.log('Removed from favorites!');
+   * }
    * ```
    */
-  removeItemFromFavorites(appId: number, publishedFileId: PublishedFileId): bigint {
+  async removeItemFromFavorites(appId: number, publishedFileId: PublishedFileId): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      return BigInt(0);
+      console.error('[Steamworks] Steam API not initialized');
+      return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      return BigInt(0);
+      console.error('[Steamworks] ISteamUGC interface not available');
+      return false;
     }
 
     try {
-      const handle = this.libraryLoader.SteamAPI_ISteamUGC_RemoveItemFromFavorites(ugc, appId, publishedFileId);
-      return BigInt(handle);
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_RemoveItemFromFavorites(ugc, appId, publishedFileId);
+      
+      if (callHandle === BigInt(0)) {
+        console.error('[Steamworks] Failed to initiate remove from favorites');
+        return false;
+      }
+
+      // Wait for the callback result
+      const result = await this.callbackPoller.poll<UserFavoriteItemsListChangedType>(
+        BigInt(callHandle),
+        UserFavoriteItemsListChanged_t,
+        K_I_USER_FAVORITE_ITEMS_LIST_CHANGED,
+        50, // max retries (5 seconds total)
+        100 // delay ms
+      );
+
+      if (result && result.m_eResult === 1) { // k_EResultOK = 1
+        return true;
+      }
+
+      console.error(`[Steamworks] Remove item from favorites failed with result: ${result?.m_eResult || 'unknown'}`);
+      return false;
     } catch (error) {
-      console.error('Error removing item from favorites:', error);
-      return BigInt(0);
+      console.error('[Steamworks] Error removing item from favorites:', error);
+      return false;
     }
   }
 }

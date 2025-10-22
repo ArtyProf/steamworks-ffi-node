@@ -1,4 +1,3 @@
-import * as koffi from 'koffi';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import {
@@ -105,13 +104,13 @@ export class SteamCloudManager {
    */
   fileWrite(filename: string, data: Buffer): boolean {
     if (!this.apiCore.isInitialized()) {
-      console.error('Steam API not initialized');
+      console.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const remoteStorage = this.apiCore.getRemoteStorageInterface();
     if (!remoteStorage) {
-      console.error('ISteamRemoteStorage interface not available');
+      console.error('[Steamworks] ISteamRemoteStorage interface not available');
       return false;
     }
 
@@ -125,7 +124,7 @@ export class SteamCloudManager {
 
       return result;
     } catch (error) {
-      console.error('Error writing file to Steam Cloud:', error);
+      console.error('[Steamworks] Error writing file to Steam Cloud:', error);
       return false;
     }
   }
@@ -159,13 +158,13 @@ export class SteamCloudManager {
     };
 
     if (!this.apiCore.isInitialized()) {
-      console.error('Steam API not initialized');
+      console.error('[Steamworks] Steam API not initialized');
       return result;
     }
 
     const remoteStorage = this.apiCore.getRemoteStorageInterface();
     if (!remoteStorage) {
-      console.error('ISteamRemoteStorage interface not available');
+      console.error('[Steamworks] ISteamRemoteStorage interface not available');
       return result;
     }
 
@@ -194,7 +193,7 @@ export class SteamCloudManager {
 
       return result;
     } catch (error) {
-      console.error('Error reading file from Steam Cloud:', error);
+      console.error('[Steamworks] Error reading file from Steam Cloud:', error);
       return result;
     }
   }
@@ -225,7 +224,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_FileExists(remoteStorage, filename);
     } catch (error) {
-      console.error('Error checking file existence:', error);
+      console.error('[Steamworks] Error checking file existence:', error);
       return false;
     }
   }
@@ -262,7 +261,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_FileDelete(remoteStorage, filename);
     } catch (error) {
-      console.error('Error deleting file:', error);
+      console.error('[Steamworks] Error deleting file:', error);
       return false;
     }
   }
@@ -292,7 +291,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_GetFileSize(remoteStorage, filename);
     } catch (error) {
-      console.error('Error getting file size:', error);
+      console.error('[Steamworks] Error getting file size:', error);
       return 0;
     }
   }
@@ -323,7 +322,7 @@ export class SteamCloudManager {
     try {
       return Number(this.libraryLoader.SteamAPI_ISteamRemoteStorage_GetFileTimestamp(remoteStorage, filename));
     } catch (error) {
-      console.error('Error getting file timestamp:', error);
+      console.error('[Steamworks] Error getting file timestamp:', error);
       return 0;
     }
   }
@@ -352,7 +351,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_GetFileCount(remoteStorage);
     } catch (error) {
-      console.error('Error getting file count:', error);
+      console.error('[Steamworks] Error getting file count:', error);
       return 0;
     }
   }
@@ -408,13 +407,13 @@ export class SteamCloudManager {
       
       // Validate size is non-negative
       if (size < 0) {
-        console.warn(`Invalid file size returned for ${name}: ${size}`);
+        console.warn('[Steamworks] Invalid file size returned for ' + name + ': ' + size);
         return { name, size: 0 };
       }
       
       return { name, size };
     } catch (error) {
-      console.error('Error getting file name and size:', error);
+      console.error('[Steamworks] Error getting file name and size:', error);
       return null;
     }
   }
@@ -491,7 +490,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_FilePersisted(remoteStorage, filename);
     } catch (error) {
-      console.error('Error checking file persisted status:', error);
+      console.error('[Steamworks] Error checking file persisted status:', error);
       return false;
     }
   }
@@ -552,7 +551,7 @@ export class SteamCloudManager {
 
       return quota;
     } catch (error) {
-      console.error('Error getting cloud quota:', error);
+      console.error('[Steamworks] Error getting cloud quota:', error);
       return quota;
     }
   }
@@ -586,7 +585,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount(remoteStorage);
     } catch (error) {
-      console.error('Error checking cloud enabled for account:', error);
+      console.error('[Steamworks] Error checking cloud enabled for account:', error);
       return false;
     }
   }
@@ -620,7 +619,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp(remoteStorage);
     } catch (error) {
-      console.error('Error checking cloud enabled for app:', error);
+      console.error('[Steamworks] Error checking cloud enabled for app:', error);
       return false;
     }
   }
@@ -654,7 +653,7 @@ export class SteamCloudManager {
     try {
       this.libraryLoader.SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp(remoteStorage, enabled);
     } catch (error) {
-      console.error('Error setting cloud enabled for app:', error);
+      console.error('[Steamworks] Error setting cloud enabled for app:', error);
     }
   }
 }
