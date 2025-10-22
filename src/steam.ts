@@ -11,6 +11,7 @@ import { SteamFriendsManager } from './internal/SteamFriendsManager';
 import { SteamRichPresenceManager } from './internal/SteamRichPresenceManager';
 import { SteamOverlayManager } from './internal/SteamOverlayManager';
 import { SteamCloudManager } from './internal/SteamCloudManager';
+import { SteamWorkshopManager } from './internal/SteamWorkshopManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -24,6 +25,7 @@ import { SteamCloudManager } from './internal/SteamCloudManager';
  * - richPresence: SteamRichPresenceManager - Rich presence operations
  * - overlay: SteamOverlayManager - Overlay control operations
  * - cloud: SteamCloudManager - Steam Cloud / Remote Storage operations
+ * - workshop: SteamWorkshopManager - Steam Workshop / UGC operations
  * 
  * @example
  * ```typescript
@@ -38,6 +40,7 @@ import { SteamCloudManager } from './internal/SteamCloudManager';
  * steam.richPresence.setRichPresence('status', 'In Menu');
  * steam.overlay.activateGameOverlay('Friends');
  * steam.cloud.fileWrite('savegame.json', saveData);
+ * const items = await steam.workshop.getSubscribedItems();
  * ```
  */
 class SteamworksSDK {
@@ -272,6 +275,46 @@ class SteamworksSDK {
    */
   public readonly cloud!: SteamCloudManager;
 
+  /**
+   * Workshop Manager - Handle Steam Workshop / User Generated Content operations
+   * 
+   * Provides Workshop functionality including:
+   * - Query and browse Workshop items
+   * - Subscribe/unsubscribe to Workshop content
+   * - Download and install Workshop items
+   * - Track download and installation progress
+   * - Create and update Workshop items
+   * - Vote on and favorite Workshop content
+   * 
+   * @example
+   * ```typescript
+   * // Subscribe to Workshop item
+   * const itemId = BigInt('123456789');
+   * await steam.workshop.subscribeItem(itemId);
+   * 
+   * // Check subscribed items
+   * const items = steam.workshop.getSubscribedItems();
+   * items.forEach(id => {
+   *   const info = steam.workshop.getItemInstallInfo(id);
+   *   if (info) {
+   *     console.log(`Item installed at: ${info.folder}`);
+   *   }
+   * });
+   * 
+   * // Query popular items
+   * const query = steam.workshop.createQueryAllUGCRequest(
+   *   EUGCQuery.RankedByVote,
+   *   EUGCMatchingUGCType.Items,
+   *   480, 480, 1
+   * );
+   * steam.workshop.sendQueryUGCRequest(query);
+   * // Wait for callback, then releaseQueryUGCRequest
+   * ```
+   * 
+   * @see {@link SteamWorkshopManager} for complete API documentation
+   */
+  public readonly workshop!: SteamWorkshopManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -285,6 +328,7 @@ class SteamworksSDK {
     this.richPresence = new SteamRichPresenceManager(this.libraryLoader, this.apiCore);
     this.overlay = new SteamOverlayManager(this.libraryLoader, this.apiCore);
     this.cloud = new SteamCloudManager(this.libraryLoader, this.apiCore);
+    this.workshop = new SteamWorkshopManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {
