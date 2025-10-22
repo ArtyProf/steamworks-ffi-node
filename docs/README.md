@@ -20,6 +20,7 @@ steam.friends.*        // Friends and social operations
 steam.richPresence.*   // Rich Presence operations
 steam.overlay.*        // Overlay control operations
 steam.cloud.*          // Cloud storage operations
+steam.workshop.*       // Workshop/UGC operations
 ```
 
 This design:
@@ -102,6 +103,15 @@ This design:
   - Quota management (track storage usage and limits)
   - Cloud settings (check/toggle cloud sync for account and app)
 
+### Workshop System
+- **[Workshop Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)**
+  - **25+ Functions** - Complete Steam Workshop/UGC support
+  - Subscription management (subscribe, unsubscribe, list items)
+  - Item state & information (download progress, installation info)
+  - Query operations (search, browse, filter Workshop content)
+  - Item creation & update (create, upload, manage your Workshop items)
+  - Voting & favorites (vote on items, manage favorites)
+
 ## 🚀 Quick Links
 
 ### Getting Started
@@ -118,6 +128,7 @@ This design:
 - Run Friends Tests: `npm run test:friends:js` - Tests all 22 friends functions
 - Run Cloud Tests: `npm run test:cloud:js` - Tests all 14 cloud storage functions
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:js` - Tests 6 rich presence + 7 overlay functions
+- Run Workshop Tests: `npm run test:workshop:js` - Tests all 25+ Workshop/UGC functions
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
 - Run Achievement Tests: `npm run test:achievements:ts` - With type safety ✨
@@ -126,6 +137,7 @@ This design:
 - Run Friends Tests: `npm run test:friends:ts` - With type safety ✨
 - Run Cloud Tests: `npm run test:cloud:ts` - With type safety ✨
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:ts` - With type safety ✨
+- Run Workshop Tests: `npm run test:workshop:ts` - With type safety ✨
 
 📁 All tests are in `tests/` folder with separate `js/` and `ts/` subfolders.
 

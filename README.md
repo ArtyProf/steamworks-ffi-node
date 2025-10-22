@@ -23,6 +23,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Cloud Storage API** - 14 functions for complete Steam Cloud (Remote Storage) integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)
 
+> 🎉 **NEW: Workshop API** - 25+ functions for complete Steam Workshop/UGC integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)
+
 ## 🎯 Features
 
 - **Complete Achievement API**: 100% coverage of Steam Achievement functionality (20/20 functions)
@@ -66,6 +68,12 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ File listing (count, iterate, get all with details)
   - ✅ Quota management (track storage usage and limits)
   - ✅ Cloud settings (check/toggle cloud sync for account and app)
+- **Workshop API**: Complete Steam Workshop/UGC integration (25+ functions)
+  - ✅ Subscription management (subscribe, unsubscribe, list items)
+  - ✅ Item state & information (download progress, installation info)
+  - ✅ Query operations (search, browse, filter Workshop content)
+  - ✅ Item creation & update (create, upload, manage your Workshop items)
+  - ✅ Voting & favorites (vote on items, manage favorites)
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Easy Setup**: Simple installation with clear SDK setup guide
@@ -239,6 +247,70 @@ if (initialized) {
     const status = file.persisted ? '☁️' : '⏳';
     console.log(`${status} ${file.name} - ${kb} KB`);
   });
+  
+  // Steam Workshop operations
+  // Subscribe to a Workshop item
+  const subscribeResult = await steam.workshop.subscribeItem(123456789n);
+  if (subscribeResult.success) {
+    console.log('✅ Subscribed to Workshop item');
+  }
+  
+  // Get all subscribed items
+  const subscribedItems = steam.workshop.getSubscribedItems();
+  console.log(`Subscribed to ${subscribedItems.length} Workshop items`);
+  
+  // Query Workshop items
+  const query = steam.workshop.createQueryAllUGCRequest(
+    0,    // Most popular
+    1,    // Items
+    1,    // Subscribed content
+    1,    // Subscribed items
+    480   // App ID
+  );
+  
+  if (query) {
+    const queryResult = await steam.workshop.sendQueryUGCRequest(query);
+    if (queryResult.success) {
+      console.log(`Found ${queryResult.numResults} Workshop items`);
+      
+      // Get details for each item
+      for (let i = 0; i < queryResult.numResults; i++) {
+        const details = steam.workshop.getQueryUGCResult(query, i);
+        if (details) {
+          console.log(`📦 ${details.title} by ${details.steamIDOwner}`);
+          console.log(`   Score: ${details.score}, Downloads: ${details.numUniqueSubscriptions}`);
+        }
+      }
+    }
+    steam.workshop.releaseQueryUGCRequest(query);
+  }
+  
+  // Check download progress for subscribed items
+  subscribedItems.forEach(itemId => {
+    const state = steam.workshop.getItemState(itemId);
+    const stateFlags = [];
+    if (state & 1) stateFlags.push('Subscribed');
+    if (state & 4) stateFlags.push('Needs Update');
+    if (state & 8) stateFlags.push('Installed');
+    if (state & 16) stateFlags.push('Downloading');
+    
+    console.log(`Item ${itemId}: ${stateFlags.join(', ')}`);
+    
+    if (state & 16) { // If downloading
+      const progress = steam.workshop.getItemDownloadInfo(itemId);
+      if (progress) {
+        const percent = (progress.downloaded / progress.total * 100).toFixed(1);
+        console.log(`  Download: ${percent}% (${progress.downloaded}/${progress.total} bytes)`);
+      }
+    }
+    
+    if (state & 8) { // If installed
+      const info = steam.workshop.getItemInstallInfo(itemId);
+      if (info.success) {
+        console.log(`  Installed at: ${info.folder}`);
+      }
+    }
+  });
 }
 
 // Cleanup
@@ -290,6 +362,8 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Friends Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)** - Friends and social features (22 functions)
 - **[Rich Presence Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/RICH_PRESENCE_MANAGER.md)** - Custom status display and join functionality (6 functions)
 - **[Overlay Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)** - Steam overlay control (7 functions)
+- **[Cloud Storage Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_STORAGE_MANAGER.md)** - Steam Cloud file operations (14 functions)
+- **[Workshop Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)** - Steam Workshop/UGC operations (25+ functions)
 - **[Cloud Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)** - Steam Cloud storage operations (14 functions)
 
 ## 🎮 Steamworks Integration
