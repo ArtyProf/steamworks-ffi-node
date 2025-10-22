@@ -10,6 +10,7 @@
  * - richpresence.ts - Rich Presence-related types
  * - overlay.ts - Overlay-related types
  * - cloud.ts - Steam Cloud/Remote Storage types
+ * - workshop.ts - Steam Workshop/UGC types
  */
 
 // Core types
@@ -35,3 +36,6 @@ export * from './overlay';
 
 // Cloud types
 export * from './cloud';
+
+// Workshop types
+export * from './workshop';

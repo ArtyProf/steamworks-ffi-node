@@ -189,6 +189,49 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp!: koffi.KoffiFunction;
   public SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp!: koffi.KoffiFunction;
 
+  // ========================================
+  // ISteamUGC (Workshop) API Functions
+  // ========================================
+  
+  // Interface accessor
+  public SteamAPI_SteamUGC_v021!: koffi.KoffiFunction;
+  
+  // Query operations
+  public SteamAPI_ISteamUGC_CreateQueryUserUGCRequest!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_CreateQueryAllUGCRequestPage!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SendQueryUGCRequest!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCResult!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_ReleaseQueryUGCRequest!: koffi.KoffiFunction;
+  
+  // Subscription operations
+  public SteamAPI_ISteamUGC_SubscribeItem!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_UnsubscribeItem!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetNumSubscribedItems!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetSubscribedItems!: koffi.KoffiFunction;
+  
+  // Item state and info
+  public SteamAPI_ISteamUGC_GetItemState!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetItemInstallInfo!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetItemDownloadInfo!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_DownloadItem!: koffi.KoffiFunction;
+  
+  // Creation and update
+  public SteamAPI_ISteamUGC_CreateItem!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_StartItemUpdate!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemTitle!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemDescription!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemVisibility!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemContent!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemPreview!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SubmitItemUpdate!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetItemUpdateProgress!: koffi.KoffiFunction;
+  
+  // Voting and favorites
+  public SteamAPI_ISteamUGC_SetUserItemVote!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetUserItemVote!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_AddItemToFavorites!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_RemoveItemFromFavorites!: koffi.KoffiFunction;
+
   /**
    * Get platform-specific Steam library path
    * Users must download and install Steamworks SDK redistributables separately
@@ -462,6 +505,49 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount = this.steamLib.func('SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount', 'bool', ['void*']);
     this.SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp = this.steamLib.func('SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp', 'bool', ['void*']);
     this.SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp = this.steamLib.func('SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp', 'void', ['void*', 'bool']);
+    
+    // ========================================
+    // ISteamUGC (Workshop) Functions
+    // ========================================
+    
+    // Interface accessor
+    this.SteamAPI_SteamUGC_v021 = this.steamLib.func('SteamAPI_SteamUGC_v021', 'void*', []);
+    
+    // Query operations
+    this.SteamAPI_ISteamUGC_CreateQueryUserUGCRequest = this.steamLib.func('SteamAPI_ISteamUGC_CreateQueryUserUGCRequest', 'uint64', ['void*', 'uint32', 'int', 'int', 'int', 'uint32', 'uint32', 'uint32']);
+    this.SteamAPI_ISteamUGC_CreateQueryAllUGCRequestPage = this.steamLib.func('SteamAPI_ISteamUGC_CreateQueryAllUGCRequestPage', 'uint64', ['void*', 'int', 'int', 'uint32', 'uint32', 'uint32']);
+    this.SteamAPI_ISteamUGC_SendQueryUGCRequest = this.steamLib.func('SteamAPI_ISteamUGC_SendQueryUGCRequest', 'uint64', ['void*', 'uint64']);
+    this.SteamAPI_ISteamUGC_GetQueryUGCResult = this.steamLib.func('SteamAPI_ISteamUGC_GetQueryUGCResult', 'bool', ['void*', 'uint64', 'uint32', 'void*']);
+    this.SteamAPI_ISteamUGC_ReleaseQueryUGCRequest = this.steamLib.func('SteamAPI_ISteamUGC_ReleaseQueryUGCRequest', 'bool', ['void*', 'uint64']);
+    
+    // Subscription operations
+    this.SteamAPI_ISteamUGC_SubscribeItem = this.steamLib.func('SteamAPI_ISteamUGC_SubscribeItem', 'uint64', ['void*', 'uint64']);
+    this.SteamAPI_ISteamUGC_UnsubscribeItem = this.steamLib.func('SteamAPI_ISteamUGC_UnsubscribeItem', 'uint64', ['void*', 'uint64']);
+    this.SteamAPI_ISteamUGC_GetNumSubscribedItems = this.steamLib.func('SteamAPI_ISteamUGC_GetNumSubscribedItems', 'uint32', ['void*']);
+    this.SteamAPI_ISteamUGC_GetSubscribedItems = this.steamLib.func('SteamAPI_ISteamUGC_GetSubscribedItems', 'uint32', ['void*', 'uint64*', 'uint32']);
+    
+    // Item state and info
+    this.SteamAPI_ISteamUGC_GetItemState = this.steamLib.func('SteamAPI_ISteamUGC_GetItemState', 'uint32', ['void*', 'uint64']);
+    this.SteamAPI_ISteamUGC_GetItemInstallInfo = this.steamLib.func('SteamAPI_ISteamUGC_GetItemInstallInfo', 'bool', ['void*', 'uint64', 'uint64*', 'str', 'uint32', 'uint32*']);
+    this.SteamAPI_ISteamUGC_GetItemDownloadInfo = this.steamLib.func('SteamAPI_ISteamUGC_GetItemDownloadInfo', 'bool', ['void*', 'uint64', 'uint64*', 'uint64*']);
+    this.SteamAPI_ISteamUGC_DownloadItem = this.steamLib.func('SteamAPI_ISteamUGC_DownloadItem', 'bool', ['void*', 'uint64', 'bool']);
+    
+    // Creation and update
+    this.SteamAPI_ISteamUGC_CreateItem = this.steamLib.func('SteamAPI_ISteamUGC_CreateItem', 'uint64', ['void*', 'uint32', 'int']);
+    this.SteamAPI_ISteamUGC_StartItemUpdate = this.steamLib.func('SteamAPI_ISteamUGC_StartItemUpdate', 'uint64', ['void*', 'uint32', 'uint64']);
+    this.SteamAPI_ISteamUGC_SetItemTitle = this.steamLib.func('SteamAPI_ISteamUGC_SetItemTitle', 'bool', ['void*', 'uint64', 'str']);
+    this.SteamAPI_ISteamUGC_SetItemDescription = this.steamLib.func('SteamAPI_ISteamUGC_SetItemDescription', 'bool', ['void*', 'uint64', 'str']);
+    this.SteamAPI_ISteamUGC_SetItemVisibility = this.steamLib.func('SteamAPI_ISteamUGC_SetItemVisibility', 'bool', ['void*', 'uint64', 'int']);
+    this.SteamAPI_ISteamUGC_SetItemContent = this.steamLib.func('SteamAPI_ISteamUGC_SetItemContent', 'bool', ['void*', 'uint64', 'str']);
+    this.SteamAPI_ISteamUGC_SetItemPreview = this.steamLib.func('SteamAPI_ISteamUGC_SetItemPreview', 'bool', ['void*', 'uint64', 'str']);
+    this.SteamAPI_ISteamUGC_SubmitItemUpdate = this.steamLib.func('SteamAPI_ISteamUGC_SubmitItemUpdate', 'uint64', ['void*', 'uint64', 'str']);
+    this.SteamAPI_ISteamUGC_GetItemUpdateProgress = this.steamLib.func('SteamAPI_ISteamUGC_GetItemUpdateProgress', 'int', ['void*', 'uint64', 'uint64*', 'uint64*']);
+    
+    // Voting and favorites
+    this.SteamAPI_ISteamUGC_SetUserItemVote = this.steamLib.func('SteamAPI_ISteamUGC_SetUserItemVote', 'uint64', ['void*', 'uint64', 'bool']);
+    this.SteamAPI_ISteamUGC_GetUserItemVote = this.steamLib.func('SteamAPI_ISteamUGC_GetUserItemVote', 'uint64', ['void*', 'uint64']);
+    this.SteamAPI_ISteamUGC_AddItemToFavorites = this.steamLib.func('SteamAPI_ISteamUGC_AddItemToFavorites', 'uint64', ['void*', 'uint32', 'uint64']);
+    this.SteamAPI_ISteamUGC_RemoveItemFromFavorites = this.steamLib.func('SteamAPI_ISteamUGC_RemoveItemFromFavorites', 'uint64', ['void*', 'uint32', 'uint64']);
   }
 
   /**

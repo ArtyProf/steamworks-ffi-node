@@ -52,6 +52,9 @@ export class SteamAPICore {
   
   /** Pointer to the ISteamRemoteStorage interface */
   private remoteStorageInterface: any = null;
+  
+  /** Pointer to the ISteamUGC interface */
+  private ugcInterface: any = null;
 
   /**
    * Creates a new SteamAPICore instance
@@ -155,6 +158,12 @@ export class SteamAPICore {
       this.remoteStorageInterface = this.libraryLoader.SteamAPI_SteamRemoteStorage_v016();
       if (!this.remoteStorageInterface || this.remoteStorageInterface === null) {
         console.warn('[Steamworks] WARNING: Failed to get SteamRemoteStorage interface');
+      }
+      
+      // Get UGC interface
+      this.ugcInterface = this.libraryLoader.SteamAPI_SteamUGC_v021();
+      if (!this.ugcInterface || this.ugcInterface === null) {
+        console.warn('[Steamworks] WARNING: Failed to get SteamUGC interface');
       }
 
       // Request current stats from Steam servers
@@ -464,5 +473,29 @@ export class SteamAPICore {
    */
   getRemoteStorageInterface(): any {
     return this.remoteStorageInterface;
+  }
+
+  /**
+   * Get the ISteamUGC interface pointer
+   * 
+   * Provides access to the Workshop/UGC (User Generated Content) interface for managing
+   * Steam Workshop items.
+   * 
+   * @returns Pointer to ISteamUGC interface, or null if not initialized
+   * 
+   * @example
+   * ```typescript
+   * const ugc = apiCore.getUGCInterface();
+   * if (ugc) {
+   *   // Use interface for Workshop operations
+   * }
+   * ```
+   * 
+   * @remarks
+   * - Returns null if Steam API is not initialized
+   * - This is a native pointer for use with FFI calls
+   */
+  getUGCInterface(): any {
+    return this.ugcInterface;
   }
 }
