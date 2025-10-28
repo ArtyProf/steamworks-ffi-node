@@ -364,7 +364,6 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Overlay Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)** - Steam overlay control (7 functions)
 - **[Cloud Storage Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_STORAGE_MANAGER.md)** - Steam Cloud file operations (14 functions)
 - **[Workshop Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)** - Steam Workshop/UGC operations (25+ functions)
-- **[Cloud Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)** - Steam Cloud storage operations (14 functions)
 
 ## 🎮 Steamworks Integration
 
