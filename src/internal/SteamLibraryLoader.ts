@@ -278,8 +278,13 @@ export class SteamLibraryLoader {
     
     // Check each possible path
     for (const checkPath of steamworksSdkPaths) {
-      if (fs.existsSync(checkPath)) {
-        return checkPath;
+      // Electron ASAR handling: if path contains .asar, try .asar.unpacked
+      let resolvedPath = checkPath;
+      if (resolvedPath.includes('.asar')) {
+        resolvedPath = resolvedPath.replace('.asar', '.asar.unpacked');
+      }
+      if (fs.existsSync(resolvedPath)) {
+        return resolvedPath;
       }
     }
     
