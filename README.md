@@ -1,9 +1,23 @@
 [![npm](https://img.shields.io/npm/v/steamworks-ffi-node.svg)](https://www.npmjs.com/package/steamworks-ffi-node)
 [![Chat](https://img.shields.io/discord/1426518243077656699?label=chat&logo=discord)](https://discord.gg/Ruzx4Z7cKr)
 
-# Steamworks FFI - Steamworks SDK Integration
+# Steamworks FFI - Steamworks SDK Integration for Node.js applications
 
 A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed for Node.js and Electron applications with **Steamworks SDK v1.62 integration**.
+
+---
+
+## 📑 Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [API Documentation](#api-documentation)
+- [Steamworks Integration](#steamworks-integration)
+- [Electron Integration](#electron-integration)
+- [Requirements](#requirements)
+- [Troubleshooting](#troubleshooting)
+- [How to Support This Project](#how-to-support-this-project)
+- [License](#license)
 
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
 
@@ -25,7 +39,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Workshop API** - 25+ functions for complete Steam Workshop/UGC integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)
 
-## 🎯 Features
+## Features
 
 - **Complete Achievement API**: 100% coverage of Steam Achievement functionality (20/20 functions)
   - ✅ Core operations (get, unlock, clear, check status)
@@ -81,7 +95,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 - **TypeScript Support**: Complete TypeScript definitions included
 - **No C++ Compilation**: Uses Koffi FFI for seamless installation
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -349,7 +363,7 @@ For immediate testing, use Spacewar (App ID 480):
 - Add to Steam library: `steam://install/480` or search "Spacewar" in Steam
 - Launch it once, then you can test with App ID 480
 
-## 📚 API Documentation
+## API Documentation
 
 Complete documentation for all APIs is available in the [docs folder](https://github.com/ArtyProf/steamworks-ffi-node/tree/main/docs):
 
@@ -365,7 +379,7 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Cloud Storage Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_STORAGE_MANAGER.md)** - Steam Cloud file operations (14 functions)
 - **[Workshop Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)** - Steam Workshop/UGC operations (25+ functions)
 
-## 🎮 Steamworks Integration
+## Steamworks Integration
 
 This library connects directly to the Steam client and Steamworks SDK:
 
@@ -422,7 +436,7 @@ For Electron applications, the library will automatically detect the Steamworks 
 
 The library searches for the SDK in standard locations within your Electron app bundle.
 
-## 🔧 Requirements
+## Requirements
 
 - **Node.js**: 18+ 
 - **Steam Client**: Must be running and logged in
@@ -438,7 +452,7 @@ The library searches for the SDK in standard locations within your Electron app 
 
 *Note: You must download and install the SDK redistributables separately as described in the Setup section above.*
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### "SteamAPI_Init failed"
 - ❌ Steam client not running → **Solution**: Start Steam and log in
@@ -459,7 +473,22 @@ The library searches for the SDK in standard locations within your Electron app 
 - ❌ "Steamworks SDK library not found" in packaged app → **Solution**: Include SDK redistributables in your build (see Electron Packaging section above)
 - ❌ Native module errors in packaged app → **Solution**: Ensure Steamworks SDK files are properly included in your app bundle
 
-## 📄 License
+
+## How to Support This Project
+
+You can support the development of this library by wishlisting, subscribing, and purchasing the app **AFK Companion** on Steam:
+
+👉 [AFK Companion on Steam](https://store.steampowered.com/app/2609100/AFK_Companion/)
+
+- Add the app to your wishlist
+- Subscribe to updates
+- Buy and run the app
+
+**AFK Companion** is built using this library! Your support helps fund further development and improvements.
+
+---
+
+## License
 
 MIT License - see LICENSE file for details.
 
