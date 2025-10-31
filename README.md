@@ -406,7 +406,7 @@ await steam.achievements.unlockAchievement('YOUR_ACHIEVEMENT');
 - ✅ Appears in Steam profile
 - ✅ Counts toward Steam statistics
 
-## 🖥️ Electron Integration
+## Electron Integration
 
 For Electron applications, use it in your main process:
 
