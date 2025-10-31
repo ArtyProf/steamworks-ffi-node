@@ -19,6 +19,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 - [How to Support This Project](#how-to-support-this-project)
 - [License](#license)
 
+---
+
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
 
 > ⚡ **Latest Steamworks SDK**: Built with Steamworks SDK v1.62 - includes all latest Steam features and improvements!
