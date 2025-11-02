@@ -127,11 +127,21 @@ npm install steamworks-ffi-node
 ```typescript
 import SteamworksSDK from 'steamworks-ffi-node';
 
+// Helper to auto-start callback polling
+function startCallbackPolling(steam: SteamworksSDK, interval: number = 1000) {
+  return setInterval(() => {
+    steam.runCallbacks();
+  }, interval);
+}
+
 // Initialize Steam connection
 const steam = new SteamworksSDK();
 const initialized = steam.init({ appId: 480 }); // Your Steam App ID
 
 if (initialized) {
+  // Start callback polling automatically (required for async operations)
+  const callbackInterval = startCallbackPolling(steam, 1000);
+  
   // Get achievements from Steam servers
   const achievements = await steam.achievements.getAllAchievements();
   console.log('Steam achievements:', achievements);
@@ -330,6 +340,7 @@ if (initialized) {
 }
 
 // Cleanup
+clearInterval(callbackInterval);
 steam.shutdown();
 ```
 
@@ -338,10 +349,20 @@ steam.shutdown();
 ```javascript
 const SteamworksSDK = require('steamworks-ffi-node').default;
 
+// Helper to auto-start callback polling
+function startCallbackPolling(steam, interval = 1000) {
+  return setInterval(() => {
+    steam.runCallbacks();
+  }, interval);
+}
+
 async function example() {
   const steam = new SteamworksSDK();
   
   if (steam.init({ appId: 480 })) {
+    // Start callback polling automatically
+    const callbackInterval = startCallbackPolling(steam, 1000);
+    
     const achievements = await steam.achievements.getAllAchievements();
     console.log(`Found ${achievements.length} achievements`);
     
@@ -350,6 +371,9 @@ async function example() {
     if (locked) {
       await steam.achievements.unlockAchievement(locked.apiName);
     }
+    
+    // Cleanup
+    clearInterval(callbackInterval);
   }
   
   steam.shutdown();
