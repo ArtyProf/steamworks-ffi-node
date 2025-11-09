@@ -47,6 +47,9 @@ export class SteamAPICore {
   /** Pointer to the ISteamUtils interface */
   private utilsInterface: any = null;
   
+  /** Pointer to the ISteamApps interface */
+  private appsInterface: any = null;
+  
   /** Pointer to the ISteamFriends interface */
   private friendsInterface: any = null;
   
@@ -148,6 +151,12 @@ export class SteamAPICore {
         console.warn('[Steamworks] WARNING: Failed to get SteamUtils interface');
       }
       
+      // Get Apps interface
+      this.appsInterface = this.libraryLoader.SteamAPI_SteamApps_v008();
+      if (!this.appsInterface || this.appsInterface === null) {
+        console.warn('[Steamworks] WARNING: Failed to get SteamApps interface');
+      }
+      
       // Get Friends interface
       this.friendsInterface = this.libraryLoader.SteamAPI_SteamFriends_v018();
       if (!this.friendsInterface || this.friendsInterface === null) {
@@ -223,6 +232,7 @@ export class SteamAPICore {
       this.userStatsInterface = null;
       this.userInterface = null;
       this.utilsInterface = null;
+      this.appsInterface = null;
       console.log('[Steamworks] Steam API shutdown complete');
     }
   }
@@ -497,5 +507,107 @@ export class SteamAPICore {
    */
   getUGCInterface(): any {
     return this.ugcInterface;
+  }
+
+  /**
+   * Get the ISteamApps interface pointer
+   * 
+   * Provides access to the Apps interface for application-specific operations
+   * like language detection, DLC status, and beta information.
+   * 
+   * @returns Pointer to ISteamApps interface, or null if not initialized
+   * 
+   * @example
+   * ```typescript
+   * const apps = apiCore.getAppsInterface();
+   * if (apps) {
+   *   // Use interface for apps operations
+   * }
+   * ```
+   * 
+   * @remarks
+   * - Returns null if Steam API is not initialized
+   * - This is a native pointer for use with FFI calls
+   */
+  getAppsInterface(): any {
+    return this.appsInterface;
+  }
+
+  /**
+   * Get the current game language
+   * 
+   * Returns the language code that the user has set Steam to use. This is the language
+   * that Steam is currently running in, and typically the language your game should display.
+   * 
+   * @returns Language code string (e.g., 'english', 'french', 'german', 'spanish', etc.)
+   * 
+   * @example
+   * ```typescript
+   * const language = apiCore.getCurrentGameLanguage();
+   * console.log(`Steam language: ${language}`);
+   * 
+   * // Use language to load appropriate localization
+   * if (language === 'french') {
+   *   loadFrenchTranslations();
+   * } else if (language === 'german') {
+   *   loadGermanTranslations();
+   * } else {
+   *   loadEnglishTranslations();
+   * }
+   * ```
+   * 
+   * @remarks
+   * Common language codes include:
+   * - 'english' - English
+   * - 'french' - French
+   * - 'german' - German
+   * - 'spanish' - Spanish (Spain)
+   * - 'latam' - Spanish (Latin America)
+   * - 'italian' - Italian
+   * - 'japanese' - Japanese
+   * - 'korean' - Korean
+   * - 'portuguese' - Portuguese
+   * - 'brazilian' - Portuguese (Brazil)
+   * - 'russian' - Russian
+   * - 'schinese' - Simplified Chinese
+   * - 'tchinese' - Traditional Chinese
+   * - 'thai' - Thai
+   * - 'polish' - Polish
+   * - 'danish' - Danish
+   * - 'dutch' - Dutch
+   * - 'finnish' - Finnish
+   * - 'norwegian' - Norwegian
+   * - 'swedish' - Swedish
+   * - 'hungarian' - Hungarian
+   * - 'czech' - Czech
+   * - 'romanian' - Romanian
+   * - 'turkish' - Turkish
+   * - 'arabic' - Arabic
+   * - 'bulgarian' - Bulgarian
+   * - 'greek' - Greek
+   * - 'ukrainian' - Ukrainian
+   * - 'vietnamese' - Vietnamese
+   * 
+   * Returns 'english' as fallback if:
+   * - Steam API is not initialized
+   * - Apps interface is unavailable
+   * - An error occurs retrieving the language
+   * 
+   * Steamworks SDK Functions:
+   * - `SteamAPI_ISteamApps_GetCurrentGameLanguage()` - Get current language
+   */
+  getCurrentGameLanguage(): string {
+    if (!this.initialized || !this.appsInterface || this.appsInterface === null) {
+      console.warn('[Steamworks] Cannot get language: Steam API not initialized or Apps interface unavailable');
+      return 'english';
+    }
+
+    try {
+      const language = this.libraryLoader.SteamAPI_ISteamApps_GetCurrentGameLanguage(this.appsInterface);
+      return language || 'english';
+    } catch (error) {
+      console.warn('[Steamworks] Failed to get current game language:', (error as Error).message);
+      return 'english';
+    }
   }
 }

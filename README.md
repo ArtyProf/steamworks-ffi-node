@@ -43,6 +43,10 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 ## Features
 
+- **Core API**: Essential Steam application functions
+  - ✅ Language detection (get current Steam language for localization)
+  - ✅ Steam status monitoring
+  - ✅ Callback processing
 - **Complete Achievement API**: 100% coverage of Steam Achievement functionality (20/20 functions)
   - ✅ Core operations (get, unlock, clear, check status)
   - ✅ Visual features (icons, progress notifications)
@@ -141,6 +145,10 @@ const initialized = steam.init({ appId: 480 }); // Your Steam App ID
 if (initialized) {
   // Start callback polling automatically (required for async operations)
   const callbackInterval = startCallbackPolling(steam, 1000);
+  
+  // Get current Steam language for localization
+  const language = steam.getCurrentGameLanguage();
+  console.log('Steam language:', language); // e.g., 'english', 'french', 'german'
   
   // Get achievements from Steam servers
   const achievements = await steam.achievements.getAllAchievements();

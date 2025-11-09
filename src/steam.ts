@@ -376,6 +376,48 @@ class SteamworksSDK {
   isSteamRunning(): boolean {
     return this.apiCore.isSteamRunning();
   }
+
+  /**
+   * Get the current game language
+   * 
+   * Returns the language code that the user has set Steam to use.
+   * This is useful for loading appropriate localization files for your game.
+   * 
+   * @returns Language code string (e.g., 'english', 'french', 'german', 'spanish', etc.)
+   * 
+   * @example
+   * ```typescript
+   * const language = steam.getCurrentGameLanguage();
+   * console.log(`Steam language: ${language}`);
+   * 
+   * // Load appropriate translations
+   * switch (language) {
+   *   case 'french':
+   *     loadFrenchTranslations();
+   *     break;
+   *   case 'german':
+   *     loadGermanTranslations();
+   *     break;
+   *   case 'japanese':
+   *     loadJapaneseTranslations();
+   *     break;
+   *   default:
+   *     loadEnglishTranslations();
+   * }
+   * ```
+   * 
+   * @remarks
+   * Common language codes include: 'english', 'french', 'german', 'spanish', 'latam',
+   * 'italian', 'japanese', 'korean', 'portuguese', 'brazilian', 'russian', 'schinese',
+   * 'tchinese', 'thai', 'polish', 'danish', 'dutch', 'finnish', 'norwegian', 'swedish',
+   * 'hungarian', 'czech', 'romanian', 'turkish', 'arabic', 'bulgarian', 'greek',
+   * 'ukrainian', 'vietnamese'
+   * 
+   * Returns 'english' if Steam API is not initialized or an error occurs.
+   */
+  getCurrentGameLanguage(): string {
+    return this.apiCore.getCurrentGameLanguage();
+  }
 }
 
 export default SteamworksSDK;

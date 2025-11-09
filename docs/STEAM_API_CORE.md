@@ -194,6 +194,140 @@ if (steam.isSteamRunning()) {
 
 ---
 
+### `getCurrentGameLanguage(): string`
+
+Get the current language that Steam is running in. This is useful for loading appropriate localization files for your game.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_SteamApps_v008()` - Get Apps interface
+- `SteamAPI_ISteamApps_GetCurrentGameLanguage()` - Get current language
+
+**Returns:** `string` - Language code (e.g., 'english', 'french', 'german')
+
+**Example:**
+```typescript
+const language = steam.getCurrentGameLanguage();
+console.log('Steam language:', language);
+
+// Load appropriate translations
+switch (language) {
+  case 'french':
+    loadFrenchTranslations();
+    break;
+  case 'german':
+    loadGermanTranslations();
+    break;
+  case 'japanese':
+    loadJapaneseTranslations();
+    break;
+  case 'schinese':
+    loadSimplifiedChineseTranslations();
+    break;
+  case 'tchinese':
+    loadTraditionalChineseTranslations();
+    break;
+  default:
+    loadEnglishTranslations();
+}
+```
+
+**Common Language Codes:**
+
+| Code | Language |
+|------|----------|
+| `english` | English |
+| `french` | French |
+| `german` | German |
+| `spanish` | Spanish (Spain) |
+| `latam` | Spanish (Latin America) |
+| `italian` | Italian |
+| `japanese` | Japanese |
+| `korean` | Korean |
+| `portuguese` | Portuguese |
+| `brazilian` | Portuguese (Brazil) |
+| `russian` | Russian |
+| `schinese` | Simplified Chinese |
+| `tchinese` | Traditional Chinese |
+| `thai` | Thai |
+| `polish` | Polish |
+| `danish` | Danish |
+| `dutch` | Dutch |
+| `finnish` | Finnish |
+| `norwegian` | Norwegian |
+| `swedish` | Swedish |
+| `hungarian` | Hungarian |
+| `czech` | Czech |
+| `romanian` | Romanian |
+| `turkish` | Turkish |
+| `arabic` | Arabic |
+| `bulgarian` | Bulgarian |
+| `greek` | Greek |
+| `ukrainian` | Ukrainian |
+| `vietnamese` | Vietnamese |
+
+**Localization Example:**
+```typescript
+import SteamworksSDK from 'steamworks-ffi-node';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const steam = new SteamworksSDK();
+steam.init({ appId: 480 });
+
+// Get Steam language
+const language = steam.getCurrentGameLanguage();
+console.log(`Steam is running in: ${language}`);
+
+// Load localized strings
+const localizationPath = path.join(
+  __dirname, 
+  'localization', 
+  `${language}.json`
+);
+
+let strings;
+if (fs.existsSync(localizationPath)) {
+  strings = JSON.parse(fs.readFileSync(localizationPath, 'utf8'));
+  console.log(`✅ Loaded ${language} translations`);
+} else {
+  // Fallback to English
+  strings = JSON.parse(
+    fs.readFileSync(
+      path.join(__dirname, 'localization', 'english.json'), 
+      'utf8'
+    )
+  );
+  console.log(`⚠️ No translations for ${language}, using English`);
+}
+
+// Use localized strings
+console.log(strings.welcomeMessage);
+console.log(strings.playButton);
+```
+
+**Returns:** Returns `'english'` as fallback if:
+- Steam API is not initialized
+- Apps interface is unavailable
+- An error occurs retrieving the language
+
+**Best Practice:**
+Get language early in initialization to set up localization:
+```typescript
+const steam = new SteamworksSDK();
+if (steam.init({ appId: 480 })) {
+  // Get language immediately after init
+  const language = steam.getCurrentGameLanguage();
+  
+  // Initialize your localization system
+  i18n.locale = language;
+  
+  // Continue with game initialization
+  await loadGameAssets(language);
+}
+```
+
+---
+
 ## Internal Methods
 
 These methods are used internally by other modules:

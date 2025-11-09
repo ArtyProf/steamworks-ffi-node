@@ -16,6 +16,8 @@ export class SteamLibraryLoader {
   public SteamAPI_SteamUserStats_v013!: koffi.KoffiFunction;
   public SteamAPI_SteamUser_v023!: koffi.KoffiFunction;
   public SteamAPI_SteamUtils_v010!: koffi.KoffiFunction;
+  public SteamAPI_SteamApps_v008!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetCurrentGameLanguage!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetNumAchievements!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetAchievementName!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetAchievementDisplayAttribute!: koffi.KoffiFunction;
@@ -337,6 +339,8 @@ export class SteamLibraryLoader {
     this.SteamAPI_SteamUserStats_v013 = this.steamLib.func('SteamAPI_SteamUserStats_v013', 'void*', []);
     this.SteamAPI_SteamUser_v023 = this.steamLib.func('SteamAPI_SteamUser_v023', 'void*', []);
     this.SteamAPI_SteamUtils_v010 = this.steamLib.func('SteamAPI_SteamUtils_v010', 'void*', []);
+    this.SteamAPI_SteamApps_v008 = this.steamLib.func('SteamAPI_SteamApps_v008', 'void*', []);
+    this.SteamAPI_ISteamApps_GetCurrentGameLanguage = this.steamLib.func('SteamAPI_ISteamApps_GetCurrentGameLanguage', 'str', ['void*']);
     
     this.SteamAPI_ISteamUserStats_GetNumAchievements = this.steamLib.func('SteamAPI_ISteamUserStats_GetNumAchievements', 'uint32', ['void*']);
     this.SteamAPI_ISteamUserStats_GetAchievementName = this.steamLib.func('SteamAPI_ISteamUserStats_GetAchievementName', 'str', ['void*', 'uint32']);
