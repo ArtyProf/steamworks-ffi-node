@@ -475,21 +475,17 @@ export class SteamLeaderboardManager {
       let actualDetailsCount = 0;
       
       if (detailsCount > 0) {
-          // Allocate memory for int32 array (4 bytes per int32)
-          const bufferSize = detailsCount * 4;
+          // Allocate koffi array
           detailsPtr = koffi.alloc('int32', detailsCount);
           
-          // WORKAROUND: koffi.encode with index doesn't work for int32 arrays
-          // Solution: Write directly to memory using Buffer API with explicit size
-          const buffer = Buffer.from(detailsPtr, bufferSize);
-          for (let i = 0; i < detailsCount; i++) {
-            buffer.writeInt32LE(detailsArray[i], i * 4); // 4 bytes per int32
-          }
+          // Encode with explicit array length in the type specification
+          const arrayType = `int32[${detailsCount}]`;
+          koffi.encode(detailsPtr, arrayType, detailsArray.slice(0, detailsCount));
           
           actualDetailsCount = detailsCount;
-          console.log(`[Steamworks] Encoded ${detailsCount} int32 value(s) successfully`);
+          console.log(`[Steamworks] Encoded ${detailsCount} int32 value(s) successfully: [${detailsArray.slice(0, 10).join(', ')}${detailsCount > 10 ? '...' : ''}]`);
       }
-
+      
       const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_UploadLeaderboardScore(
         userStatsInterface,
         leaderboardHandle,
