@@ -467,19 +467,27 @@ export class SteamLeaderboardManager {
     try {
       const detailsArray = details || [];
       const detailsCount = Math.min(detailsArray.length, 64);
-
+      
       console.log(`[Steamworks] Uploading score: ${score} (details: ${detailsCount})`);
       
       // Properly allocate and populate the details array for Steamworks SDK
       let detailsPtr = null;
+      let actualDetailsCount = 0;
+      
       if (detailsCount > 0) {
-        // Allocate array for the details (creates pointer to int32 array)
-        detailsPtr = koffi.alloc('int32', detailsCount);
-        
-        // Copy the details into the buffer
-        for (let i = 0; i < detailsCount; i++) {
-          koffi.encode(detailsPtr, 'int32', detailsArray[i], i);
-        }
+          // Allocate memory for int32 array (4 bytes per int32)
+          const bufferSize = detailsCount * 4;
+          detailsPtr = koffi.alloc('int32', detailsCount);
+          
+          // WORKAROUND: koffi.encode with index doesn't work for int32 arrays
+          // Solution: Write directly to memory using Buffer API with explicit size
+          const buffer = Buffer.from(detailsPtr, bufferSize);
+          for (let i = 0; i < detailsCount; i++) {
+            buffer.writeInt32LE(detailsArray[i], i * 4); // 4 bytes per int32
+          }
+          
+          actualDetailsCount = detailsCount;
+          console.log(`[Steamworks] Encoded ${detailsCount} int32 value(s) successfully`);
       }
 
       const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_UploadLeaderboardScore(
@@ -488,7 +496,7 @@ export class SteamLeaderboardManager {
         uploadMethod,
         score,
         detailsPtr,
-        detailsCount
+        actualDetailsCount
       );
 
       if (callHandle === BigInt(0)) {
