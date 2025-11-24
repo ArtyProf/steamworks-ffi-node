@@ -470,8 +470,13 @@ export class SteamLeaderboardManager {
 
       console.log(`[Steamworks] Uploading score: ${score} (details: ${detailsCount})`);
       
-      const detailsPtr = detailsCount > 0 ? koffi.alloc('int32', detailsCount) : null;
-      if (detailsPtr && detailsCount > 0) {
+      // Properly allocate and populate the details array for Steamworks SDK
+      let detailsPtr = null;
+      if (detailsCount > 0) {
+        // Allocate array for the details (creates pointer to int32 array)
+        detailsPtr = koffi.alloc('int32', detailsCount);
+        
+        // Copy the details into the buffer
         for (let i = 0; i < detailsCount; i++) {
           koffi.encode(detailsPtr, 'int32', detailsArray[i], i);
         }
