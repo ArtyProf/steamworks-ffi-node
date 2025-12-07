@@ -203,6 +203,13 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUGC_CreateQueryAllUGCRequestPage!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_SendQueryUGCRequest!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_GetQueryUGCResult!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCNumTags!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCTag!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCTagDisplayName!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCPreviewURL!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCMetadata!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCChildren!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SetReturnPlaytimeStats!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_ReleaseQueryUGCRequest!: koffi.KoffiFunction;
   
   // Subscription operations
@@ -527,6 +534,13 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUGC_CreateQueryAllUGCRequestPage = this.steamLib.func('SteamAPI_ISteamUGC_CreateQueryAllUGCRequestPage', 'uint64', ['void*', 'int', 'int', 'uint32', 'uint32', 'uint32']);
     this.SteamAPI_ISteamUGC_SendQueryUGCRequest = this.steamLib.func('SteamAPI_ISteamUGC_SendQueryUGCRequest', 'uint64', ['void*', 'uint64']);
     this.SteamAPI_ISteamUGC_GetQueryUGCResult = this.steamLib.func('SteamAPI_ISteamUGC_GetQueryUGCResult', 'bool', ['void*', 'uint64', 'uint32', 'void*']);
+    this.SteamAPI_ISteamUGC_GetQueryUGCNumTags = this.steamLib.func('SteamAPI_ISteamUGC_GetQueryUGCNumTags', 'uint32', ['void*', 'uint64', 'uint32']);
+    this.SteamAPI_ISteamUGC_GetQueryUGCTag = this.steamLib.func('SteamAPI_ISteamUGC_GetQueryUGCTag', 'bool', ['void*', 'uint64', 'uint32', 'uint32', 'str', 'uint32']);
+    this.SteamAPI_ISteamUGC_GetQueryUGCTagDisplayName = this.steamLib.func('SteamAPI_ISteamUGC_GetQueryUGCTagDisplayName', 'bool', ['void*', 'uint64', 'uint32', 'uint32', 'str', 'uint32']);
+    this.SteamAPI_ISteamUGC_GetQueryUGCPreviewURL = this.steamLib.func('SteamAPI_ISteamUGC_GetQueryUGCPreviewURL', 'bool', ['void*', 'uint64', 'uint32', 'str', 'uint32']);
+    this.SteamAPI_ISteamUGC_GetQueryUGCMetadata = this.steamLib.func('SteamAPI_ISteamUGC_GetQueryUGCMetadata', 'bool', ['void*', 'uint64', 'uint32', 'str', 'uint32']);
+    this.SteamAPI_ISteamUGC_GetQueryUGCChildren = this.steamLib.func('SteamAPI_ISteamUGC_GetQueryUGCChildren', 'bool', ['void*', 'uint64', 'uint32', 'uint64*', 'uint32']);
+    this.SteamAPI_ISteamUGC_SetReturnPlaytimeStats = this.steamLib.func('SteamAPI_ISteamUGC_SetReturnPlaytimeStats', 'bool', ['void*', 'uint64', 'uint32']);
     this.SteamAPI_ISteamUGC_ReleaseQueryUGCRequest = this.steamLib.func('SteamAPI_ISteamUGC_ReleaseQueryUGCRequest', 'bool', ['void*', 'uint64']);
     
     // Subscription operations

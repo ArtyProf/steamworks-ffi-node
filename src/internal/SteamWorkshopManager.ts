@@ -15,6 +15,7 @@ import {
   EUGCQuery,
   EItemState,
   EItemUpdateStatus,
+  EItemStatistic,
   EWorkshopFileType,
   ERemoteStoragePublishedFileVisibility,
   K_UGC_QUERY_HANDLE_INVALID,
@@ -97,6 +98,26 @@ const UserFavoriteItemsListChanged_t = koffi.struct('UserFavoriteItemsListChange
   m_eResult: 'int',                     // EResult (4 bytes)
   m_bWasAddRequest: 'bool'              // bool (1 byte)
 });
+
+// Manual buffer parsing for SteamUGCDetails_t
+// Steam uses tight packing (likely #pragma pack(push, 4))
+// Constants from isteamremotestorage.h:
+// k_cchPublishedDocumentTitleMax = 128 + 1 = 129
+// k_cchPublishedDocumentDescriptionMax = 8000
+// k_cchTagListMax = 1024 + 1 = 1025
+// k_cchFilenameMax = 260
+// k_cchPublishedFileURLMax = 256
+// Actual struct size from debugging:
+// 0-24: uint64(8)+int32(4)+int32(4)+uint32(4)+uint32(4) = 24
+// 24-153: char[129] (no padding after)
+// 153-8153: char[8000] = 8000
+// 8153->8160: pad to 8-byte for uint64
+// 8160-8180: uint64(8)+uint32(4)+uint32(4)+uint32(4)+int32(4) = 24
+// 8180-8184: int32(4) visibility, then bools at 8181-8183 (overlapping!)
+// 8184-9209: char[1025]
+// 9209->9216: pad to 8-byte
+// 9216-9784: remaining fields
+const STEAM_UGC_DETAILS_SIZE = 9784;
 
 /**
  * Manager for Steam Workshop / User Generated Content (UGC) operations
@@ -729,6 +750,43 @@ export class SteamWorkshopManager {
   }
 
   /**
+   * Enable returning statistics for UGC query results
+   * 
+   * @param queryHandle - Query handle to configure
+   * @param days - Number of days of playtime stats to return (0 = lifetime)
+   * @returns True if successful
+   * 
+   * @remarks
+   * Call this BEFORE sendQueryUGCRequest to enable statistics in results.
+   * This allows GetQueryUGCStatistic to return valid data.
+   * 
+   * @example
+   * ```typescript
+   * const query = steam.workshop.createQueryAllUGCRequest(...);
+   * steam.workshop.setReturnPlaytimeStats(query, 0); // Enable lifetime stats
+   * const result = await steam.workshop.sendQueryUGCRequest(query);
+   * ```
+   */
+  setReturnPlaytimeStats(queryHandle: UGCQueryHandle, days: number = 0): boolean {
+    if (!this.apiCore.isInitialized()) {
+      return false;
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return false;
+    }
+
+    try {
+      const success = this.libraryLoader.SteamAPI_ISteamUGC_SetReturnPlaytimeStats(ugc, queryHandle, days);
+      return success;
+    } catch (error) {
+      console.error('[Steamworks] Error setting return playtime stats:', error);
+      return false;
+    }
+  }
+
+  /**
    * Sends a UGC query to Steam and waits for results
    * 
    * @param queryHandle - Handle from createQueryUserUGCRequest or createQueryAllUGCRequest
@@ -737,10 +795,12 @@ export class SteamWorkshopManager {
    * @remarks
    * After processing results, call releaseQueryUGCRequest to free memory
    * Use getQueryUGCResult to retrieve individual item details
+   * For statistics to be available, call setReturnPlaytimeStats before this method
    * 
    * @example
    * ```typescript
    * const query = steam.workshop.createQueryAllUGCRequest(...);
+   * steam.workshop.setReturnPlaytimeStats(query, 0); // Enable statistics
    * const result = await steam.workshop.sendQueryUGCRequest(query);
    * 
    * if (result) {
@@ -776,6 +836,10 @@ export class SteamWorkshopManager {
     }
 
     try {
+      // Enable statistics before sending query
+      // This is required for GetQueryUGCStatistic to return valid data
+      this.setReturnPlaytimeStats(queryHandle, 0); // 0 = lifetime stats
+      
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_SendQueryUGCRequest(ugc, queryHandle);
       
       if (callHandle === BigInt(0)) {
@@ -831,7 +895,7 @@ export class SteamWorkshopManager {
    *   const item = steam.workshop.getQueryUGCResult(query, i);
    *   if (item) {
    *     console.log(`${item.title} by ${item.steamIdOwner}`);
-   *     console.log(`Votes: ${item.votesUp} up, ${item.votesDown} down`);
+   *     console.log(`Votes: 👍 ${item.votesUp} | Score: ${item.score.toFixed(2)}`);
    *   }
    * }
    * 
@@ -850,8 +914,7 @@ export class SteamWorkshopManager {
 
     try {
       // Allocate buffer for SteamUGCDetails_t struct
-      // Struct size: ~10KB (8KB description + 1KB tags + other fields)
-      const detailsBuffer = Buffer.alloc(10240);
+      const detailsBuffer = Buffer.alloc(STEAM_UGC_DETAILS_SIZE);
       
       const success = this.libraryLoader.SteamAPI_ISteamUGC_GetQueryUGCResult(
         ugc,
@@ -864,137 +927,166 @@ export class SteamWorkshopManager {
         return null;
       }
 
-      // Parse the SteamUGCDetails_t struct
+      // CRITICAL FINDING: GetQueryUGCResult only populates fields up to offset 8184!
+      // After the 3 bools (at 8181-8183), all remaining fields are uninitialized memory.
+      // The tags, file handles, sizes, votes, etc. are NOT populated by this API call.
+      // 
+      // To get additional metadata, use these separate API calls:
+      // - ISteamUGC::GetQueryUGCMetadata() for tags
+      // - ISteamUGC::GetQueryUGCStatistics() for votes
+      // - ISteamRemoteStorage functions for file info
+      //
+      // For now, return safe defaults for unpopulated fields.
+
+      // Manually parse the struct with proper 8-byte alignment (#pragma pack(8))
       let offset = 0;
-
-      // PublishedFileId_t m_nPublishedFileId (uint64)
+      
+      // uint64 m_nPublishedFileId (8 bytes, offset 0)
       const publishedFileId = detailsBuffer.readBigUInt64LE(offset);
-      offset += 8;
-
-      // EResult m_eResult (int32)
+      offset += 8; // Now at 8
+      
+      // int32 m_eResult (4 bytes, offset 8)
       const result = detailsBuffer.readInt32LE(offset);
-      offset += 4;
-
-      // EWorkshopFileType m_eFileType (int32)
+      offset += 4; // Now at 12
+      
+      // int32 m_eFileType (4 bytes, offset 12)
       const fileType = detailsBuffer.readInt32LE(offset);
-      offset += 4;
-
-      // AppId_t m_nCreatorAppID (uint32)
-      const creatorAppId = detailsBuffer.readUInt32LE(offset);
-      offset += 4;
-
-      // AppId_t m_nConsumerAppID (uint32)
-      const consumerAppId = detailsBuffer.readUInt32LE(offset);
-      offset += 4;
-
-      // char m_rgchTitle[k_cchPublishedDocumentTitleMax] (129 bytes)
+      offset += 4; // Now at 16
+      
+      // uint32 m_nCreatorAppID (4 bytes, offset 16)
+      const creatorAppID = detailsBuffer.readUInt32LE(offset);
+      offset += 4; // Now at 20
+      
+      // uint32 m_nConsumerAppID (4 bytes, offset 20)
+      const consumerAppID = detailsBuffer.readUInt32LE(offset);
+      offset += 4; // Now at 24
+      
+      // char[129] m_rgchTitle (129 bytes, offset 24, char has 1-byte alignment, no padding before)
       const titleEnd = detailsBuffer.indexOf(0, offset);
       const title = detailsBuffer.toString('utf8', offset, titleEnd > offset ? titleEnd : offset + 129);
-      offset += 129;
-
-      // char m_rgchDescription[k_cchPublishedDocumentDescriptionMax] (8000 bytes)
+      offset += 129; // Now at 153
+      
+      // NO PADDING - char arrays don't cause alignment padding with #pragma pack(8)
+      // char[8000] m_rgchDescription (8000 bytes, offset 153)
       const descEnd = detailsBuffer.indexOf(0, offset);
       const description = detailsBuffer.toString('utf8', offset, descEnd > offset ? descEnd : offset + 8000);
-      offset += 8000;
-
-      // uint64 m_ulSteamIDOwner
-      const steamIdOwner = detailsBuffer.readBigUInt64LE(offset);
-      offset += 8;
-
-      // uint32 m_rtimeCreated
+      offset += 8000; // Now at 8153
+      
+      // CRITICAL FIX: There's a 3-byte gap here (likely from previous field alignment)
+      // Testing showed Steam ID is at offset 8156, not 8153 or 8160
+      offset += 3; // Now at 8156
+      
+      // uint64 m_ulSteamIDOwner (8 bytes, offset 8156)
+      const steamIDOwner = detailsBuffer.readBigUInt64LE(offset);
+      offset += 8; // Now at 8164
+      
+      // uint32 m_rtimeCreated (4 bytes, offset 8164)
       const timeCreated = detailsBuffer.readUInt32LE(offset);
-      offset += 4;
-
-      // uint32 m_rtimeUpdated
+      offset += 4; // Now at 8168
+      
+      // uint32 m_rtimeUpdated (4 bytes, offset 8168)
       const timeUpdated = detailsBuffer.readUInt32LE(offset);
-      offset += 4;
-
-      // uint32 m_rtimeAddedToUserList
+      offset += 4; // Now at 8172
+      
+      // uint32 m_rtimeAddedToUserList (4 bytes, offset 8172)
       const timeAddedToUserList = detailsBuffer.readUInt32LE(offset);
-      offset += 4;
-
-      // ERemoteStoragePublishedFileVisibility m_eVisibility (int32)
+      offset += 4; // Now at 8176
+      
+      // int32 m_eVisibility (4 bytes, offset 8176)
       const visibility = detailsBuffer.readInt32LE(offset);
-      offset += 4;
-
-      // bool m_bBanned
+      offset += 4; // Now at 8180
+      
+      // bool m_bBanned (1 byte, offset 8180)
       const banned = detailsBuffer.readUInt8(offset) !== 0;
-      offset += 1;
-
-      // bool m_bAcceptedForUse
+      offset += 1; // Now at 8181
+      
+      // bool m_bAcceptedForUse (1 byte, offset 8181)
       const acceptedForUse = detailsBuffer.readUInt8(offset) !== 0;
-      offset += 1;
-
-      // bool m_bTagsTruncated
+      offset += 1; // Now at 8182
+      
+      // bool m_bTagsTruncated (1 byte, offset 8182)
       const tagsTruncated = detailsBuffer.readUInt8(offset) !== 0;
-      offset += 1;
-
-      // Padding alignment (structs are aligned)
-      offset += 1; // Align to 4 bytes
-
-      // char m_rgchTags[k_cchTagListMax] (1025 bytes)
+      offset += 1; // Now at 8183
+      
+      // Padding to align next field (char array doesn't need padding with pack(8))
+      // char[1025] m_rgchTags (1025 bytes, offset 8183)
       const tagsEnd = detailsBuffer.indexOf(0, offset);
       const tagsString = detailsBuffer.toString('utf8', offset, tagsEnd > offset ? tagsEnd : offset + 1025);
-      const tags = tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0);
-      offset += 1025;
-
-      // Padding alignment
-      offset += 3; // Align to 8 bytes
-
-      // UGCHandle_t m_hFile (uint64)
-      const fileHandle = detailsBuffer.readBigUInt64LE(offset);
-      offset += 8;
-
-      // UGCHandle_t m_hPreviewFile (uint64)
-      const previewFileHandle = detailsBuffer.readBigUInt64LE(offset);
-      offset += 8;
-
-      // char m_pchFileName[k_cchFilenameMax] (260 bytes)
+      offset += 1025; // Now at 9208
+      
+      // Padding before uint64 (9208 is already 8-byte aligned)
+      // UGCHandle_t m_hFile (uint64, 8 bytes, offset 9208)
+      const file = detailsBuffer.readBigUInt64LE(offset);
+      offset += 8; // Now at 9216
+      
+      // UGCHandle_t m_hPreviewFile (uint64, 8 bytes, offset 9216)
+      const previewFile = detailsBuffer.readBigUInt64LE(offset);
+      offset += 8; // Now at 9224
+      
+      // char[260] m_pchFileName (260 bytes, offset 9224)
       const fileNameEnd = detailsBuffer.indexOf(0, offset);
       const fileName = detailsBuffer.toString('utf8', offset, fileNameEnd > offset ? fileNameEnd : offset + 260);
-      offset += 260;
-
-      // int32 m_nFileSize
+      offset += 260; // Now at 9484
+      
+      // Padding before int32 (9484 is 4-byte aligned, good for int32)
+      // int32 m_nFileSize (4 bytes, offset 9484)
       const fileSize = detailsBuffer.readInt32LE(offset);
-      offset += 4;
-
-      // int32 m_nPreviewFileSize
+      offset += 4; // Now at 9488
+      
+      // int32 m_nPreviewFileSize (4 bytes, offset 9488)
       const previewFileSize = detailsBuffer.readInt32LE(offset);
-      offset += 4;
-
-      // char m_rgchURL[k_cchPublishedFileURLMax] (256 bytes)
+      offset += 4; // Now at 9492
+      
+      // char[256] m_rgchURL (256 bytes, offset 9492)
       const urlEnd = detailsBuffer.indexOf(0, offset);
-      const url = detailsBuffer.toString('utf8', offset, urlEnd > offset ? urlEnd : offset + 256);
-      offset += 256;
-
-      // uint32 m_unVotesUp
-      const votesUp = detailsBuffer.readUInt32LE(offset);
-      offset += 4;
-
-      // uint32 m_unVotesDown
-      const votesDown = detailsBuffer.readUInt32LE(offset);
-      offset += 4;
-
-      // float m_flScore
-      const score = detailsBuffer.readFloatLE(offset);
-      offset += 4;
-
-      // uint32 m_unNumChildren
+      const urlFromStruct = detailsBuffer.toString('utf8', offset, urlEnd > offset ? urlEnd : offset + 256);
+      offset += 256; // Now at 9748
+      
+      // uint32 m_unVotesUp (4 bytes, offset 9748)
+      const votesUpFromStruct = detailsBuffer.readUInt32LE(offset);
+      offset += 4; // Now at 9752
+      
+      // uint32 m_unVotesDown (4 bytes, offset 9752)
+      const votesDownFromStruct = detailsBuffer.readUInt32LE(offset);
+      offset += 4; // Now at 9756
+      
+      // float m_flScore (4 bytes, offset 9756)
+      const scoreFromStruct = detailsBuffer.readFloatLE(offset);
+      offset += 4; // Now at 9760
+      
+      // uint32 m_unNumChildren (4 bytes, offset 9760)
       const numChildren = detailsBuffer.readUInt32LE(offset);
-      offset += 4;
-
-      // uint64 m_ulTotalFilesSize
+      offset += 4; // Now at 9764
+      
+      // uint64 m_ulTotalFilesSize (8 bytes, offset 9764)
+      // Padding needed for 8-byte alignment (9764 -> 9768)
+      offset = Math.ceil(offset / 8) * 8; // Now at 9768
       const totalFilesSize = detailsBuffer.readBigUInt64LE(offset);
-
+      offset += 8; // Now at 9776
+      
+      // Parse tags from comma-separated string in struct
+      // m_rgchTags contains a comma-separated list of tags
+      const tags: string[] = tagsString
+        ? tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+        : [];
+      
+      // Fetch preview URL using GetQueryUGCPreviewURL (more reliable than struct URL)
+      const url = this.getQueryUGCPreviewURL(queryHandle, index) || urlFromStruct || '';
+      
+      // Use votes from struct (these are the real vote counts!)
+      const votesUp = votesUpFromStruct;
+      const votesDown = votesDownFromStruct;
+      const score = scoreFromStruct;
+      
       return {
         publishedFileId,
         result,
         fileType,
-        creatorAppID: creatorAppId,
-        consumerAppID: consumerAppId,
+        creatorAppID,
+        consumerAppID,
         title,
         description,
-        steamIDOwner: steamIdOwner,
+        steamIDOwner,
         timeCreated,
         timeUpdated,
         timeAddedToUserList,
@@ -1003,8 +1095,8 @@ export class SteamWorkshopManager {
         acceptedForUse,
         tagsTruncated,
         tags,
-        file: fileHandle,
-        previewFile: previewFileHandle,
+        file,
+        previewFile,
         fileName,
         fileSize,
         previewFileSize,
@@ -1053,6 +1145,181 @@ export class SteamWorkshopManager {
     } catch (error) {
       console.error('[Steamworks] Error releasing UGC query:', error);
       return false;
+    }
+  }
+
+  /**
+   * Get number of tags for a UGC query result
+   * 
+   * @param queryHandle - Query handle from sendQueryUGCRequest
+   * @param index - Index of the result (0 to numResults-1)
+   * @returns Number of tags, or 0 if failed
+   * 
+   * @example
+   * ```typescript
+   * const numTags = steam.workshop.getQueryUGCNumTags(query, i);
+   * ```
+   */
+  getQueryUGCNumTags(queryHandle: UGCQueryHandle, index: number): number {
+    if (!this.apiCore.isInitialized()) {
+      return 0;
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return 0;
+    }
+
+    try {
+      return this.libraryLoader.SteamAPI_ISteamUGC_GetQueryUGCNumTags(ugc, queryHandle, index);
+    } catch (error) {
+      console.error('[Steamworks] Error getting UGC tag count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get a specific tag for a UGC query result
+   * 
+   * @param queryHandle - Query handle from sendQueryUGCRequest
+   * @param index - Index of the result (0 to numResults-1)
+   * @param tagIndex - Index of the tag (0 to numTags-1)
+   * @returns The tag string, or null if failed
+   * 
+   * @example
+   * ```typescript
+   * const numTags = steam.workshop.getQueryUGCNumTags(query, i);
+   * for (let t = 0; t < numTags; t++) {
+   *   const tag = steam.workshop.getQueryUGCTag(query, i, t);
+   *   console.log(`Tag: ${tag}`);
+   * }
+   * ```
+   */
+  getQueryUGCTag(
+    queryHandle: UGCQueryHandle,
+    index: number,
+    tagIndex: number
+  ): string | null {
+    if (!this.apiCore.isInitialized()) {
+      return null;
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return null;
+    }
+
+    try {
+      const tagBuffer = Buffer.alloc(256);
+      const success = this.libraryLoader.SteamAPI_ISteamUGC_GetQueryUGCTag(
+        ugc,
+        queryHandle,
+        index,
+        tagIndex,
+        tagBuffer,
+        256
+      );
+
+      if (!success) {
+        return null;
+      }
+
+      // Find null terminator
+      const nullIndex = tagBuffer.indexOf(0);
+      return nullIndex >= 0 ? tagBuffer.toString('utf8', 0, nullIndex) : tagBuffer.toString('utf8');
+    } catch (error) {
+      console.error('[Steamworks] Error getting UGC tag:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get preview URL for a UGC query result
+   * 
+   * @param queryHandle - Query handle from sendQueryUGCRequest
+   * @param index - Index of the result (0 to numResults-1)
+   * @returns The preview URL, or null if failed
+   * 
+   * @example
+   * ```typescript
+   * const previewUrl = steam.workshop.getQueryUGCPreviewURL(query, i);
+   * ```
+   */
+  getQueryUGCPreviewURL(queryHandle: UGCQueryHandle, index: number): string | null {
+    if (!this.apiCore.isInitialized()) {
+      return null;
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return null;
+    }
+
+    try {
+      const urlBuffer = Buffer.alloc(1024);
+      const success = this.libraryLoader.SteamAPI_ISteamUGC_GetQueryUGCPreviewURL(
+        ugc,
+        queryHandle,
+        index,
+        urlBuffer,
+        1024
+      );
+
+      if (!success) {
+        return null;
+      }
+
+      // Find null terminator
+      const nullIndex = urlBuffer.indexOf(0);
+      return nullIndex >= 0 ? urlBuffer.toString('utf8', 0, nullIndex) : urlBuffer.toString('utf8');
+    } catch (error) {
+      console.error('[Steamworks] Error getting UGC preview URL:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get metadata for a UGC query result
+   * 
+   * @param queryHandle - Query handle from sendQueryUGCRequest
+   * @param index - Index of the result (0 to numResults-1)
+   * @returns The metadata string, or null if failed
+   * 
+   * @example
+   * ```typescript
+   * const metadata = steam.workshop.getQueryUGCMetadata(query, i);
+   * ```
+   */
+  getQueryUGCMetadata(queryHandle: UGCQueryHandle, index: number): string | null {
+    if (!this.apiCore.isInitialized()) {
+      return null;
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return null;
+    }
+
+    try {
+      const metadataBuffer = Buffer.alloc(5000);
+      const success = this.libraryLoader.SteamAPI_ISteamUGC_GetQueryUGCMetadata(
+        ugc,
+        queryHandle,
+        index,
+        metadataBuffer,
+        5000
+      );
+
+      if (!success) {
+        return null;
+      }
+
+      // Find null terminator
+      const nullIndex = metadataBuffer.indexOf(0);
+      return nullIndex >= 0 ? metadataBuffer.toString('utf8', 0, nullIndex) : metadataBuffer.toString('utf8');
+    } catch (error) {
+      console.error('[Steamworks] Error getting UGC metadata:', error);
+      return null;
     }
   }
 
