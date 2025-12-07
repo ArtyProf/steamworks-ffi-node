@@ -105,7 +105,7 @@ This design:
 
 ### Workshop System
 - **[Workshop Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)**
-  - **25+ Functions** - Complete Steam Workshop/UGC support
+  - **28 Functions** - Complete Steam Workshop/UGC support
   - Subscription management (subscribe, unsubscribe, list items)
   - Item state & information (download progress, installation info)
   - Query operations (search, browse, filter Workshop content)

@@ -39,7 +39,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Cloud Storage API** - 14 functions for complete Steam Cloud (Remote Storage) integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)
 
-> 🎉 **NEW: Workshop API** - 25+ functions for complete Steam Workshop/UGC integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)
+> 🎉 **NEW: Workshop API** - 28 functions for complete Steam Workshop/UGC integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)
 
 ## Features
 
@@ -88,7 +88,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ File listing (count, iterate, get all with details)
   - ✅ Quota management (track storage usage and limits)
   - ✅ Cloud settings (check/toggle cloud sync for account and app)
-- **Workshop API**: Complete Steam Workshop/UGC integration (25+ functions)
+- **Workshop API**: Complete Steam Workshop/UGC integration (28 functions)
   - ✅ Subscription management (subscribe, unsubscribe, list items)
   - ✅ Item state & information (download progress, installation info)
   - ✅ Query operations (search, browse, filter Workshop content)

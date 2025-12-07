@@ -10,11 +10,13 @@ The `SteamWorkshopManager` provides comprehensive access to the Steam Workshop A
 
 | Category | Functions | Description |
 |----------|-----------|-------------|
-| [Subscription Management](#subscription-management) | 3 | Subscribe, unsubscribe, and list Workshop items |
+| [Subscription Management](#subscription-management) | 4 | Subscribe, unsubscribe, and list Workshop items |
 | [Item State & Information](#item-state--information) | 4 | Get item state, installation info, and download progress |
-| [Query Operations](#query-operations) | 5 | Search and browse Workshop content |
+| [Query Operations](#query-operations) | 7 | Search and browse Workshop content |
 | [Item Creation & Update](#item-creation--update) | 9 | Create and update your own Workshop items |
 | [Voting & Favorites](#voting--favorites) | 4 | Vote on items and manage favorites |
+
+**Total: 28 Functions**
 
 ---
 
@@ -499,7 +501,7 @@ if (result) {
     const item = steam.workshop.getQueryUGCResult(query, i);
     if (item) {
       console.log(`${i + 1}. ${item.title}`);
-      console.log(`   Votes: 👍 ${item.votesUp} 👎 ${item.votesDown}`);
+      console.log(`   Votes: 👍 ${item.votesUp} | Score: ${item.score.toFixed(2)}`);
     }
   }
   
@@ -554,6 +556,45 @@ if (result) {
 
 ---
 
+### `setReturnPlaytimeStats(queryHandle, days)`
+
+Enable returning playtime statistics for UGC query results.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_SetReturnPlaytimeStats()` - Enable statistics
+
+**Parameters:**
+- `queryHandle: UGCQueryHandle` - Query handle to configure
+- `days: number` - Number of days of playtime stats to return (0 = lifetime)
+
+**Returns:** `boolean` - `true` if successful
+
+**Example:**
+```typescript
+// Create query
+const query = steam.workshop.createQueryAllUGCRequest(
+  EUGCQuery.RankedByVote,
+  EUGCMatchingUGCType.Items,
+  480, 480, 1
+);
+
+// Enable lifetime playtime statistics
+steam.workshop.setReturnPlaytimeStats(query, 0);
+
+// Now send the query
+const result = await steam.workshop.sendQueryUGCRequest(query);
+
+// Statistics will be available in query results
+```
+
+**Notes:**
+- Call this BEFORE `sendQueryUGCRequest()`
+- Enables additional statistics in WorkshopItem results
+- Use 0 for lifetime stats, or specific number of days
+- Allows tracking item popularity by playtime
+
+---
+
 ### `getQueryUGCResult(queryHandle, index)`
 
 Get a single result from a completed UGC query.
@@ -592,8 +633,7 @@ interface WorkshopItem {
   fileSize: number;                // File size in bytes
   previewFileSize: number;         // Preview size in bytes
   url: string;                     // Workshop URL
-  votesUp: number;                 // Upvotes
-  votesDown: number;               // Downvotes
+  votesUp: number;                 // Upvotes (subscriptions)
   score: number;                   // Score (0-1)
   numChildren: number;             // Number of children
   totalFilesSize: bigint;          // Total size
@@ -620,7 +660,7 @@ if (result) {
       console.log(`\n${i + 1}. ${item.title}`);
       console.log(`   ID: ${item.publishedFileId}`);
       console.log(`   By: ${item.steamIDOwner}`);
-      console.log(`   Votes: 👍 ${item.votesUp} 👎 ${item.votesDown}`);
+      console.log(`   Votes: 👍 ${item.votesUp} | Score: ${item.score.toFixed(2)}`);
       console.log(`   Size: ${(item.fileSize / 1024 / 1024).toFixed(2)} MB`);
       console.log(`   Tags: ${item.tags.join(', ')}`);
       console.log(`   URL: ${item.url}`);
@@ -635,6 +675,160 @@ if (result) {
   steam.workshop.releaseQueryUGCRequest(query);
 }
 ```
+
+---
+
+### `getQueryUGCNumTags(queryHandle, index)`
+
+Get the number of tags for a specific query result.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_GetQueryUGCNumTags()` - Get tag count
+
+**Parameters:**
+- `queryHandle: UGCQueryHandle` - Query handle from completed query
+- `index: number` - Index of result (0-based)
+
+**Returns:** `number` - Number of tags, or 0 if failed
+
+**Example:**
+```typescript
+const query = steam.workshop.createQueryAllUGCRequest(
+  EUGCQuery.RankedByVote,
+  EUGCMatchingUGCType.Items,
+  480, 480, 1
+);
+
+const result = await steam.workshop.sendQueryUGCRequest(query);
+
+if (result) {
+  for (let i = 0; i < result.numResults; i++) {
+    const numTags = steam.workshop.getQueryUGCNumTags(query, i);
+    const item = steam.workshop.getQueryUGCResult(query, i);
+    
+    if (item) {
+      console.log(`${item.title} has ${numTags} tags`);
+      console.log(`Tags: ${item.tags.join(', ')}`);
+    }
+  }
+  
+  steam.workshop.releaseQueryUGCRequest(query);
+}
+```
+
+**Notes:**
+- Returns 0 if index is out of range
+- Tags are also available in the `tags` array of WorkshopItem
+- Useful for validation before processing tags
+
+---
+
+### `getQueryUGCPreviewURL(queryHandle, index)`
+
+Get the preview image URL for a specific query result.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_GetQueryUGCPreviewURL()` - Get preview URL
+
+**Parameters:**
+- `queryHandle: UGCQueryHandle` - Query handle from completed query
+- `index: number` - Index of result (0-based)
+
+**Returns:** `string | null` - Preview image URL, or null if failed
+
+**Example:**
+```typescript
+const query = steam.workshop.createQueryAllUGCRequest(
+  EUGCQuery.RankedByVote,
+  EUGCMatchingUGCType.Items,
+  480, 480, 1
+);
+
+const result = await steam.workshop.sendQueryUGCRequest(query);
+
+if (result) {
+  for (let i = 0; i < result.numResults; i++) {
+    const item = steam.workshop.getQueryUGCResult(query, i);
+    const previewURL = steam.workshop.getQueryUGCPreviewURL(query, i);
+    
+    if (item && previewURL) {
+      console.log(`${item.title}`);
+      console.log(`Preview: ${previewURL}`);
+      
+      // Download preview image for your UI
+      // await downloadImage(previewURL, `./previews/${item.publishedFileId}.jpg`);
+    }
+  }
+  
+  steam.workshop.releaseQueryUGCRequest(query);
+}
+```
+
+**Notes:**
+- Returns null if no preview available or index out of range
+- URL is hosted on Steam's CDN
+- Image is typically 512x512 or 256x256
+- Useful for displaying item previews in custom UI
+
+---
+
+### `getQueryUGCMetadata(queryHandle, index)`
+
+Get the metadata string for a specific query result.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_GetQueryUGCMetadata()` - Get metadata
+
+**Parameters:**
+- `queryHandle: UGCQueryHandle` - Query handle from completed query
+- `index: number` - Index of result (0-based)
+
+**Returns:** `string | null` - Metadata string, or null if none
+
+**Example:**
+```typescript
+const query = steam.workshop.createQueryAllUGCRequest(
+  EUGCQuery.RankedByVote,
+  EUGCMatchingUGCType.Items,
+  480, 480, 1
+);
+
+const result = await steam.workshop.sendQueryUGCRequest(query);
+
+if (result) {
+  for (let i = 0; i < result.numResults; i++) {
+    const item = steam.workshop.getQueryUGCResult(query, i);
+    const metadata = steam.workshop.getQueryUGCMetadata(query, i);
+    
+    if (item) {
+      console.log(`\n${item.title}`);
+      
+      if (metadata) {
+        // Parse JSON metadata (if your mod uses it)
+        try {
+          const data = JSON.parse(metadata);
+          console.log(`Version: ${data.version}`);
+          console.log(`Author: ${data.author}`);
+          console.log(`Compatible: ${data.gameVersion}`);
+        } catch {
+          console.log(`Metadata: ${metadata}`);
+        }
+      } else {
+        console.log('No metadata available');
+      }
+    }
+  }
+  
+  steam.workshop.releaseQueryUGCRequest(query);
+}
+```
+
+**Notes:**
+- Returns null if no metadata or index out of range
+- Max size: 5000 characters
+- Can store JSON, XML, or any text format
+- Set via `SetItemMetadata()` during item update
+- Useful for version info, compatibility data, mod settings
 
 ---
 
@@ -1342,7 +1536,6 @@ interface WorkshopItem {
   previewFileSize: number;
   url: string;
   votesUp: number;
-  votesDown: number;
   score: number;
   numChildren: number;
   totalFilesSize: bigint;
@@ -1449,7 +1642,7 @@ async function browsePopularMods() {
     if (item) {
       console.log(`\n${i + 1}. ${item.title}`);
       console.log(`   ID: ${item.publishedFileId}`);
-      console.log(`   Rating: 👍 ${item.votesUp} 👎 ${item.votesDown}`);
+      console.log(`   Rating: 👍 ${item.votesUp} | Score: ${item.score.toFixed(2)}`);
       console.log(`   Size: ${(item.fileSize / 1024 / 1024).toFixed(2)} MB`);
       console.log(`   Tags: ${item.tags.join(', ')}`);
       console.log(`   URL: ${item.url}`);
