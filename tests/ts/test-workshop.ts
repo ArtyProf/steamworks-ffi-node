@@ -293,7 +293,7 @@ async function testCompleteWorkshopLifecycle(): Promise<void> {
             console.log(`\n   Item ${i + 1}:`);
             console.log(`   ID: ${item.publishedFileId}`);
             console.log(`   Title: ${item.title}`);
-            console.log(`   Votes: 👍 ${item.votesUp} 👎 ${item.votesDown}`);
+            console.log(`   Votes: 👍 ${item.votesUp} | Score: ${item.score.toFixed(2)}`);
             console.log(`   Owner: ${item.steamIDOwner}`);
           }
         }
