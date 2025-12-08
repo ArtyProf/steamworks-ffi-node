@@ -750,6 +750,51 @@ export class SteamWorkshopManager {
   }
 
   /**
+   * Set the search text for a UGC query to filter by text in the title or description
+   * 
+   * @param queryHandle - Query handle to configure
+   * @param searchText - Text to search for in item titles and descriptions
+   * @returns True if successful
+   * 
+   * @remarks
+   * Call this BEFORE sendQueryUGCRequest to enable text search filtering.
+   * The query type should be set to RankedByTextSearch (11) for best results.
+   * 
+   * @example
+   * ```typescript
+   * const query = steam.workshop.createQueryAllUGCRequest(
+   *   EUGCQuery.RankedByTextSearch, // Use text search query type
+   *   EUGCMatchingUGCType.Items,
+   *   appId,
+   *   appId,
+   *   1
+   * );
+   * steam.workshop.setSearchText(query, "dragon"); // Search for "dragon"
+   * const result = await steam.workshop.sendQueryUGCRequest(query);
+   * ```
+   */
+  setSearchText(queryHandle: UGCQueryHandle, searchText: string): boolean {
+    if (!this.apiCore.isInitialized()) {
+      return false;
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return false;
+    }
+
+    try {
+      console.log(`[Steamworks] Setting search text: "${searchText}"`);
+      const success = this.libraryLoader.SteamAPI_ISteamUGC_SetSearchText(ugc, queryHandle, searchText);
+      console.log(`[Steamworks] SetSearchText result: ${success}`);
+      return success;
+    } catch (error) {
+      console.error('[Steamworks] Error setting search text:', error);
+      return false;
+    }
+  }
+
+  /**
    * Enable returning statistics for UGC query results
    * 
    * @param queryHandle - Query handle to configure

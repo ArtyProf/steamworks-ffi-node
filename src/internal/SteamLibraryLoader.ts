@@ -235,6 +235,9 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUGC_SubmitItemUpdate!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_GetItemUpdateProgress!: koffi.KoffiFunction;
   
+  // Query options
+  public SteamAPI_ISteamUGC_SetSearchText!: koffi.KoffiFunction;
+  
   // Voting and favorites
   public SteamAPI_ISteamUGC_SetUserItemVote!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_GetUserItemVote!: koffi.KoffiFunction;
@@ -542,6 +545,9 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUGC_GetQueryUGCChildren = this.steamLib.func('SteamAPI_ISteamUGC_GetQueryUGCChildren', 'bool', ['void*', 'uint64', 'uint32', 'uint64*', 'uint32']);
     this.SteamAPI_ISteamUGC_SetReturnPlaytimeStats = this.steamLib.func('SteamAPI_ISteamUGC_SetReturnPlaytimeStats', 'bool', ['void*', 'uint64', 'uint32']);
     this.SteamAPI_ISteamUGC_ReleaseQueryUGCRequest = this.steamLib.func('SteamAPI_ISteamUGC_ReleaseQueryUGCRequest', 'bool', ['void*', 'uint64']);
+    
+    // Query options
+    this.SteamAPI_ISteamUGC_SetSearchText = this.steamLib.func('SteamAPI_ISteamUGC_SetSearchText', 'bool', ['void*', 'uint64', 'string']);
     
     // Subscription operations
     this.SteamAPI_ISteamUGC_SubscribeItem = this.steamLib.func('SteamAPI_ISteamUGC_SubscribeItem', 'uint64', ['void*', 'uint64']);
