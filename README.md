@@ -39,7 +39,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Cloud Storage API** - 14 functions for complete Steam Cloud (Remote Storage) integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)
 
-> 🎉 **NEW: Workshop API** - 28 functions for complete Steam Workshop/UGC integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)
+> 🎉 **NEW: Workshop API** - 29 functions for complete Steam Workshop/UGC integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)
 
 ## Features
 
@@ -88,10 +88,10 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ File listing (count, iterate, get all with details)
   - ✅ Quota management (track storage usage and limits)
   - ✅ Cloud settings (check/toggle cloud sync for account and app)
-- **Workshop API**: Complete Steam Workshop/UGC integration (28 functions)
+- **Workshop API**: Complete Steam Workshop/UGC integration (29 functions)
   - ✅ Subscription management (subscribe, unsubscribe, list items)
   - ✅ Item state & information (download progress, installation info)
-  - ✅ Query operations (search, browse, filter Workshop content)
+  - ✅ Query operations (text search, browse, filter Workshop content)
   - ✅ Item creation & update (create, upload, manage your Workshop items)
   - ✅ Voting & favorites (vote on items, manage favorites)
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
@@ -293,19 +293,22 @@ if (initialized) {
   const subscribedItems = steam.workshop.getSubscribedItems();
   console.log(`Subscribed to ${subscribedItems.length} Workshop items`);
   
-  // Query Workshop items
+  // Query Workshop items with text search
   const query = steam.workshop.createQueryAllUGCRequest(
-    0,    // Most popular
-    1,    // Items
-    1,    // Subscribed content
-    1,    // Subscribed items
-    480   // App ID
+    11,   // RankedByTextSearch - for text search queries
+    0,    // Items
+    480,  // Creator App ID
+    480,  // Consumer App ID
+    1     // Page 1
   );
   
   if (query) {
+    // Set search text to filter results
+    steam.workshop.setSearchText(query, 'map');
+    
     const queryResult = await steam.workshop.sendQueryUGCRequest(query);
-    if (queryResult.success) {
-      console.log(`Found ${queryResult.numResults} Workshop items`);
+    if (queryResult) {
+      console.log(`Found ${queryResult.numResults} Workshop items matching "map"`);
       
       // Get details for each item
       for (let i = 0; i < queryResult.numResults; i++) {
@@ -411,7 +414,7 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Rich Presence Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/RICH_PRESENCE_MANAGER.md)** - Custom status display and join functionality (6 functions)
 - **[Overlay Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)** - Steam overlay control (7 functions)
 - **[Cloud Storage Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_STORAGE_MANAGER.md)** - Steam Cloud file operations (14 functions)
-- **[Workshop Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)** - Steam Workshop/UGC operations (25+ functions)
+- **[Workshop Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)** - Steam Workshop/UGC operations (29 functions)
 
 ## Steamworks Integration
 

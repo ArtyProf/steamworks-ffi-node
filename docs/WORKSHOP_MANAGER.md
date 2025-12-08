@@ -12,11 +12,11 @@ The `SteamWorkshopManager` provides comprehensive access to the Steam Workshop A
 |----------|-----------|-------------|
 | [Subscription Management](#subscription-management) | 4 | Subscribe, unsubscribe, and list Workshop items |
 | [Item State & Information](#item-state--information) | 4 | Get item state, installation info, and download progress |
-| [Query Operations](#query-operations) | 7 | Search and browse Workshop content |
+| [Query Operations](#query-operations) | 8 | Search and browse Workshop content |
 | [Item Creation & Update](#item-creation--update) | 9 | Create and update your own Workshop items |
 | [Voting & Favorites](#voting--favorites) | 4 | Vote on items and manage favorites |
 
-**Total: 28 Functions**
+**Total: 29 Functions**
 
 ---
 
@@ -553,6 +553,57 @@ if (result) {
 - After processing results, always call `releaseQueryUGCRequest()`
 - Use `getQueryUGCResult()` to retrieve individual items
 - Query returns up to 50 items per page
+
+---
+
+### `setSearchText(queryHandle, searchText)`
+
+Set the search text for a UGC query to filter by text in the title or description.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_SetSearchText()` - Set search text filter
+
+**Parameters:**
+- `queryHandle: UGCQueryHandle` - Query handle to configure
+- `searchText: string` - Text to search for in item titles and descriptions
+
+**Returns:** `boolean` - `true` if successful
+
+**Example:**
+```typescript
+// Create a text search query
+const query = steam.workshop.createQueryAllUGCRequest(
+  EUGCQuery.RankedByTextSearch, // Use text search query type
+  EUGCMatchingUGCType.Items,
+  480, 480, 1
+);
+
+// Set the search text
+steam.workshop.setSearchText(query, "dragon");
+
+// Now send the query
+const result = await steam.workshop.sendQueryUGCRequest(query);
+
+if (result) {
+  console.log(`Found ${result.numResults} items matching "dragon"`);
+  
+  for (let i = 0; i < result.numResults; i++) {
+    const item = steam.workshop.getQueryUGCResult(query, i);
+    if (item) {
+      console.log(`${item.title} - ${item.description}`);
+    }
+  }
+  
+  steam.workshop.releaseQueryUGCRequest(query);
+}
+```
+
+**Notes:**
+- Call this BEFORE `sendQueryUGCRequest()`
+- Works best with query type `EUGCQuery.RankedByTextSearch` (11)
+- Searches in both item titles and descriptions
+- Case-insensitive text matching
+- Returns items ranked by search relevance
 
 ---
 
