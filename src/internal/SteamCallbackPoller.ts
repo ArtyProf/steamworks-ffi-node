@@ -183,21 +183,33 @@ export class SteamCallbackPoller {
   /**
    * Manually parses CreateItemResult_t from raw bytes
    * 
-   * Layout: [int32:0-3][uint64:4-11][uint8:12] = 13 bytes, padded to 16
-   * Steam's packed struct has no padding between int32 and uint64
+   * Layout differs by platform due to struct packing:
+   * - Windows (MSVC, pack(8)): [int32:0-3][padding:4-7][uint64:8-15][uint8:16] = 24 bytes
+   * - Mac/Linux (GCC/Clang, pack(4)): [int32:0-3][uint64:4-11][uint8:12] = 16 bytes
    * 
    * @param result - Koffi-allocated result buffer
    * @returns Parsed CreateItemResult_t object
    */
   private parseCreateItemResult(result: any): CreateItemResultType {
-    const rawBytes = koffi.decode(result, koffi.array('uint8', 16));
+    const rawBytes = koffi.decode(result, koffi.array('uint8', 24));
     const buffer = Buffer.from(rawBytes);
     
-    return {
-      m_eResult: buffer.readInt32LE(0),
-      m_nPublishedFileId: buffer.readBigUInt64LE(4),
-      m_bUserNeedsToAcceptWorkshopLegalAgreement: buffer.readUInt8(12) !== 0
-    };
+    // Detect platform and parse accordingly
+    if (process.platform === 'win32') {
+      // Windows: 8-byte aligned uint64 at offset 8
+      return {
+        m_eResult: buffer.readInt32LE(0),
+        m_nPublishedFileId: buffer.readBigUInt64LE(8),
+        m_bUserNeedsToAcceptWorkshopLegalAgreement: buffer.readUInt8(16) !== 0
+      };
+    } else {
+      // Mac/Linux: packed struct, uint64 at offset 4
+      return {
+        m_eResult: buffer.readInt32LE(0),
+        m_nPublishedFileId: buffer.readBigUInt64LE(4),
+        m_bUserNeedsToAcceptWorkshopLegalAgreement: buffer.readUInt8(12) !== 0
+      };
+    }
   }
 
   /**

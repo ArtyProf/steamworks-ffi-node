@@ -42,10 +42,12 @@ import {
 import * as koffi from 'koffi';
 
 // Manual buffer parsing for CreateItemResult_t callback
-// Steam uses #pragma pack causing tight packing - Koffi can't handle this properly
-// Layout: [int32:0-3][uint64:4-11][uint8:12] = 13 bytes, padded to 16
+// Steam uses #pragma pack causing different alignment on Windows vs Mac/Linux:
+// - Windows (MSVC, pack(8)): [int32:0-3][padding:4-7][uint64:8-15][uint8:16] = 24 bytes
+// - Mac/Linux (GCC/Clang, pack(4)): [int32:0-3][uint64:4-11][uint8:12] = 16 bytes
+// We allocate 24 bytes to handle both cases
 const CreateItemResult_t = koffi.struct('CreateItemResult_t', {
-  rawBytes: koffi.array('uint8', 16)
+  rawBytes: koffi.array('uint8', 24)
 });
 
 // Manual buffer parsing for SubmitItemUpdateResult_t callback
@@ -100,24 +102,23 @@ const UserFavoriteItemsListChanged_t = koffi.struct('UserFavoriteItemsListChange
 });
 
 // Manual buffer parsing for SteamUGCDetails_t
-// Steam uses tight packing (likely #pragma pack(push, 4))
+// Steam uses different struct packing on Windows vs Mac/Linux:
+// - Windows (MSVC): #pragma pack(push, 8) - 8-byte alignment for uint64
+// - Mac/Linux (GCC/Clang): #pragma pack(push, 4) - 4-byte alignment
+// 
+// Key differences:
+// - After m_rgchDescription (offset 8153), Windows adds 7 bytes padding to align uint64
+// - This shifts all subsequent fields by different amounts
+//
 // Constants from isteamremotestorage.h:
 // k_cchPublishedDocumentTitleMax = 128 + 1 = 129
 // k_cchPublishedDocumentDescriptionMax = 8000
 // k_cchTagListMax = 1024 + 1 = 1025
 // k_cchFilenameMax = 260
 // k_cchPublishedFileURLMax = 256
-// Actual struct size from debugging:
-// 0-24: uint64(8)+int32(4)+int32(4)+uint32(4)+uint32(4) = 24
-// 24-153: char[129] (no padding after)
-// 153-8153: char[8000] = 8000
-// 8153->8160: pad to 8-byte for uint64
-// 8160-8180: uint64(8)+uint32(4)+uint32(4)+uint32(4)+int32(4) = 24
-// 8180-8184: int32(4) visibility, then bools at 8181-8183 (overlapping!)
-// 8184-9209: char[1025]
-// 9209->9216: pad to 8-byte
-// 9216-9784: remaining fields
-const STEAM_UGC_DETAILS_SIZE = 9784;
+//
+// We use a larger buffer to accommodate Windows layout
+const STEAM_UGC_DETAILS_SIZE = 9800; // Extra space for Windows alignment
 
 /**
  * Manager for Steam Workshop / User Generated Content (UGC) operations
@@ -1017,11 +1018,17 @@ export class SteamWorkshopManager {
       const description = detailsBuffer.toString('utf8', offset, descEnd > offset ? descEnd : offset + 8000);
       offset += 8000; // Now at 8153
       
-      // CRITICAL FIX: There's a 3-byte gap here (likely from previous field alignment)
-      // Testing showed Steam ID is at offset 8156, not 8153 or 8160
-      offset += 3; // Now at 8156
+      // PLATFORM-SPECIFIC ALIGNMENT:
+      // After the description char array, we need to align for uint64 m_ulSteamIDOwner
+      // - Windows (MSVC pack(8)): Pad to 8-byte boundary: 8153 -> 8160 (7 bytes padding)
+      // - Mac/Linux (GCC pack(4)): Pad to 4-byte boundary: 8153 -> 8156 (3 bytes padding)
+      if (process.platform === 'win32') {
+        offset = Math.ceil(offset / 8) * 8; // Windows: align to 8 bytes -> 8160
+      } else {
+        offset += 3; // Mac/Linux: 3 bytes padding -> 8156
+      }
       
-      // uint64 m_ulSteamIDOwner (8 bytes, offset 8156)
+      // uint64 m_ulSteamIDOwner (8 bytes)
       const steamIDOwner = detailsBuffer.readBigUInt64LE(offset);
       offset += 8; // Now at 8164
       
@@ -1057,10 +1064,16 @@ export class SteamWorkshopManager {
       // char[1025] m_rgchTags (1025 bytes, offset 8183)
       const tagsEnd = detailsBuffer.indexOf(0, offset);
       const tagsString = detailsBuffer.toString('utf8', offset, tagsEnd > offset ? tagsEnd : offset + 1025);
-      offset += 1025; // Now at 9208
+      offset += 1025; // Mac/Linux: Now at 9208, Windows: Now at 9212
       
-      // Padding before uint64 (9208 is already 8-byte aligned)
-      // UGCHandle_t m_hFile (uint64, 8 bytes, offset 9208)
+      // PLATFORM-SPECIFIC ALIGNMENT before uint64:
+      // - Windows (MSVC pack(8)): Pad to 8-byte boundary
+      // - Mac/Linux: offset 9208 is already 8-byte aligned
+      if (process.platform === 'win32') {
+        offset = Math.ceil(offset / 8) * 8; // Windows: align to 8 bytes
+      }
+      
+      // UGCHandle_t m_hFile (uint64, 8 bytes)
       const file = detailsBuffer.readBigUInt64LE(offset);
       offset += 8; // Now at 9216
       
