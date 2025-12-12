@@ -139,7 +139,7 @@ function startCallbackPolling(steam: SteamworksSDK, interval: number = 1000) {
 }
 
 // Initialize Steam connection
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 const initialized = steam.init({ appId: 480 }); // Your Steam App ID
 
 if (initialized) {
@@ -368,7 +368,7 @@ function startCallbackPolling(steam, interval = 1000) {
 }
 
 async function example() {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   
   if (steam.init({ appId: 480 })) {
     // Start callback polling automatically
@@ -422,7 +422,7 @@ This library connects directly to the Steam client and Steamworks SDK:
 
 ```javascript
 // Steamworks API
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 steam.init({ appId: 480 }); // Connects to actual Steam
 
 // Live achievements from Steam servers
@@ -451,7 +451,7 @@ import { app } from 'electron';
 import SteamworksSDK from 'steamworks-ffi-node';
 
 app.whenReady().then(() => {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   
   if (steam.init({ appId: YOUR_STEAM_APP_ID })) {
     console.log('Steam initialized in Electron!');
@@ -462,7 +462,7 @@ app.whenReady().then(() => {
 });
 
 app.on('before-quit', () => {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   steam.shutdown();
 });
 ```

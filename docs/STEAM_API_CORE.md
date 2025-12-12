@@ -38,7 +38,7 @@ interface SteamInitOptions {
 ```typescript
 import SteamworksSDK from 'steamworks-ffi-node';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 const success = steam.init({ appId: 480 });
 
 if (success) {
@@ -271,7 +271,7 @@ import SteamworksSDK from 'steamworks-ffi-node';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 steam.init({ appId: 480 });
 
 // Get Steam language
@@ -313,7 +313,7 @@ console.log(strings.playButton);
 **Best Practice:**
 Get language early in initialization to set up localization:
 ```typescript
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 if (steam.init({ appId: 480 })) {
   // Get language immediately after init
   const language = steam.getCurrentGameLanguage();
@@ -445,7 +445,7 @@ if (!status.initialized) {
 import SteamworksSDK from 'steamworks-ffi-node';
 
 async function steamExample() {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   
   // Check if Steam is running
   if (!steam.isSteamRunning()) {
@@ -484,7 +484,7 @@ async function steamExample() {
 
 // Handle cleanup on exit
 process.on('SIGINT', () => {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   steam.shutdown();
   process.exit(0);
 });
@@ -499,18 +499,18 @@ steamExample();
 ### 1. Create Instance Per Usage
 ```typescript
 // ✅ Good - Create instance when needed
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 steam.init({ appId: 480 });
 
 // Multiple instances are fine
-const steam1 = new SteamworksSDK();
-const steam2 = new SteamworksSDK();
+const steam1 = SteamworksSDK.getInstance();
+const steam2 = SteamworksSDK.getInstance();
 ```
 
 ### 2. Always Shutdown
 ```typescript
 // ✅ Good
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 try {
   steam.init({ appId: 480 });
   // ... work ...
@@ -522,7 +522,7 @@ try {
 ### 3. Check Status
 ```typescript
 // ✅ Good - Check before operations
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 if (!steam.getStatus().initialized) {
   steam.init({ appId: 480 });
 }

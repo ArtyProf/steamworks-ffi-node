@@ -51,7 +51,7 @@ interface SteamAchievement {
 ```typescript
 import SteamworksSDK from 'steamworks-ffi-node';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 const achievements = await steam.achievements.getAllAchievements();
 
 console.log(`Found ${achievements.length} achievements`);
@@ -785,7 +785,7 @@ await steam.achievements.resetAllStats(true);
 import SteamworksSDK from 'steamworks-ffi-node';
 
 async function comprehensiveExample() {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   
   // Initialize
   if (!steam.init({ appId: 480 })) {

@@ -39,7 +39,7 @@ Write file data to Steam Cloud storage.
 ```typescript
 import SteamworksSDK from 'steamworks-ffi-node';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 
 // Save game state
 const saveData = {
@@ -548,7 +548,7 @@ const MAX_FILENAME_LENGTH = 260;                     // characters
 ```typescript
 import SteamworksSDK from 'steamworks-ffi-node';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 
 // Save game
 function saveGame(gameState: any) {

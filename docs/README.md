@@ -9,7 +9,7 @@ Steamworks FFI uses a **manager-based architecture** for better organization:
 ```typescript
 import SteamworksSDK from 'steamworks-ffi-node';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 steam.init({ appId: 480 });
 
 // Access features through specialized managers

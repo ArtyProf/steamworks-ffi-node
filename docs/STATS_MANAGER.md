@@ -46,7 +46,7 @@ interface SteamStat {
 ```typescript
 import SteamworksSDK from 'steamworks-ffi-node';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 steam.init({ appId: YOUR_APP_ID });
 
 const killsStat = await steam.stats.getStatInt('total_kills');
@@ -245,7 +245,7 @@ interface UserStat {
 **Example:**
 ```typescript
 async function compareWithFriend(friendSteamId: string) {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   steam.init({ appId: YOUR_APP_ID });
   
   // Get your stats
@@ -363,7 +363,7 @@ interface GlobalStat {
 **Example:**
 ```typescript
 async function viewGlobalStats() {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   steam.init({ appId: YOUR_APP_ID });
   
   // Request global stats
@@ -568,7 +568,7 @@ interface GlobalStatHistory {
 import SteamworksSDK from 'steamworks-ffi-node';
 
 async function trackGameSession() {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   steam.init({ appId: YOUR_APP_ID });
   
   // Session start
@@ -611,7 +611,7 @@ trackGameSession();
 
 ```typescript
 async function createLeaderboard(friendSteamIds: string[]) {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   steam.init({ appId: YOUR_APP_ID });
   
   // Get your stats
@@ -667,7 +667,7 @@ async function createLeaderboard(friendSteamIds: string[]) {
 
 ```typescript
 async function showGlobalDashboard() {
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   steam.init({ appId: YOUR_APP_ID });
   
   // Request global stats with 30 days history

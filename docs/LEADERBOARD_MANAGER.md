@@ -70,7 +70,7 @@ enum LeaderboardDisplayType {
 ```typescript
 import SteamworksSDK, { LeaderboardSortMethod, LeaderboardDisplayType } from 'steamworks-ffi-node';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 steam.init({ appId: YOUR_APP_ID });
 
 // High score leaderboard (higher is better)
@@ -537,7 +537,7 @@ import Steam, {
   LeaderboardDataRequest
 } from 'steamworks-ffi-node';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 
 async function highScoreExample() {
   // Initialize Steam
@@ -621,7 +621,7 @@ import Steam, {
   LeaderboardDataRequest
 } from 'steamworks-ffi-node';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 
 async function speedRunExample() {
   steam.init({ appId: YOUR_APP_ID });
@@ -689,7 +689,7 @@ import Steam, {
   LeaderboardDisplayType
 } from 'steamworks-ffi-node';
 
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 
 async function friendComparisonExample() {
   steam.init({ appId: YOUR_APP_ID });
@@ -940,7 +940,7 @@ Steam provides a test game (Spacewar) for development:
 
 ```typescript
 // Test leaderboards without a published game
-const steam = new SteamworksSDK();
+const steam = SteamworksSDK.getInstance();
 steam.init({ appId: 480 }); // Spacewar
 
 const leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
