@@ -1,4 +1,4 @@
-const SteamworksSDK = require('../../dist/index.js').default;
+const { SteamworksSDK } = require('../../dist/index.js');
 
 /**
  * Comprehensive test covering all 20+ Steam Achievement API functions

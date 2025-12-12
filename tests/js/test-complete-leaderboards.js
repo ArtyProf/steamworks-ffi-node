@@ -5,13 +5,7 @@
  * Uses ISteamUtils polling to retrieve callback results synchronously after async operations.
  */
 
-const SteamworksSDK = require('../../dist/index').default;
-const { 
-  LeaderboardSortMethod, 
-  LeaderboardDisplayType, 
-  LeaderboardDataRequest,
-  LeaderboardUploadScoreMethod 
-} = require('../../dist/index');
+const { SteamworksSDK, LeaderboardSortMethod, LeaderboardDisplayType, LeaderboardDataRequest, LeaderboardUploadScoreMethod } = require('../../dist/index.js');
 
 async function testLeaderboardsAPI() {
   console.log('🧪 Starting Steam Leaderboards API Test\n');

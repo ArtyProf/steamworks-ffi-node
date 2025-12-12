@@ -1,5 +1,4 @@
-const SteamworksSDK = require('../../dist/index.js').default;
-const { EFriendFlags, INVALID_FRIENDS_GROUP_ID } = require('../../dist/index.js');
+const { SteamworksSDK, EFriendFlags, INVALID_FRIENDS_GROUP_ID } = require('../../dist/index.js');
 
 /**
  * Test script for Steam Friends API

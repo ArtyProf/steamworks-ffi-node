@@ -3,7 +3,7 @@
  * This test demonstrates the complete Steamworks FFI cloud storage functionality
  */
 
-const SteamworksSDK = require('../../dist/index').default;
+const { SteamworksSDK } = require('../../dist/index.js');
 
 async function testAllCloudFunctions() {
   console.log('🌥️  Complete Steamworks Cloud API Test (JavaScript)');

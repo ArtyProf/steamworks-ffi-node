@@ -355,9 +355,16 @@ clearInterval(callbackInterval);
 steam.shutdown();
 ```
 
-### JavaScript (CommonJS)
+### JavaScript
 
 ```javascript
+// Option 1: ESM Named import
+import { SteamworksSDK } from 'steamworks-ffi-node';
+
+// Option 2: CommonJs named import (recommended - no .default needed)
+const { SteamworksSDK } = require('steamworks-ffi-node');
+
+// Option 3: CommonJs default named import (also works)
 const SteamworksSDK = require('steamworks-ffi-node').default;
 
 // Helper to auto-start callback polling

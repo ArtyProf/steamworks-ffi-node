@@ -14,7 +14,7 @@
  * - User must be logged in
  */
 
-const SteamworksSDK = require('../../dist/index').default;
+const { SteamworksSDK } = require('../../dist/index.js');
 
 async function testCoreAPI() {
   console.log('\n==============================================');

@@ -13,5 +13,6 @@ export { SteamWorkshopManager } from './internal/SteamWorkshopManager';
 // Export all types from organized structure
 export * from './types';
 
-// Export main Steam class
+// Export main Steam class as both default and named export
 export default SteamworksSDK;
+export { SteamworksSDK };

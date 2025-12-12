@@ -1,11 +1,4 @@
-const SteamworksSDK = require('../../dist').default;
-const { 
-  EOverlayDialog, 
-  EOverlayToUserDialog,
-  EOverlayToStoreFlag,
-  EActivateGameOverlayToWebPageMode,
-  RichPresenceKeys 
-} = require('../../dist');
+const { SteamworksSDK, EOverlayDialog, EOverlayToUserDialog, EOverlayToStoreFlag, EActivateGameOverlayToWebPageMode, RichPresenceKeys } = require('../../dist/index.js');
 
 /**
  * Test suite for Rich Presence and Overlay Managers (JavaScript)

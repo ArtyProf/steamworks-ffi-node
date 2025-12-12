@@ -10,18 +10,10 @@
  * This test creates a real Workshop item, so use with caution!
  */
 
-const SteamworksSDK = require('../../dist/index').default;
-const {
-  EWorkshopFileType,
-  ERemoteStoragePublishedFileVisibility,
-  EUGCQuery,
-  EUGCMatchingUGCType,
-  EItemState,
-  EItemUpdateStatus
-} = require('../../dist/types');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const { SteamworksSDK, EWorkshopFileType, ERemoteStoragePublishedFileVisibility, EUGCQuery, EUGCMatchingUGCType, EItemState, EItemUpdateStatus } = require('../../dist/index.js');
+const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = require('fs');
+const { join } = require('path');
+const { tmpdir } = require('os');
 
 // Test configuration
 const TEST_APP_ID = 480; // Spacewar
@@ -43,16 +35,16 @@ async function waitWithCallbacks(steam, ms) {
 
 // Helper to create temporary test content
 function createTestContent() {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'steam-workshop-test-'));
-  const contentPath = path.join(tempDir, 'content');
-  const previewPath = path.join(tempDir, 'preview.jpg');
+  const tempDir = mkdtempSync(join(tmpdir(), 'steam-workshop-test-'));
+  const contentPath = join(tempDir, 'content');
+  const previewPath = join(tempDir, 'preview.jpg');
   
   // Create content directory
-  fs.mkdirSync(contentPath, { recursive: true });
+  mkdirSync(contentPath, { recursive: true });
   
   // Create test file
-  const testFile = path.join(contentPath, 'test-mod.txt');
-  fs.writeFileSync(testFile, `Steam Workshop Test Item
+  const testFile = join(contentPath, 'test-mod.txt');
+  writeFileSync(testFile, `Steam Workshop Test Item
 Created: ${new Date().toISOString()}
 This is a test Workshop item created by the Steamworks FFI test suite.
 It should be deleted automatically after testing.
@@ -80,11 +72,11 @@ Test Content:
     0x00, 0x00, 0xFF, 0xDA, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3F, 0x00,
     0x37, 0xFF, 0xD9
   ]);
-  fs.writeFileSync(previewPath, minimalJpeg);
+  writeFileSync(previewPath, minimalJpeg);
   
   const cleanup = () => {
     try {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      rmSync(tempDir, { recursive: true, force: true });
     } catch (error) {
       console.error('Error cleaning up temp directory:', error);
     }

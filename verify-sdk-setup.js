@@ -181,13 +181,13 @@ function testBasicFunctionality() {
   try {
     console.log('Attempting to load steamworks-ffi-node...');
     
-    // Try to require the package
-    const SteamworksSDK = require('./dist/index.js').default || require('./dist/index.js');
+    // Try to require the package (named export is preferred)
+    const { SteamworksSDK } = require('./dist/index.js');
     console.log('✅ Package loaded successfully');
     
     // Try to create instance (this will test SDK loading)
     console.log('Testing SDK initialization...');
-    const steam = SteamworksSDK.getInstance();
+    SteamworksSDK.getInstance();
     console.log('✅ SteamworksSDK instance created');
     
     console.log('');
