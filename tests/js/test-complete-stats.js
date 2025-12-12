@@ -8,7 +8,7 @@ const SteamworksSDK = require('../../dist/index').default;
 async function testStatsAPI() {
   console.log('🧪 Starting Steam Stats API Test (JavaScript)\n');
   
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   
   // Initialize Steam
   console.log('🔧 Initializing Steam API...');

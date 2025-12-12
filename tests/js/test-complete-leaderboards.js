@@ -16,7 +16,7 @@ const {
 async function testLeaderboardsAPI() {
   console.log('🧪 Starting Steam Leaderboards API Test\n');
   
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   
   // Initialize Steam
   console.log('🔧 Initializing Steam API...');

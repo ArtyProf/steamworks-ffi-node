@@ -13,7 +13,7 @@ async function testAllAchievementFunctions() {
   console.log('   3. Internet connection for Steam features');
   console.log('');
 
-  const steam = new SteamworksSDK();
+  const steam = SteamworksSDK.getInstance();
   
   try {
     // ═══════════════════════════════════════════════════════════════

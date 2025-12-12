@@ -187,7 +187,7 @@ function testBasicFunctionality() {
     
     // Try to create instance (this will test SDK loading)
     console.log('Testing SDK initialization...');
-    const steam = new SteamworksSDK();
+    const steam = SteamworksSDK.getInstance();
     console.log('✅ SteamworksSDK instance created');
     
     console.log('');
