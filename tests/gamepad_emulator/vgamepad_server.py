@@ -15,6 +15,12 @@ import sys
 import time
 import json
 import traceback
+import io
+
+# Force UTF-8 encoding for stdout/stderr on Windows
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 class VirtualGamepadServer:
     def __init__(self, controller_type='xbox'):
@@ -198,6 +204,7 @@ class VirtualGamepadServer:
 
     def run_server(self):
         """Run interactive command server"""
+        print("READY", flush=True)
         print("\n=== Virtual Gamepad Server Ready ===", flush=True)
         print("Commands:", flush=True)
         print("  PRESS:<button>:<duration_ms>", flush=True)
@@ -209,7 +216,6 @@ class VirtualGamepadServer:
         print("  TEST", flush=True)
         print("  PING", flush=True)
         print("  EXIT", flush=True)
-        print("READY", flush=True)
         
         while True:
             try:

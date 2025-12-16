@@ -1,0 +1,56 @@
+"In Game Actions"
+{
+	"actions"
+	{
+		"MenuControls"
+		{
+			"title"		"Menu Controls"
+			"Button"
+			{
+				"Jump"		"Jump"
+				"Fire"		"Fire"
+			}
+		}
+		"GameplayControls"
+		{
+			"title"		"Gameplay Controls"
+			"Button"
+			{
+				"Jump"		"Jump"
+				"Fire"		"Fire"
+			}
+			"StickPadGyro"
+			{
+				"Move"
+				{
+					"title"			"Move"
+					"input_mode"	"joystick_move"
+				}
+				"Camera"
+				{
+					"title"			"Camera"
+					"input_mode"	"joystick_camera"
+				}
+			}
+		}
+	}
+	"action_layers"
+	{
+		"MenuLayer"
+		{
+			"title"		"Menu Layer"
+			"Button"
+			{
+				"Jump"		"Jump"
+			}
+		}
+	}
+	"localization"
+	{
+		"english"
+		{
+			"title"			"Steam Input Test - Spacewar"
+			"description"	"Action sets for testing Steam Input API"
+		}
+	}
+}
