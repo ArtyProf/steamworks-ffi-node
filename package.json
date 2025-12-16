@@ -16,6 +16,9 @@
     "test:cloud:js": "node tests/js/test-complete-cloud.js",
     "test:workshop:js": "node tests/js/test-workshop.js",
     "test:richpresence-overlay:js": "node tests/js/test-richpresence-overlay.js",
+    "test:input:js": "node tests/js/test-input.js",
+    "test:input-xbox:js": "USE_VIRTUAL_GAMEPAD=true VIRTUAL_GAMEPAD_TYPE=xbox node tests/js/test-input.js",
+    "test:input-ps4:js": "USE_VIRTUAL_GAMEPAD=true VIRTUAL_GAMEPAD_TYPE=ps4 node tests/js/test-input.js",
     "test:core:ts": "ts-node tests/ts/test-core-api.ts",
     "test:achievements:ts": "ts-node tests/ts/test-complete-achievements.ts",
     "test:stats:ts": "ts-node tests/ts/test-complete-stats.ts",
@@ -24,6 +27,9 @@
     "test:cloud:ts": "ts-node tests/ts/test-complete-cloud.ts",
     "test:workshop:ts": "ts-node tests/ts/test-workshop.ts",
     "test:richpresence-overlay:ts": "ts-node tests/ts/test-richpresence-overlay.ts",
+    "test:input:ts": "ts-node tests/ts/test-input.ts",
+    "test:input-xbox:ts": "USE_VIRTUAL_GAMEPAD=true VIRTUAL_GAMEPAD_TYPE=xbox ts-node tests/ts/test-input.ts",
+    "test:input-ps4:ts": "USE_VIRTUAL_GAMEPAD=true VIRTUAL_GAMEPAD_TYPE=ps4 ts-node tests/ts/test-input.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
