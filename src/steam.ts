@@ -12,6 +12,7 @@ import { SteamRichPresenceManager } from './internal/SteamRichPresenceManager';
 import { SteamOverlayManager } from './internal/SteamOverlayManager';
 import { SteamCloudManager } from './internal/SteamCloudManager';
 import { SteamWorkshopManager } from './internal/SteamWorkshopManager';
+import { SteamInputManager } from './internal/SteamInputManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -26,6 +27,7 @@ import { SteamWorkshopManager } from './internal/SteamWorkshopManager';
  * - overlay: SteamOverlayManager - Overlay control operations
  * - cloud: SteamCloudManager - Steam Cloud / Remote Storage operations
  * - workshop: SteamWorkshopManager - Steam Workshop / UGC operations
+ * - input: SteamInputManager - Unified controller input operations
  * 
  * @example
  * ```typescript
@@ -41,6 +43,8 @@ import { SteamWorkshopManager } from './internal/SteamWorkshopManager';
  * steam.overlay.activateGameOverlay('Friends');
  * steam.cloud.fileWrite('savegame.json', saveData);
  * const items = await steam.workshop.getSubscribedItems();
+ * steam.input.init();
+ * steam.input.runFrame();
  * ```
  */
 class SteamworksSDK {
@@ -315,6 +319,62 @@ class SteamworksSDK {
    */
   public readonly workshop!: SteamWorkshopManager;
 
+  /**
+   * Input Manager - Handle Steam Input for unified controller support
+   * 
+   * Provides comprehensive controller functionality including:
+   * - Support for Xbox, PlayStation, Nintendo Switch, Steam Controller, and more
+   * - Controller detection and enumeration
+   * - Action set management for context-based controls
+   * - Digital actions (buttons) and analog actions (sticks, triggers)
+   * - Motion data (gyroscope, accelerometer)
+   * - Haptic feedback and vibration
+   * - LED control for supported controllers
+   * - Button glyph display for on-screen prompts
+   * - Controller configuration UI
+   * 
+   * @example
+   * ```typescript
+   * // Initialize Steam Input
+   * steam.input.init();
+   * 
+   * // Update every frame
+   * function gameLoop() {
+   *   steam.input.runFrame();
+   *   
+   *   // Get connected controllers
+   *   const controllers = steam.input.getConnectedControllers();
+   *   if (controllers.length > 0) {
+   *     const handle = controllers[0];
+   *     
+   *     // Read button input
+   *     const jumpHandle = steam.input.getDigitalActionHandle('Jump');
+   *     const jumpData = steam.input.getDigitalActionData(handle, jumpHandle);
+   *     if (jumpData.state) {
+   *       player.jump();
+   *     }
+   *     
+   *     // Read analog input
+   *     const moveHandle = steam.input.getAnalogActionHandle('Move');
+   *     const moveData = steam.input.getAnalogActionData(handle, moveHandle);
+   *     if (moveData.active) {
+   *       player.move(moveData.x, moveData.y);
+   *     }
+   *     
+   *     // Trigger rumble on hit
+   *     if (player.tookDamage) {
+   *       steam.input.triggerVibration(handle, 30000, 30000);
+   *     }
+   *   }
+   *   
+   *   requestAnimationFrame(gameLoop);
+   * }
+   * ```
+   * 
+   * @see {@link SteamInputManager} for complete API documentation
+   */
+  public readonly input!: SteamInputManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -329,6 +389,7 @@ class SteamworksSDK {
     this.overlay = new SteamOverlayManager(this.libraryLoader, this.apiCore);
     this.cloud = new SteamCloudManager(this.libraryLoader, this.apiCore);
     this.workshop = new SteamWorkshopManager(this.libraryLoader, this.apiCore);
+    this.input = new SteamInputManager(this.libraryLoader);
   }
 
   static getInstance(): SteamworksSDK {
