@@ -875,7 +875,11 @@ async function testSteamInput() {
                 console.log(`  No motion data available\n`);
               }
             } catch (error: any) {
-              console.log(`  ⚠️  Sample ${i + 1}/3: Failed to read motion data (${error.message})\n`);
+              console.log(
+                `  ⚠️  Sample ${i + 1}/3: Failed to read motion data (${
+                  error.message
+                })\n`
+              );
             }
 
             await delay(200);
@@ -883,10 +887,16 @@ async function testSteamInput() {
         } else if (supportsMotion && TEST_CONFIG.USE_VIRTUAL_GAMEPAD) {
           console.log("⚠️  Motion data skipped for virtual controller");
           console.log(`   Type: ${getControllerTypeName(controllerType)}`);
-          console.log("   Virtual controllers from vgamepad don't support motion sensors");
-          console.log("   Test with a real physical controller to test motion data\n");
+          console.log(
+            "   Virtual controllers from vgamepad don't support motion sensors"
+          );
+          console.log(
+            "   Test with a real physical controller to test motion data\n"
+          );
         } else {
-          console.log("⚠️  Motion sensors not supported on this controller type");
+          console.log(
+            "⚠️  Motion sensors not supported on this controller type"
+          );
           console.log(`   Type: ${getControllerTypeName(controllerType)}`);
           console.log(
             "   Motion supported on: Steam Controller, DualShock, Switch controllers, Steam Deck\n"
