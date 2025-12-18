@@ -39,3 +39,6 @@ export * from './cloud';
 
 // Workshop types
 export * from './workshop';
+
+// Input types
+export * from './input';

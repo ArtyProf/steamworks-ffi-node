@@ -244,6 +244,78 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUGC_AddItemToFavorites!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_RemoveItemFromFavorites!: koffi.KoffiFunction;
 
+  // ========================================
+  // ISteamInput Functions
+  // ========================================
+  
+  // Interface accessor
+  public SteamAPI_SteamInput_v006!: koffi.KoffiFunction;
+  
+  // Initialization
+  public SteamAPI_ISteamInput_Init!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_Shutdown!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_SetInputActionManifestFilePath!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_RunFrame!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_BWaitForData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_BNewDataAvailable!: koffi.KoffiFunction;
+  
+  // Controller enumeration
+  public SteamAPI_ISteamInput_GetConnectedControllers!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_EnableDeviceCallbacks!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_EnableActionEventCallbacks!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetInputTypeForHandle!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetControllerForGamepadIndex!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetGamepadIndexForController!: koffi.KoffiFunction;
+  
+  // Action sets
+  public SteamAPI_ISteamInput_GetActionSetHandle!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_ActivateActionSet!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetCurrentActionSet!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_ActivateActionSetLayer!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_DeactivateActionSetLayer!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_DeactivateAllActionSetLayers!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetActiveActionSetLayers!: koffi.KoffiFunction;
+  
+  // Digital actions
+  public SteamAPI_ISteamInput_GetDigitalActionHandle!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetDigitalActionData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetDigitalActionOrigins!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetStringForDigitalActionName!: koffi.KoffiFunction;
+  
+  // Analog actions
+  public SteamAPI_ISteamInput_GetAnalogActionHandle!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetAnalogActionData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetAnalogActionOrigins!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetStringForAnalogActionName!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_StopAnalogActionMomentum!: koffi.KoffiFunction;
+  
+  // Motion data
+  public SteamAPI_ISteamInput_GetMotionData!: koffi.KoffiFunction;
+  
+  // Haptics and rumble
+  public SteamAPI_ISteamInput_TriggerVibration!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_TriggerVibrationExtended!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_TriggerSimpleHapticEvent!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_SetLEDColor!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_Legacy_TriggerHapticPulse!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_Legacy_TriggerRepeatedHapticPulse!: koffi.KoffiFunction;
+  
+  // Glyphs and strings
+  public SteamAPI_ISteamInput_GetGlyphPNGForActionOrigin!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetGlyphSVGForActionOrigin!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetGlyphForActionOrigin_Legacy!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetStringForActionOrigin!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetStringForXboxOrigin!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetGlyphForXboxOrigin!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetActionOriginFromXboxOrigin!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_TranslateActionOrigin!: koffi.KoffiFunction;
+  
+  // Utility
+  public SteamAPI_ISteamInput_ShowBindingPanel!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetDeviceBindingRevision!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetRemotePlaySessionID!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetSessionInputConfigurationSettings!: koffi.KoffiFunction;
+
   /**
    * Get platform-specific Steam library path
    * Users must download and install Steamworks SDK redistributables separately
@@ -577,6 +649,78 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUGC_GetUserItemVote = this.steamLib.func('SteamAPI_ISteamUGC_GetUserItemVote', 'uint64', ['void*', 'uint64']);
     this.SteamAPI_ISteamUGC_AddItemToFavorites = this.steamLib.func('SteamAPI_ISteamUGC_AddItemToFavorites', 'uint64', ['void*', 'uint32', 'uint64']);
     this.SteamAPI_ISteamUGC_RemoveItemFromFavorites = this.steamLib.func('SteamAPI_ISteamUGC_RemoveItemFromFavorites', 'uint64', ['void*', 'uint32', 'uint64']);
+    
+    // ========================================
+    // ISteamInput Functions
+    // ========================================
+    
+    // Interface accessor
+    this.SteamAPI_SteamInput_v006 = this.steamLib.func('SteamAPI_SteamInput_v006', 'void*', []);
+    
+    // Initialization
+    this.SteamAPI_ISteamInput_Init = this.steamLib.func('SteamAPI_ISteamInput_Init', 'bool', ['void*', 'bool']);
+    this.SteamAPI_ISteamInput_Shutdown = this.steamLib.func('SteamAPI_ISteamInput_Shutdown', 'bool', ['void*']);
+    this.SteamAPI_ISteamInput_SetInputActionManifestFilePath = this.steamLib.func('SteamAPI_ISteamInput_SetInputActionManifestFilePath', 'bool', ['void*', 'str']);
+    this.SteamAPI_ISteamInput_RunFrame = this.steamLib.func('SteamAPI_ISteamInput_RunFrame', 'void', ['void*', 'bool']);
+    this.SteamAPI_ISteamInput_BWaitForData = this.steamLib.func('SteamAPI_ISteamInput_BWaitForData', 'bool', ['void*', 'bool', 'uint32']);
+    this.SteamAPI_ISteamInput_BNewDataAvailable = this.steamLib.func('SteamAPI_ISteamInput_BNewDataAvailable', 'bool', ['void*']);
+    
+    // Controller enumeration
+    this.SteamAPI_ISteamInput_GetConnectedControllers = this.steamLib.func('SteamAPI_ISteamInput_GetConnectedControllers', 'int', ['void*', 'uint64*']);
+    this.SteamAPI_ISteamInput_EnableDeviceCallbacks = this.steamLib.func('SteamAPI_ISteamInput_EnableDeviceCallbacks', 'void', ['void*']);
+    this.SteamAPI_ISteamInput_EnableActionEventCallbacks = this.steamLib.func('SteamAPI_ISteamInput_EnableActionEventCallbacks', 'void', ['void*', 'void*']);
+    this.SteamAPI_ISteamInput_GetInputTypeForHandle = this.steamLib.func('SteamAPI_ISteamInput_GetInputTypeForHandle', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamInput_GetControllerForGamepadIndex = this.steamLib.func('SteamAPI_ISteamInput_GetControllerForGamepadIndex', 'uint64', ['void*', 'int']);
+    this.SteamAPI_ISteamInput_GetGamepadIndexForController = this.steamLib.func('SteamAPI_ISteamInput_GetGamepadIndexForController', 'int', ['void*', 'uint64']);
+    
+    // Action sets
+    this.SteamAPI_ISteamInput_GetActionSetHandle = this.steamLib.func('SteamAPI_ISteamInput_GetActionSetHandle', 'uint64', ['void*', 'str']);
+    this.SteamAPI_ISteamInput_ActivateActionSet = this.steamLib.func('SteamAPI_ISteamInput_ActivateActionSet', 'void', ['void*', 'uint64', 'uint64']);
+    this.SteamAPI_ISteamInput_GetCurrentActionSet = this.steamLib.func('SteamAPI_ISteamInput_GetCurrentActionSet', 'uint64', ['void*', 'uint64']);
+    this.SteamAPI_ISteamInput_ActivateActionSetLayer = this.steamLib.func('SteamAPI_ISteamInput_ActivateActionSetLayer', 'void', ['void*', 'uint64', 'uint64']);
+    this.SteamAPI_ISteamInput_DeactivateActionSetLayer = this.steamLib.func('SteamAPI_ISteamInput_DeactivateActionSetLayer', 'void', ['void*', 'uint64', 'uint64']);
+    this.SteamAPI_ISteamInput_DeactivateAllActionSetLayers = this.steamLib.func('SteamAPI_ISteamInput_DeactivateAllActionSetLayers', 'void', ['void*', 'uint64']);
+    this.SteamAPI_ISteamInput_GetActiveActionSetLayers = this.steamLib.func('SteamAPI_ISteamInput_GetActiveActionSetLayers', 'int', ['void*', 'uint64', 'uint64*']);
+    
+    // Digital actions
+    this.SteamAPI_ISteamInput_GetDigitalActionHandle = this.steamLib.func('SteamAPI_ISteamInput_GetDigitalActionHandle', 'uint64', ['void*', 'str']);
+    this.SteamAPI_ISteamInput_GetDigitalActionData = this.steamLib.func('SteamAPI_ISteamInput_GetDigitalActionData', 'void', ['void*', 'uint64', 'uint64', 'void*']);
+    this.SteamAPI_ISteamInput_GetDigitalActionOrigins = this.steamLib.func('SteamAPI_ISteamInput_GetDigitalActionOrigins', 'int', ['void*', 'uint64', 'uint64', 'uint64', 'int*']);
+    this.SteamAPI_ISteamInput_GetStringForDigitalActionName = this.steamLib.func('SteamAPI_ISteamInput_GetStringForDigitalActionName', 'str', ['void*', 'uint64']);
+    
+    // Analog actions
+    this.SteamAPI_ISteamInput_GetAnalogActionHandle = this.steamLib.func('SteamAPI_ISteamInput_GetAnalogActionHandle', 'uint64', ['void*', 'str']);
+    this.SteamAPI_ISteamInput_GetAnalogActionData = this.steamLib.func('SteamAPI_ISteamInput_GetAnalogActionData', 'void', ['void*', 'uint64', 'uint64', 'void*']);
+    this.SteamAPI_ISteamInput_GetAnalogActionOrigins = this.steamLib.func('SteamAPI_ISteamInput_GetAnalogActionOrigins', 'int', ['void*', 'uint64', 'uint64', 'uint64', 'int*']);
+    this.SteamAPI_ISteamInput_GetStringForAnalogActionName = this.steamLib.func('SteamAPI_ISteamInput_GetStringForAnalogActionName', 'str', ['void*', 'uint64']);
+    this.SteamAPI_ISteamInput_StopAnalogActionMomentum = this.steamLib.func('SteamAPI_ISteamInput_StopAnalogActionMomentum', 'void', ['void*', 'uint64', 'uint64']);
+    
+    // Motion data
+    this.SteamAPI_ISteamInput_GetMotionData = this.steamLib.func('SteamAPI_ISteamInput_GetMotionData', 'void', ['void*', 'uint64', 'void*']);
+    
+    // Haptics and rumble
+    this.SteamAPI_ISteamInput_TriggerVibration = this.steamLib.func('SteamAPI_ISteamInput_TriggerVibration', 'void', ['void*', 'uint64', 'uint16', 'uint16']);
+    this.SteamAPI_ISteamInput_TriggerVibrationExtended = this.steamLib.func('SteamAPI_ISteamInput_TriggerVibrationExtended', 'void', ['void*', 'uint64', 'uint16', 'uint16', 'uint16', 'uint16']);
+    this.SteamAPI_ISteamInput_TriggerSimpleHapticEvent = this.steamLib.func('SteamAPI_ISteamInput_TriggerSimpleHapticEvent', 'void', ['void*', 'uint64', 'int', 'uint8', 'int8', 'uint8', 'int8']);
+    this.SteamAPI_ISteamInput_SetLEDColor = this.steamLib.func('SteamAPI_ISteamInput_SetLEDColor', 'void', ['void*', 'uint64', 'uint8', 'uint8', 'uint8', 'uint32']);
+    this.SteamAPI_ISteamInput_Legacy_TriggerHapticPulse = this.steamLib.func('SteamAPI_ISteamInput_Legacy_TriggerHapticPulse', 'void', ['void*', 'uint64', 'int', 'uint16']);
+    this.SteamAPI_ISteamInput_Legacy_TriggerRepeatedHapticPulse = this.steamLib.func('SteamAPI_ISteamInput_Legacy_TriggerRepeatedHapticPulse', 'void', ['void*', 'uint64', 'int', 'uint16', 'uint16', 'uint16', 'uint32']);
+    
+    // Glyphs and strings
+    this.SteamAPI_ISteamInput_GetGlyphPNGForActionOrigin = this.steamLib.func('SteamAPI_ISteamInput_GetGlyphPNGForActionOrigin', 'str', ['void*', 'int', 'int', 'uint32']);
+    this.SteamAPI_ISteamInput_GetGlyphSVGForActionOrigin = this.steamLib.func('SteamAPI_ISteamInput_GetGlyphSVGForActionOrigin', 'str', ['void*', 'int', 'uint32']);
+    this.SteamAPI_ISteamInput_GetGlyphForActionOrigin_Legacy = this.steamLib.func('SteamAPI_ISteamInput_GetGlyphForActionOrigin_Legacy', 'str', ['void*', 'int']);
+    this.SteamAPI_ISteamInput_GetStringForActionOrigin = this.steamLib.func('SteamAPI_ISteamInput_GetStringForActionOrigin', 'str', ['void*', 'int']);
+    this.SteamAPI_ISteamInput_GetStringForXboxOrigin = this.steamLib.func('SteamAPI_ISteamInput_GetStringForXboxOrigin', 'str', ['void*', 'int']);
+    this.SteamAPI_ISteamInput_GetGlyphForXboxOrigin = this.steamLib.func('SteamAPI_ISteamInput_GetGlyphForXboxOrigin', 'str', ['void*', 'int']);
+    this.SteamAPI_ISteamInput_GetActionOriginFromXboxOrigin = this.steamLib.func('SteamAPI_ISteamInput_GetActionOriginFromXboxOrigin', 'int', ['void*', 'uint64', 'int']);
+    this.SteamAPI_ISteamInput_TranslateActionOrigin = this.steamLib.func('SteamAPI_ISteamInput_TranslateActionOrigin', 'int', ['void*', 'int', 'int']);
+    
+    // Utility
+    this.SteamAPI_ISteamInput_ShowBindingPanel = this.steamLib.func('SteamAPI_ISteamInput_ShowBindingPanel', 'bool', ['void*', 'uint64']);
+    this.SteamAPI_ISteamInput_GetDeviceBindingRevision = this.steamLib.func('SteamAPI_ISteamInput_GetDeviceBindingRevision', 'bool', ['void*', 'uint64', 'int*', 'int*']);
+    this.SteamAPI_ISteamInput_GetRemotePlaySessionID = this.steamLib.func('SteamAPI_ISteamInput_GetRemotePlaySessionID', 'uint32', ['void*', 'uint64']);
+    this.SteamAPI_ISteamInput_GetSessionInputConfigurationSettings = this.steamLib.func('SteamAPI_ISteamInput_GetSessionInputConfigurationSettings', 'uint16', ['void*']);
   }
 
   /**
