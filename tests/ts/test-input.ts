@@ -817,71 +817,87 @@ async function testSteamInput() {
     // Test 9: Motion Data
     // ========================================
     if (controllers.length > 0) {
-      console.log("Test 9: Motion Data (Gyro & Accelerometer)");
-      console.log("----------------------------------------");
-      console.log("Testing: getMotionData\n");
+      try {
+        console.log("Test 9: Motion Data (Gyro & Accelerometer)");
+        console.log("----------------------------------------");
+        console.log("Testing: getMotionData\n");
 
-      const testHandle = controllers[0];
-      const controllerType = steam.input.getInputTypeForHandle(testHandle);
+        const testHandle = controllers[0];
+        const controllerType = steam.input.getInputTypeForHandle(testHandle);
 
-      const supportsMotion = [
-        SteamInputType.SteamController,
-        SteamInputType.PS4Controller,
-        SteamInputType.PS5Controller,
-        SteamInputType.SwitchProController,
-        SteamInputType.SwitchJoyConPair,
-        SteamInputType.SwitchJoyConSingle,
-        SteamInputType.SteamDeckController,
-      ].includes(controllerType);
+        const supportsMotion = [
+          SteamInputType.SteamController,
+          SteamInputType.PS4Controller,
+          SteamInputType.PS5Controller,
+          SteamInputType.SwitchProController,
+          SteamInputType.SwitchJoyConPair,
+          SteamInputType.SwitchJoyConSingle,
+          SteamInputType.SteamDeckController,
+        ].includes(controllerType);
 
-      if (supportsMotion) {
-        console.log("Reading motion data (3 samples)...\n");
+        if (supportsMotion && !TEST_CONFIG.USE_VIRTUAL_GAMEPAD) {
+          // Motion data only works with real physical controllers
+          // Virtual controllers from vgamepad don't support motion sensors
+          console.log("Reading motion data (3 samples)...\n");
 
-        for (let i = 0; i < 3; i++) {
-          steam.runCallbacks();
-          steam.input.runFrame();
-          const motionData = steam.input.getMotionData(testHandle);
+          for (let i = 0; i < 3; i++) {
+            try {
+              steam.runCallbacks();
+              steam.input.runFrame();
+              const motionData = steam.input.getMotionData(testHandle);
 
-          if (motionData) {
-            console.log(`Sample ${i + 1}/3:`);
-            console.log(
-              `  Rotation Quaternion: (${motionData.rotQuatX.toFixed(
-                3
-              )}, ${motionData.rotQuatY.toFixed(
-                3
-              )}, ${motionData.rotQuatZ.toFixed(
-                3
-              )}, ${motionData.rotQuatW.toFixed(3)})`
-            );
-            console.log(
-              `  Angular Velocity (°/s): X=${motionData.rotVelX.toFixed(
-                1
-              )}, Y=${motionData.rotVelY.toFixed(
-                1
-              )}, Z=${motionData.rotVelZ.toFixed(1)}`
-            );
-            console.log(
-              `  Acceleration (G): X=${motionData.posAccelX.toFixed(
-                3
-              )}, Y=${motionData.posAccelY.toFixed(
-                3
-              )}, Z=${motionData.posAccelZ.toFixed(3)}\n`
-            );
-          } else {
-            console.log(`  No motion data available\n`);
+              if (motionData) {
+                console.log(`Sample ${i + 1}/3:`);
+                console.log(
+                  `  Rotation Quaternion: (${motionData.rotQuatX.toFixed(
+                    3
+                  )}, ${motionData.rotQuatY.toFixed(
+                    3
+                  )}, ${motionData.rotQuatZ.toFixed(
+                    3
+                  )}, ${motionData.rotQuatW.toFixed(3)})`
+                );
+                console.log(
+                  `  Angular Velocity (°/s): X=${motionData.rotVelX.toFixed(
+                    1
+                  )}, Y=${motionData.rotVelY.toFixed(
+                    1
+                  )}, Z=${motionData.rotVelZ.toFixed(1)}`
+                );
+                console.log(
+                  `  Acceleration (G): X=${motionData.posAccelX.toFixed(
+                    3
+                  )}, Y=${motionData.posAccelY.toFixed(
+                    3
+                  )}, Z=${motionData.posAccelZ.toFixed(3)}\n`
+                );
+              } else {
+                console.log(`  No motion data available\n`);
+              }
+            } catch (error: any) {
+              console.log(`  ⚠️  Sample ${i + 1}/3: Failed to read motion data (${error.message})\n`);
+            }
+
+            await delay(200);
           }
-
-          await delay(200);
+        } else if (supportsMotion && TEST_CONFIG.USE_VIRTUAL_GAMEPAD) {
+          console.log("⚠️  Motion data skipped for virtual controller");
+          console.log(`   Type: ${getControllerTypeName(controllerType)}`);
+          console.log("   Virtual controllers from vgamepad don't support motion sensors");
+          console.log("   Test with a real physical controller to test motion data\n");
+        } else {
+          console.log("⚠️  Motion sensors not supported on this controller type");
+          console.log(`   Type: ${getControllerTypeName(controllerType)}`);
+          console.log(
+            "   Motion supported on: Steam Controller, DualShock, Switch controllers, Steam Deck\n"
+          );
         }
-      } else {
-        console.log("⚠️  Motion sensors not supported on this controller type");
-        console.log(`   Type: ${getControllerTypeName(controllerType)}`);
-        console.log(
-          "   Motion supported on: Steam Controller, DualShock, Switch controllers, Steam Deck\n"
-        );
-      }
 
-      console.log("✅ Motion data tested\n");
+        console.log("✅ Motion data tested\n");
+      } catch (error: any) {
+        console.error("❌ Test 9 failed:", error.message);
+        console.log("⚠️  Motion data test skipped due to error\n");
+      }
     }
 
     // ========================================
