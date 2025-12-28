@@ -778,6 +778,7 @@ export class SteamAppsManager {
    */
   getBuildInfo(): AppBuildInfo {
     const apps = this.getSteamApps();
+    const appId = this.apiCore.getStatus().appId;
     
     let betaName = 'public';
     if (apps) {
@@ -791,7 +792,7 @@ export class SteamAppsManager {
     return {
       buildId: this.getAppBuildId(),
       betaName,
-      installDir: this.getAppInstallDir(480) // Use spacewar for testing
+      installDir: this.getAppInstallDir(appId)
     };
   }
 
