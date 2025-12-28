@@ -21,6 +21,8 @@
     "test:input-ps4:js": "node tests/js/test-input.js --virtual --type=ps4",
     "test:screenshots:js": "node tests/js/test-screenshots.js",
     "test:apps:js": "node tests/js/test-apps.js",
+    "test:matchmaking:host:js": "node tests/js/test-matchmaking-host.js",
+    "test:matchmaking:join:js": "node tests/js/test-matchmaking-join.js",
     "test:core:ts": "ts-node tests/ts/test-core-api.ts",
     "test:achievements:ts": "ts-node tests/ts/test-complete-achievements.ts",
     "test:stats:ts": "ts-node tests/ts/test-complete-stats.ts",
