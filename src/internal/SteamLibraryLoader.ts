@@ -16,8 +16,6 @@ export class SteamLibraryLoader {
   public SteamAPI_SteamUserStats_v013!: koffi.KoffiFunction;
   public SteamAPI_SteamUser_v023!: koffi.KoffiFunction;
   public SteamAPI_SteamUtils_v010!: koffi.KoffiFunction;
-  public SteamAPI_SteamApps_v008!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetCurrentGameLanguage!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetNumAchievements!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetAchievementName!: koffi.KoffiFunction;
   public SteamAPI_ISteamUserStats_GetAchievementDisplayAttribute!: koffi.KoffiFunction;
@@ -345,6 +343,56 @@ export class SteamLibraryLoader {
   // VR screenshots
   public SteamAPI_ISteamScreenshots_AddVRScreenshotToLibrary!: koffi.KoffiFunction;
 
+  // ========================================
+  // ISteamApps Functions (DLC & App Ownership)
+  // ========================================
+  
+  // Interface accessor
+  public SteamAPI_SteamApps_v008!: koffi.KoffiFunction;
+  
+  // Ownership checks
+  public SteamAPI_ISteamApps_BIsSubscribed!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BIsLowViolence!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BIsCybercafe!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BIsVACBanned!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BIsSubscribedApp!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BIsAppInstalled!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BIsSubscribedFromFreeWeekend!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BIsSubscribedFromFamilySharing!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BIsTimedTrial!: koffi.KoffiFunction;
+  
+  // DLC functions
+  public SteamAPI_ISteamApps_BIsDlcInstalled!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetDLCCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BGetDLCDataByIndex!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_InstallDLC!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_UninstallDLC!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetDlcDownloadProgress!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_SetDlcContext!: koffi.KoffiFunction;
+  
+  // App info
+  public SteamAPI_ISteamApps_GetCurrentGameLanguage!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetAvailableGameLanguages!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetEarliestPurchaseUnixTime!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetAppInstallDir!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetAppOwner!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetAppBuildId!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetInstalledDepots!: koffi.KoffiFunction;
+  
+  // Beta branches
+  public SteamAPI_ISteamApps_GetCurrentBetaName!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetNumBetas!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetBetaInfo!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_SetActiveBeta!: koffi.KoffiFunction;
+  
+  // Launch parameters
+  public SteamAPI_ISteamApps_GetLaunchQueryParam!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetLaunchCommandLine!: koffi.KoffiFunction;
+  
+  // Misc
+  public SteamAPI_ISteamApps_MarkContentCorrupt!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetFileDetails!: koffi.KoffiFunction;
+
   /**
    * Get platform-specific Steam library path
    * Users must download and install Steamworks SDK redistributables separately
@@ -450,8 +498,6 @@ export class SteamLibraryLoader {
     this.SteamAPI_SteamUserStats_v013 = this.steamLib.func('SteamAPI_SteamUserStats_v013', 'void*', []);
     this.SteamAPI_SteamUser_v023 = this.steamLib.func('SteamAPI_SteamUser_v023', 'void*', []);
     this.SteamAPI_SteamUtils_v010 = this.steamLib.func('SteamAPI_SteamUtils_v010', 'void*', []);
-    this.SteamAPI_SteamApps_v008 = this.steamLib.func('SteamAPI_SteamApps_v008', 'void*', []);
-    this.SteamAPI_ISteamApps_GetCurrentGameLanguage = this.steamLib.func('SteamAPI_ISteamApps_GetCurrentGameLanguage', 'str', ['void*']);
     
     this.SteamAPI_ISteamUserStats_GetNumAchievements = this.steamLib.func('SteamAPI_ISteamUserStats_GetNumAchievements', 'uint32', ['void*']);
     this.SteamAPI_ISteamUserStats_GetAchievementName = this.steamLib.func('SteamAPI_ISteamUserStats_GetAchievementName', 'str', ['void*', 'uint32']);
@@ -779,6 +825,56 @@ export class SteamLibraryLoader {
     
     // VR screenshots
     this.SteamAPI_ISteamScreenshots_AddVRScreenshotToLibrary = this.steamLib.func('SteamAPI_ISteamScreenshots_AddVRScreenshotToLibrary', 'uint32', ['void*', 'int', 'str', 'str']);
+    
+    // ========================================
+    // ISteamApps Functions (DLC & App Ownership)
+    // ========================================
+    
+    // Interface accessor
+    this.SteamAPI_SteamApps_v008 = this.steamLib.func('SteamAPI_SteamApps_v008', 'void*', []);
+    
+    // Ownership checks
+    this.SteamAPI_ISteamApps_BIsSubscribed = this.steamLib.func('SteamAPI_ISteamApps_BIsSubscribed', 'bool', ['void*']);
+    this.SteamAPI_ISteamApps_BIsLowViolence = this.steamLib.func('SteamAPI_ISteamApps_BIsLowViolence', 'bool', ['void*']);
+    this.SteamAPI_ISteamApps_BIsCybercafe = this.steamLib.func('SteamAPI_ISteamApps_BIsCybercafe', 'bool', ['void*']);
+    this.SteamAPI_ISteamApps_BIsVACBanned = this.steamLib.func('SteamAPI_ISteamApps_BIsVACBanned', 'bool', ['void*']);
+    this.SteamAPI_ISteamApps_BIsSubscribedApp = this.steamLib.func('SteamAPI_ISteamApps_BIsSubscribedApp', 'bool', ['void*', 'uint32']);
+    this.SteamAPI_ISteamApps_BIsAppInstalled = this.steamLib.func('SteamAPI_ISteamApps_BIsAppInstalled', 'bool', ['void*', 'uint32']);
+    this.SteamAPI_ISteamApps_BIsSubscribedFromFreeWeekend = this.steamLib.func('SteamAPI_ISteamApps_BIsSubscribedFromFreeWeekend', 'bool', ['void*']);
+    this.SteamAPI_ISteamApps_BIsSubscribedFromFamilySharing = this.steamLib.func('SteamAPI_ISteamApps_BIsSubscribedFromFamilySharing', 'bool', ['void*']);
+    this.SteamAPI_ISteamApps_BIsTimedTrial = this.steamLib.func('SteamAPI_ISteamApps_BIsTimedTrial', 'bool', ['void*', 'uint32*', 'uint32*']);
+    
+    // DLC functions
+    this.SteamAPI_ISteamApps_BIsDlcInstalled = this.steamLib.func('SteamAPI_ISteamApps_BIsDlcInstalled', 'bool', ['void*', 'uint32']);
+    this.SteamAPI_ISteamApps_GetDLCCount = this.steamLib.func('SteamAPI_ISteamApps_GetDLCCount', 'int', ['void*']);
+    this.SteamAPI_ISteamApps_BGetDLCDataByIndex = this.steamLib.func('SteamAPI_ISteamApps_BGetDLCDataByIndex', 'bool', ['void*', 'int', 'uint32*', 'bool*', 'char*', 'int']);
+    this.SteamAPI_ISteamApps_InstallDLC = this.steamLib.func('SteamAPI_ISteamApps_InstallDLC', 'void', ['void*', 'uint32']);
+    this.SteamAPI_ISteamApps_UninstallDLC = this.steamLib.func('SteamAPI_ISteamApps_UninstallDLC', 'void', ['void*', 'uint32']);
+    this.SteamAPI_ISteamApps_GetDlcDownloadProgress = this.steamLib.func('SteamAPI_ISteamApps_GetDlcDownloadProgress', 'bool', ['void*', 'uint32', 'uint64*', 'uint64*']);
+    this.SteamAPI_ISteamApps_SetDlcContext = this.steamLib.func('SteamAPI_ISteamApps_SetDlcContext', 'bool', ['void*', 'uint32']);
+    
+    // App info
+    this.SteamAPI_ISteamApps_GetCurrentGameLanguage = this.steamLib.func('SteamAPI_ISteamApps_GetCurrentGameLanguage', 'str', ['void*']);
+    this.SteamAPI_ISteamApps_GetAvailableGameLanguages = this.steamLib.func('SteamAPI_ISteamApps_GetAvailableGameLanguages', 'str', ['void*']);
+    this.SteamAPI_ISteamApps_GetEarliestPurchaseUnixTime = this.steamLib.func('SteamAPI_ISteamApps_GetEarliestPurchaseUnixTime', 'uint32', ['void*', 'uint32']);
+    this.SteamAPI_ISteamApps_GetAppInstallDir = this.steamLib.func('SteamAPI_ISteamApps_GetAppInstallDir', 'uint32', ['void*', 'uint32', 'char*', 'uint32']);
+    this.SteamAPI_ISteamApps_GetAppOwner = this.steamLib.func('SteamAPI_ISteamApps_GetAppOwner', 'uint64', ['void*']);
+    this.SteamAPI_ISteamApps_GetAppBuildId = this.steamLib.func('SteamAPI_ISteamApps_GetAppBuildId', 'int', ['void*']);
+    this.SteamAPI_ISteamApps_GetInstalledDepots = this.steamLib.func('SteamAPI_ISteamApps_GetInstalledDepots', 'uint32', ['void*', 'uint32', 'uint32*', 'uint32']);
+    
+    // Beta branches
+    this.SteamAPI_ISteamApps_GetCurrentBetaName = this.steamLib.func('SteamAPI_ISteamApps_GetCurrentBetaName', 'bool', ['void*', 'char*', 'int']);
+    this.SteamAPI_ISteamApps_GetNumBetas = this.steamLib.func('SteamAPI_ISteamApps_GetNumBetas', 'int', ['void*', 'int*', 'int*']);
+    this.SteamAPI_ISteamApps_GetBetaInfo = this.steamLib.func('SteamAPI_ISteamApps_GetBetaInfo', 'bool', ['void*', 'int', 'uint32*', 'uint32*', 'char*', 'int', 'char*', 'int']);
+    this.SteamAPI_ISteamApps_SetActiveBeta = this.steamLib.func('SteamAPI_ISteamApps_SetActiveBeta', 'bool', ['void*', 'str']);
+    
+    // Launch parameters
+    this.SteamAPI_ISteamApps_GetLaunchQueryParam = this.steamLib.func('SteamAPI_ISteamApps_GetLaunchQueryParam', 'str', ['void*', 'str']);
+    this.SteamAPI_ISteamApps_GetLaunchCommandLine = this.steamLib.func('SteamAPI_ISteamApps_GetLaunchCommandLine', 'int', ['void*', 'char*', 'int']);
+    
+    // Misc
+    this.SteamAPI_ISteamApps_MarkContentCorrupt = this.steamLib.func('SteamAPI_ISteamApps_MarkContentCorrupt', 'bool', ['void*', 'bool']);
+    this.SteamAPI_ISteamApps_GetFileDetails = this.steamLib.func('SteamAPI_ISteamApps_GetFileDetails', 'uint64', ['void*', 'str']);
   }
 
   /**

@@ -23,6 +23,7 @@ steam.cloud.*          // Cloud storage operations
 steam.workshop.*       // Workshop/UGC operations
 steam.input.*          // Controller input operations
 steam.screenshots.*    // Screenshots operations
+steam.apps.*           // DLC and app ownership operations
 ```
 
 This design:
@@ -148,6 +149,18 @@ This design:
   - Workshop integration (link screenshots to published items)
   - Screenshot hooks (intercept F12 to handle screenshots yourself)
   - VR screenshot support (side-by-side and cubemap formats)
+
+### Apps/DLC System
+
+- **[Apps Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/APPS_MANAGER.md)**
+  - **28 Functions** - Complete DLC and app ownership support
+  - DLC ownership checks (is DLC owned and installed)
+  - Install/uninstall optional DLC
+  - App ownership verification (subscribed, free weekend, Family Sharing)
+  - Beta branch management (list, switch, get info)
+  - App metadata (languages, build info, install directories)
+  - Launch parameters (Steam URL launch params)
+  - Timed trial status
 
 ## 🚀 Quick Links
 

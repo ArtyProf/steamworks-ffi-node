@@ -45,3 +45,6 @@ export * from './input';
 
 // Screenshots types
 export * from './screenshots';
+
+// Apps/DLC types
+export * from './apps';

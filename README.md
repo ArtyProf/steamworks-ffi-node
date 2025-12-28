@@ -45,6 +45,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Screenshots API** - 9 functions for Steam Screenshots integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SCREENSHOT_MANAGER.md)
 
+> 🎉 **NEW: Apps/DLC API** - 28 functions for DLC ownership, app metadata, and beta branches! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/APPS_MANAGER.md)
+
 ## Features
 
 - **Core API**: Essential Steam application functions
@@ -113,6 +115,13 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Workshop integration (tag published files)
   - ✅ Screenshot hooks (intercept F12 screenshots)
   - ✅ VR screenshot support
+- **Apps/DLC API**: Complete DLC and app ownership (28 functions)
+  - ✅ DLC ownership and installation checks
+  - ✅ Install/uninstall optional DLC
+  - ✅ App ownership verification (free weekend, Family Sharing)
+  - ✅ Beta branch management
+  - ✅ App metadata (languages, build info, install paths)
+  - ✅ Launch parameters and timed trials
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Easy Setup**: Simple installation with clear SDK setup guide

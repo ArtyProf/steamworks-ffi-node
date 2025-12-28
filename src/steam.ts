@@ -14,6 +14,7 @@ import { SteamCloudManager } from './internal/SteamCloudManager';
 import { SteamWorkshopManager } from './internal/SteamWorkshopManager';
 import { SteamInputManager } from './internal/SteamInputManager';
 import { SteamScreenshotManager } from './internal/SteamScreenshotManager';
+import { SteamAppsManager } from './internal/SteamAppsManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -416,6 +417,48 @@ class SteamworksSDK {
    */
   public readonly screenshots!: SteamScreenshotManager;
 
+  /**
+   * Apps Manager - Handle DLC, app ownership, and app metadata
+   * 
+   * Provides DLC and app ownership functionality including:
+   * - Check DLC ownership and installation status
+   * - Install/uninstall optional DLC
+   * - Verify app ownership (subscribed, free weekend, Family Sharing)
+   * - Get app install directories
+   * - Access beta branches and build information
+   * - Retrieve launch parameters
+   * - Check timed trial status
+   * 
+   * @example
+   * ```typescript
+   * // Check DLC ownership
+   * const EXPANSION_DLC = 123456;
+   * if (steam.apps.isDlcInstalled(EXPANSION_DLC)) {
+   *   enableExpansionContent();
+   * }
+   * 
+   * // List all DLC
+   * const allDlc = steam.apps.getAllDLC();
+   * allDlc.forEach(dlc => {
+   *   console.log(`${dlc.name}: ${dlc.available ? 'Owned' : 'Not Owned'}`);
+   * });
+   * 
+   * // Check Family Sharing
+   * if (steam.apps.isSubscribedFromFamilySharing()) {
+   *   const ownerId = steam.apps.getAppOwner();
+   *   console.log(`Borrowed from: ${ownerId}`);
+   * }
+   * 
+   * // Get app info
+   * const language = steam.apps.getCurrentGameLanguage();
+   * const buildId = steam.apps.getAppBuildId();
+   * const installDir = steam.apps.getAppInstallDir(480);
+   * ```
+   * 
+   * @see {@link SteamAppsManager} for complete API documentation
+   */
+  public readonly apps!: SteamAppsManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -432,6 +475,7 @@ class SteamworksSDK {
     this.workshop = new SteamWorkshopManager(this.libraryLoader, this.apiCore);
     this.input = new SteamInputManager(this.libraryLoader);
     this.screenshots = new SteamScreenshotManager(this.libraryLoader, this.apiCore);
+    this.apps = new SteamAppsManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {
