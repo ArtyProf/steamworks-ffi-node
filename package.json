@@ -34,6 +34,8 @@
     "test:input-ps4:ts": "ts-node tests/ts/test-input.ts --virtual --type=ps4",
     "test:screenshots:ts": "ts-node tests/ts/test-screenshots.ts",
     "test:apps:ts": "ts-node tests/ts/test-apps.ts",
+    "test:matchmaking:host:ts": "ts-node tests/ts/test-matchmaking-host.ts",
+    "test:matchmaking:join:ts": "ts-node tests/ts/test-matchmaking-join.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

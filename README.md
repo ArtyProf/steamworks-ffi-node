@@ -47,6 +47,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Apps/DLC API** - 28 functions for DLC ownership, app metadata, and beta branches! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/APPS_MANAGER.md)
 
+> 🎉 **NEW: Matchmaking API** - 30+ functions for multiplayer lobby matchmaking! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/MATCHMAKING_MANAGER.md) ⚠️ Requires two Steam accounts for testing
+
 ## Features
 
 - **Core API**: Essential Steam application functions
@@ -122,6 +124,14 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Beta branch management
   - ✅ App metadata (languages, build info, install paths)
   - ✅ Launch parameters and timed trials
+- **Matchmaking API**: Complete multiplayer lobby matchmaking (30+ functions) ⚠️ _Requires two Steam accounts for testing_
+  - ✅ Lobby creation (public, private, friends-only, invisible)
+  - ✅ Lobby searching with filters (string, numerical, distance)
+  - ✅ Lobby joining and leaving
+  - ✅ Lobby data (get/set metadata for searching and game state)
+  - ✅ Member management (list, limit, ownership transfer)
+  - ✅ Lobby chat (send/receive messages)
+  - ✅ Game server association
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Easy Setup**: Simple installation with clear SDK setup guide
@@ -476,6 +486,9 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Cloud Storage Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)** - Steam Cloud file operations (14 functions)
 - **[Workshop Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)** - Steam Workshop/UGC operations (29 functions)
 - **[Input Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/INPUT_MANAGER.md)** - Steam Input controller support (35+ functions) ⚠️ _Virtual gamepad testing only_
+- **[Apps Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/APPS_MANAGER.md)** - DLC and app ownership (28 functions)
+- **[Screenshot Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SCREENSHOT_MANAGER.md)** - Steam Screenshots integration (9 functions)
+- **[Matchmaking Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/MATCHMAKING_MANAGER.md)** - Multiplayer lobby matchmaking (30+ functions) ⚠️ _Requires two Steam accounts_
 
 ## Steamworks Integration
 

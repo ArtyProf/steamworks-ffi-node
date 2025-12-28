@@ -108,3 +108,38 @@ export interface DeleteItemResultType {
   m_eResult: number;
   m_nPublishedFileId: bigint;
 }
+
+// ========================================
+// Matchmaking Callback Types
+// ========================================
+
+/**
+ * LobbyCreated_t callback structure
+ * 
+ * Result of ISteamMatchmaking::CreateLobby call
+ */
+export interface LobbyCreatedType {
+  m_eResult: number;
+  m_ulSteamIDLobby: bigint;
+}
+
+/**
+ * LobbyEnter_t callback structure
+ * 
+ * Result of ISteamMatchmaking::JoinLobby call
+ */
+export interface LobbyEnterType {
+  m_ulSteamIDLobby: bigint;
+  m_rgfChatPermissions: number;
+  m_bLocked: boolean;
+  m_EChatRoomEnterResponse: number;
+}
+
+/**
+ * LobbyMatchList_t callback structure
+ * 
+ * Result of ISteamMatchmaking::RequestLobbyList call
+ */
+export interface LobbyMatchListType {
+  m_nLobbiesMatching: number;
+}

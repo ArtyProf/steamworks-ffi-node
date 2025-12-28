@@ -48,3 +48,6 @@ export * from './screenshots';
 
 // Apps/DLC types
 export * from './apps';
+
+// Matchmaking types
+export * from './matchmaking';

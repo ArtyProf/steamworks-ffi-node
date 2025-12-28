@@ -58,6 +58,9 @@ export class SteamAPICore {
   
   /** Pointer to the ISteamUGC interface */
   private ugcInterface: any = null;
+  
+  /** Pointer to the ISteamMatchmaking interface */
+  private matchmakingInterface: any = null;
 
   /**
    * Creates a new SteamAPICore instance
@@ -173,6 +176,12 @@ export class SteamAPICore {
       this.ugcInterface = this.libraryLoader.SteamAPI_SteamUGC_v021();
       if (!this.ugcInterface || this.ugcInterface === null) {
         console.warn('[Steamworks] WARNING: Failed to get SteamUGC interface');
+      }
+      
+      // Get Matchmaking interface
+      this.matchmakingInterface = this.libraryLoader.SteamAPI_SteamMatchmaking_v009();
+      if (!this.matchmakingInterface || this.matchmakingInterface === null) {
+        console.warn('[Steamworks] WARNING: Failed to get SteamMatchmaking interface');
       }
 
       // Request current stats from Steam servers
@@ -531,6 +540,30 @@ export class SteamAPICore {
    */
   getAppsInterface(): any {
     return this.appsInterface;
+  }
+
+  /**
+   * Get the ISteamMatchmaking interface pointer
+   * 
+   * Provides access to the Matchmaking interface for lobby operations
+   * including creating, joining, and managing game lobbies.
+   * 
+   * @returns Pointer to ISteamMatchmaking interface, or null if not initialized
+   * 
+   * @example
+   * ```typescript
+   * const matchmaking = apiCore.getMatchmakingInterface();
+   * if (matchmaking) {
+   *   // Use interface for lobby operations
+   * }
+   * ```
+   * 
+   * @remarks
+   * - Returns null if Steam API is not initialized
+   * - This is a native pointer for use with FFI calls
+   */
+  getMatchmakingInterface(): any {
+    return this.matchmakingInterface;
   }
 
 }

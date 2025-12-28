@@ -24,6 +24,7 @@ steam.workshop.*       // Workshop/UGC operations
 steam.input.*          // Controller input operations
 steam.screenshots.*    // Screenshots operations
 steam.apps.*           // DLC and app ownership operations
+steam.matchmaking.*    // Multiplayer lobby operations
 ```
 
 This design:
@@ -161,6 +162,19 @@ This design:
   - App metadata (languages, build info, install directories)
   - Launch parameters (Steam URL launch params)
   - Timed trial status
+
+### Matchmaking System
+
+- **[Matchmaking Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/MATCHMAKING_MANAGER.md)**
+  - **30+ Functions** - Complete lobby matchmaking support
+  - Lobby creation (public, private, friends-only, invisible)
+  - Lobby searching with filters (string, numerical, near, distance)
+  - Lobby joining and leaving
+  - Lobby data (get/set metadata for searching and game state)
+  - Member management (list, limit, ownership transfer)
+  - Lobby chat (send/receive messages between members)
+  - Game server association (link dedicated servers to lobbies)
+  - ⚠️ **Requires two Steam accounts for full testing** - multiplayer API
 
 ## 🚀 Quick Links
 
