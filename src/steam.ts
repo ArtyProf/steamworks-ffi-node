@@ -561,9 +561,12 @@ class SteamworksSDK {
    * 'ukrainian', 'vietnamese'
    * 
    * Returns 'english' if Steam API is not initialized or an error occurs.
+   * 
+   * @deprecated This method will be removed in a future version. 
+   * Please use `steam.apps.getCurrentGameLanguage()` instead.
    */
   getCurrentGameLanguage(): string {
-    return this.apiCore.getCurrentGameLanguage();
+    return this.apps.getCurrentGameLanguage();
   }
 }
 

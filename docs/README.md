@@ -182,6 +182,7 @@ This design:
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:js` - Tests 6 rich presence + 7 overlay functions
 - Run Workshop Tests: `npm run test:workshop:js` - Tests all 30 Workshop/UGC functions
 - Run Input Tests: `npm run test:input-xbox:js` or `npm run test:input-ps4:js` - Tests 35+ input functions with virtual gamepad
+- Run Apps/DLC Tests: `npm run test:apps:js` - Tests all 28 apps/DLC functions
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
 
@@ -193,6 +194,7 @@ This design:
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:ts` - With type safety ✨
 - Run Workshop Tests: `npm run test:workshop:ts` - With type safety ✨
 - Run Input Tests: `npm run test:input-xbox:ts` or `npm run test:input-ps4:ts` - With type safety ✨
+- Run Apps/DLC Tests: `npm run test:apps:ts` - With type safety ✨
 
 📁 All tests are in `tests/` folder with separate `js/` and `ts/` subfolders.
 
