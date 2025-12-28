@@ -7,6 +7,27 @@
  * 
  * Usage:
  *   npm run test:matchmaking:host:ts
+ * 
+ * Methods tested in this file:
+ *   - createLobby()
+ *   - setLobbyData()
+ *   - getLobbyData()
+ *   - getAllLobbyData()
+ *   - getLobbyOwner()
+ *   - getLobbyMemberLimit()
+ *   - setLobbyMemberLimit()
+ *   - getNumLobbyMembers()
+ *   - getLobbyMemberByIndex()
+ *   - setLobbyType()
+ *   - setLobbyJoinable()
+ *   - setLobbyOwner() (when second player joins)
+ *   - deleteLobbyData()
+ *   - sendLobbyChatMsg()
+ *   - leaveLobby()
+ * 
+ * Note: Chat messages require LobbyChatMsg_t callback handling which needs
+ * proper callback registration. The getLobbyChatEntry() requires the chatId
+ * from that callback - polling with 0 won't work for receiving messages.
  */
 
 import { SteamworksSDK, ELobbyType, type LobbyId } from '../../src';
@@ -69,11 +90,30 @@ async function testMatchmakingHost(): Promise<void> {
   const setResult2 = steam.matchmaking.setLobbyData(lobbyId, 'map', 'testMap1');
   const setResult3 = steam.matchmaking.setLobbyData(lobbyId, 'hostName', playerName);
   const setResult4 = steam.matchmaking.setLobbyData(lobbyId, 'version', '1.0.0');
+  // Set numerical data for filter testing
+  const setResult5 = steam.matchmaking.setLobbyData(lobbyId, 'skillLevel', '50');
+  const setResult6 = steam.matchmaking.setLobbyData(lobbyId, 'minLevel', '10');
 
   console.log(`Set gameMode=cooperative: ${setResult1}`);
   console.log(`Set map=testMap1: ${setResult2}`);
   console.log(`Set hostName=${playerName}: ${setResult3}`);
   console.log(`Set version=1.0.0: ${setResult4}`);
+  console.log(`Set skillLevel=50: ${setResult5}`);
+  console.log(`Set minLevel=10: ${setResult6}`);
+  console.log('');
+
+  // Test getLobbyData for individual keys
+  console.log('-'.repeat(60));
+  console.log('TESTING getLobbyData()');
+  console.log('-'.repeat(60));
+  
+  const gameMode = steam.matchmaking.getLobbyData(lobbyId, 'gameMode');
+  const map = steam.matchmaking.getLobbyData(lobbyId, 'map');
+  const nonExistent = steam.matchmaking.getLobbyData(lobbyId, 'doesNotExist');
+  
+  console.log(`getLobbyData('gameMode'): "${gameMode}"`);
+  console.log(`getLobbyData('map'): "${map}"`);
+  console.log(`getLobbyData('doesNotExist'): "${nonExistent}" (should be empty)`);
   console.log('');
 
   // Display lobby info
@@ -84,7 +124,6 @@ async function testMatchmakingHost(): Promise<void> {
   const lobbyOwner = steam.matchmaking.getLobbyOwner(lobbyId);
   const maxMembers = steam.matchmaking.getLobbyMemberLimit(lobbyId);
   const currentMembers = steam.matchmaking.getNumLobbyMembers(lobbyId);
-  const lobbyData = steam.matchmaking.getAllLobbyData(lobbyId);
 
   console.log(`Owner: ${lobbyOwner}`);
   console.log(`Members: ${currentMembers}/${maxMembers}`);
@@ -94,7 +133,69 @@ async function testMatchmakingHost(): Promise<void> {
   console.log(`Lobby Data:`, allData);
   console.log('');
 
-  // Set up a callback poller for member updates
+  // Test setLobbyMemberLimit
+  console.log('-'.repeat(60));
+  console.log('TESTING setLobbyMemberLimit()');
+  console.log('-'.repeat(60));
+  
+  const originalLimit = steam.matchmaking.getLobbyMemberLimit(lobbyId);
+  console.log(`Original member limit: ${originalLimit}`);
+  
+  const limitChanged = steam.matchmaking.setLobbyMemberLimit(lobbyId, 8);
+  console.log(`setLobbyMemberLimit(8): ${limitChanged}`);
+  
+  const newLimit = steam.matchmaking.getLobbyMemberLimit(lobbyId);
+  console.log(`New member limit: ${newLimit}`);
+  
+  // Restore original
+  steam.matchmaking.setLobbyMemberLimit(lobbyId, originalLimit);
+  console.log(`Restored to: ${steam.matchmaking.getLobbyMemberLimit(lobbyId)}`);
+  console.log('');
+
+  // Test setLobbyType
+  console.log('-'.repeat(60));
+  console.log('TESTING setLobbyType()');
+  console.log('-'.repeat(60));
+  
+  console.log('Current type: Public (0)');
+  
+  const typeChanged1 = steam.matchmaking.setLobbyType(lobbyId, ELobbyType.FriendsOnly);
+  console.log(`setLobbyType(FriendsOnly): ${typeChanged1}`);
+  
+  const typeChanged2 = steam.matchmaking.setLobbyType(lobbyId, ELobbyType.Public);
+  console.log(`setLobbyType(Public) - restored: ${typeChanged2}`);
+  console.log('');
+
+  // Test setLobbyJoinable
+  console.log('-'.repeat(60));
+  console.log('TESTING setLobbyJoinable()');
+  console.log('-'.repeat(60));
+  
+  const lockResult = steam.matchmaking.setLobbyJoinable(lobbyId, false);
+  console.log(`setLobbyJoinable(false) - locked: ${lockResult}`);
+  
+  const unlockResult = steam.matchmaking.setLobbyJoinable(lobbyId, true);
+  console.log(`setLobbyJoinable(true) - unlocked: ${unlockResult}`);
+  console.log('');
+
+  // Test deleteLobbyData
+  console.log('-'.repeat(60));
+  console.log('TESTING deleteLobbyData()');
+  console.log('-'.repeat(60));
+  
+  // Add a temp key then delete it
+  steam.matchmaking.setLobbyData(lobbyId, 'tempKey', 'tempValue');
+  const tempBefore = steam.matchmaking.getLobbyData(lobbyId, 'tempKey');
+  console.log(`Before delete - tempKey: "${tempBefore}"`);
+  
+  const deleteResult = steam.matchmaking.deleteLobbyData(lobbyId, 'tempKey');
+  console.log(`deleteLobbyData('tempKey'): ${deleteResult}`);
+  
+  const tempAfter = steam.matchmaking.getLobbyData(lobbyId, 'tempKey');
+  console.log(`After delete - tempKey: "${tempAfter}" (should be empty)`);
+  console.log('');
+
+  // Set up waiting for players
   console.log('-'.repeat(60));
   console.log('WAITING FOR PLAYERS');
   console.log('-'.repeat(60));
@@ -102,12 +203,16 @@ async function testMatchmakingHost(): Promise<void> {
   console.log('The lobby is now public and searchable.');
   console.log('Run test-matchmaking-join.ts on another machine to join.');
   console.log('');
+  console.log('Or join directly with:');
+  console.log(`  npx ts-node tests/ts/test-matchmaking-join.ts ${lobbyId}`);
+  console.log('');
   console.log('Press Ctrl+C to leave lobby and exit.');
   console.log('');
 
   // Track members we've seen
   let previousMemberCount = currentMembers;
   let running = true;
+  let ownershipTransferred = false;
 
   // Set up signal handler for clean exit
   process.on('SIGINT', () => {
@@ -115,7 +220,7 @@ async function testMatchmakingHost(): Promise<void> {
     running = false;
   });
 
-  // Main loop - check for new members and messages
+  // Main loop - check for new members
   while (running) {
     // Run callbacks
     steam.runCallbacks();
@@ -131,17 +236,56 @@ async function testMatchmakingHost(): Promise<void> {
       // List all current members
       for (let i = 0; i < newMemberCount; i++) {
         const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
-        console.log(`  Member ${i + 1}: ${memberId}`);
+        const memberName = steam.friends.getFriendPersonaName(memberId);
+        console.log(`  Member ${i + 1}: ${memberName} (${memberId})`);
+        
+        // Read member data if available
+        const memberStatus = steam.matchmaking.getLobbyMemberData(lobbyId, memberId, 'status');
+        const memberChar = steam.matchmaking.getLobbyMemberData(lobbyId, memberId, 'character');
+        if (memberStatus || memberChar) {
+          console.log(`    Data: status="${memberStatus}", character="${memberChar}"`);
+        }
       }
-      console.log('');
       
+      // Test setLobbyOwner when second player joins
+      if (newMemberCount >= 2 && !ownershipTransferred) {
+        console.log('');
+        console.log('--- Testing setLobbyOwner() ---');
+        
+        // Find the other member
+        for (let i = 0; i < newMemberCount; i++) {
+          const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
+          if (memberId !== steamId) {
+            console.log(`Attempting to transfer ownership to: ${memberId}`);
+            const transferResult = steam.matchmaking.setLobbyOwner(lobbyId, memberId);
+            console.log(`setLobbyOwner() result: ${transferResult}`);
+            
+            const newOwner = steam.matchmaking.getLobbyOwner(lobbyId);
+            console.log(`New owner: ${newOwner}`);
+            
+            // Transfer back
+            if (transferResult) {
+              console.log('Transferring ownership back...');
+              // Note: This won't work because we're no longer the owner!
+              // The new owner would need to transfer it back
+              console.log('(Cannot transfer back - we are no longer the owner)');
+            }
+            
+            ownershipTransferred = true;
+            break;
+          }
+        }
+      }
+      
+      // Send a welcome message when someone joins
+      if (newMemberCount > previousMemberCount) {
+        const welcomeMsg = `Welcome! ${newMemberCount} players in lobby.`;
+        const sent = steam.matchmaking.sendLobbyChatMsg(lobbyId, welcomeMsg);
+        console.log(`Sent welcome message: ${sent}`);
+      }
+      
+      console.log('');
       previousMemberCount = newMemberCount;
-    }
-
-    // Check for chat messages
-    const chatEntry = steam.matchmaking.getLobbyChatEntry(lobbyId, 0);
-    if (chatEntry) {
-      console.log(`[CHAT] ${chatEntry.senderId}: ${chatEntry.message}`);
     }
 
     // Wait a bit before next check

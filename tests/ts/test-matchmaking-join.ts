@@ -10,9 +10,28 @@
  * 
  * Optional: Pass a lobby ID as argument to join directly:
  *   npx ts-node tests/ts/test-matchmaking-join.ts <lobbyId>
+ * 
+ * Methods tested in this file:
+ *   - requestLobbyList()
+ *   - addRequestLobbyListStringFilter()
+ *   - addRequestLobbyListNumericalFilter()
+ *   - addRequestLobbyListNearValueFilter()
+ *   - addRequestLobbyListFilterSlotsAvailable()
+ *   - addRequestLobbyListDistanceFilter()
+ *   - addRequestLobbyListResultCountFilter()
+ *   - joinLobby()
+ *   - getLobbyOwner()
+ *   - getLobbyMemberLimit()
+ *   - getNumLobbyMembers()
+ *   - getLobbyMemberByIndex()
+ *   - getAllLobbyData()
+ *   - setLobbyMemberData()
+ *   - getLobbyMemberData()
+ *   - sendLobbyChatMsg()
+ *   - leaveLobby()
  */
 
-import { SteamworksSDK, ELobbyType, ELobbyComparison } from '../../src';
+import { SteamworksSDK, ELobbyType, ELobbyComparison, ELobbyDistanceFilter } from '../../src';
 
 async function testMatchmakingJoin(): Promise<void> {
   console.log('='.repeat(60));
@@ -53,17 +72,42 @@ async function testMatchmakingJoin(): Promise<void> {
     console.log(`Attempting to join lobby: ${providedLobbyId}`);
     targetLobbyId = providedLobbyId;
   } else {
-    // Search for lobbies
+    // Search for lobbies with various filters
     console.log('-'.repeat(60));
-    console.log('SEARCHING FOR LOBBIES');
+    console.log('TESTING LOBBY SEARCH FILTERS');
     console.log('-'.repeat(60));
 
-    // Add filters to find lobbies with our game mode
-    console.log('Adding search filters...');
+    // Test 1: String filter
+    console.log('\n[Test 1] addRequestLobbyListStringFilter()');
+    console.log('  Filter: gameMode = "cooperative"');
     steam.matchmaking.addRequestLobbyListStringFilter('gameMode', 'cooperative', ELobbyComparison.Equal);
+    
+    // Test 2: Numerical filter (host sets skillLevel=50 and minLevel=10)
+    console.log('\n[Test 2] addRequestLobbyListNumericalFilter()');
+    console.log('  Filter: minLevel <= 15');
+    steam.matchmaking.addRequestLobbyListNumericalFilter('minLevel', 15, ELobbyComparison.EqualToOrLessThan);
+    
+    // Test 3: Near value filter (find lobbies with skill close to 50)
+    console.log('\n[Test 3] addRequestLobbyListNearValueFilter()');
+    console.log('  Filter: skillLevel near 50 (sorts by closest)');
+    steam.matchmaking.addRequestLobbyListNearValueFilter('skillLevel', 50);
+    
+    // Test 4: Slots available filter
+    console.log('\n[Test 4] addRequestLobbyListFilterSlotsAvailable()');
+    console.log('  Filter: at least 1 slot available');
+    steam.matchmaking.addRequestLobbyListFilterSlotsAvailable(1);
+    
+    // Test 5: Distance filter
+    console.log('\n[Test 5] addRequestLobbyListDistanceFilter()');
+    console.log('  Filter: Worldwide (no distance restriction)');
+    steam.matchmaking.addRequestLobbyListDistanceFilter(ELobbyDistanceFilter.Worldwide);
+    
+    // Test 6: Result count filter
+    console.log('\n[Test 6] addRequestLobbyListResultCountFilter()');
+    console.log('  Filter: max 20 results');
     steam.matchmaking.addRequestLobbyListResultCountFilter(20);
     
-    console.log('Requesting lobby list...');
+    console.log('\nRequesting lobby list with all filters...');
     const lobbyListResult = await steam.matchmaking.requestLobbyList();
 
     if (!lobbyListResult.success) {
@@ -72,11 +116,11 @@ async function testMatchmakingJoin(): Promise<void> {
       process.exit(1);
     }
 
-    console.log(`Found ${lobbyListResult.lobbies.length} lobbies:`);
+    console.log(`Found ${lobbyListResult.lobbies.length} lobbies matching filters:`);
     console.log('');
 
     if (lobbyListResult.lobbies.length === 0) {
-      console.log('No lobbies found!');
+      console.log('No lobbies found with filters!');
       console.log('Make sure test-matchmaking-host.ts is running on another machine.');
       console.log('');
       
@@ -166,22 +210,43 @@ async function testMatchmakingJoin(): Promise<void> {
   console.log(`Lobby Data:`, allData);
   console.log('');
 
-  // List all members
+  // List all members and their data
   console.log('Current Members:');
   for (let i = 0; i < currentMembers; i++) {
     const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
-    console.log(`  ${i + 1}. ${memberId}`);
+    const memberName = steam.friends.getFriendPersonaName(memberId);
+    console.log(`  ${i + 1}. ${memberName} (${memberId})`);
   }
   console.log('');
 
   // Set our member data
   console.log('-'.repeat(60));
-  console.log('SETTING MEMBER DATA');
+  console.log('TESTING MEMBER DATA');
   console.log('-'.repeat(60));
 
+  console.log('\n[Test] setLobbyMemberData()');
   steam.matchmaking.setLobbyMemberData(lobbyId, 'status', 'ready');
   steam.matchmaking.setLobbyMemberData(lobbyId, 'character', 'warrior');
-  console.log('Set member data: status=ready, character=warrior');
+  steam.matchmaking.setLobbyMemberData(lobbyId, 'level', '42');
+  console.log('Set: status=ready, character=warrior, level=42');
+  
+  console.log('\n[Test] getLobbyMemberData() - reading own data');
+  const myStatus = steam.matchmaking.getLobbyMemberData(lobbyId, steamId, 'status');
+  const myChar = steam.matchmaking.getLobbyMemberData(lobbyId, steamId, 'character');
+  const myLevel = steam.matchmaking.getLobbyMemberData(lobbyId, steamId, 'level');
+  console.log(`Read back: status="${myStatus}", character="${myChar}", level="${myLevel}"`);
+  
+  // Read other members' data if available
+  console.log('\n[Test] getLobbyMemberData() - reading other members');
+  for (let i = 0; i < currentMembers; i++) {
+    const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
+    if (memberId !== steamId) {
+      const memberName = steam.friends.getFriendPersonaName(memberId);
+      const memberStatus = steam.matchmaking.getLobbyMemberData(lobbyId, memberId, 'status');
+      const memberChar = steam.matchmaking.getLobbyMemberData(lobbyId, memberId, 'character');
+      console.log(`${memberName}: status="${memberStatus}", character="${memberChar}"`);
+    }
+  }
   console.log('');
 
   // Send a chat message
@@ -223,21 +288,20 @@ async function testMatchmakingJoin(): Promise<void> {
       console.log('*** MEMBER UPDATE ***');
       console.log(`Members: ${previousMemberCount} -> ${newMemberCount}`);
       
-      // List all current members
+      // List all current members with their data
       for (let i = 0; i < newMemberCount; i++) {
         const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
-        console.log(`  Member ${i + 1}: ${memberId}`);
+        const memberName = steam.friends.getFriendPersonaName(memberId);
+        const memberStatus = steam.matchmaking.getLobbyMemberData(lobbyId, memberId, 'status');
+        console.log(`  Member ${i + 1}: ${memberName} (status: ${memberStatus || 'not set'})`);
       }
       console.log('');
       
       previousMemberCount = newMemberCount;
     }
 
-    // Check for chat messages
-    const chatEntry = steam.matchmaking.getLobbyChatEntry(lobbyId, 0);
-    if (chatEntry) {
-      console.log(`[CHAT] ${chatEntry.senderId}: ${chatEntry.message}`);
-    }
+    // Note: Chat message receiving requires LobbyChatMsg_t callback handling
+    // getLobbyChatEntry() needs the chatId from that callback, not polling with 0
 
     // Wait a bit before next check
     await sleep(100);

@@ -8,12 +8,18 @@ import {
   K_I_REMOTE_STORAGE_UNSUBSCRIBE_PUBLISHED_FILE_RESULT,
   K_I_SET_USER_ITEM_VOTE_RESULT,
   K_I_GET_USER_ITEM_VOTE_RESULT,
+  K_I_LOBBY_CREATED,
+  K_I_LOBBY_ENTER,
+  K_I_LOBBY_MATCH_LIST,
   CreateItemResultType,
   SubmitItemUpdateResultType,
   RemoteStorageSubscribePublishedFileResultType,
   RemoteStorageUnsubscribePublishedFileResultType,
   SetUserItemVoteResultType,
-  GetUserItemVoteResultType
+  GetUserItemVoteResultType,
+  LobbyCreatedType,
+  LobbyEnterType,
+  LobbyMatchListType
 } from './callbackTypes';
 
 /**
@@ -174,6 +180,15 @@ export class SteamCallbackPoller {
       case K_I_GET_USER_ITEM_VOTE_RESULT:
         return this.parseGetUserItemVoteResult(result) as unknown as T;
       
+      case K_I_LOBBY_CREATED:
+        return this.parseLobbyCreatedResult(result) as unknown as T;
+      
+      case K_I_LOBBY_ENTER:
+        return this.parseLobbyEnterResult(result) as unknown as T;
+      
+      case K_I_LOBBY_MATCH_LIST:
+        return this.parseLobbyMatchListResult(result) as unknown as T;
+      
       default:
         // Standard Koffi decoding for non-packed structs
         return koffi.decode(result, resultStruct) as T;
@@ -309,6 +324,85 @@ export class SteamCallbackPoller {
       m_bVotedUp: buffer.readUInt8(12) !== 0,
       m_bVotedDown: buffer.readUInt8(13) !== 0,
       m_bVoteSkipped: buffer.readUInt8(14) !== 0
+    };
+  }
+
+  /**
+   * Manually parses LobbyCreated_t from raw bytes
+   * 
+   * Layout differs by platform due to struct packing:
+   * - Windows (MSVC, pack(8)): [int32:0-3][padding:4-7][uint64:8-15] = 16 bytes
+   * - Mac/Linux (GCC/Clang, pack(4)): [int32:0-3][uint64:4-11] = 12 bytes
+   * 
+   * @param result - Koffi-allocated result buffer
+   * @returns Parsed LobbyCreated_t object
+   */
+  private parseLobbyCreatedResult(result: any): LobbyCreatedType {
+    const rawBytes = koffi.decode(result, koffi.array('uint8', 16));
+    const buffer = Buffer.from(rawBytes);
+    
+    if (process.platform === 'win32') {
+      // Windows: 8-byte aligned uint64 at offset 8
+      return {
+        m_eResult: buffer.readInt32LE(0),
+        m_ulSteamIDLobby: buffer.readBigUInt64LE(8)
+      };
+    } else {
+      // Mac/Linux: packed struct, uint64 at offset 4
+      return {
+        m_eResult: buffer.readInt32LE(0),
+        m_ulSteamIDLobby: buffer.readBigUInt64LE(4)
+      };
+    }
+  }
+
+  /**
+   * Manually parses LobbyEnter_t from raw bytes
+   * 
+   * Layout: [uint64:0-7][uint32:8-11][bool:12][uint32:13-16] = 17 bytes packed
+   * Note: The bool causes misalignment on non-packed compilers
+   * 
+   * @param result - Koffi-allocated result buffer
+   * @returns Parsed LobbyEnter_t object
+   */
+  private parseLobbyEnterResult(result: any): LobbyEnterType {
+    const rawBytes = koffi.decode(result, koffi.array('uint8', 24));
+    const buffer = Buffer.from(rawBytes);
+    
+    if (process.platform === 'win32') {
+      // Windows layout with potential padding
+      return {
+        m_ulSteamIDLobby: buffer.readBigUInt64LE(0),
+        m_rgfChatPermissions: buffer.readUInt32LE(8),
+        m_bLocked: buffer.readUInt8(12) !== 0,
+        m_EChatRoomEnterResponse: buffer.readUInt32LE(16)
+      };
+    } else {
+      // Mac/Linux packed layout
+      return {
+        m_ulSteamIDLobby: buffer.readBigUInt64LE(0),
+        m_rgfChatPermissions: buffer.readUInt32LE(8),
+        m_bLocked: buffer.readUInt8(12) !== 0,
+        m_EChatRoomEnterResponse: buffer.readUInt32LE(13)
+      };
+    }
+  }
+
+  /**
+   * Manually parses LobbyMatchList_t from raw bytes
+   * 
+   * Layout: [uint32:0-3] = 4 bytes
+   * Simple struct with just one field
+   * 
+   * @param result - Koffi-allocated result buffer
+   * @returns Parsed LobbyMatchList_t object
+   */
+  private parseLobbyMatchListResult(result: any): LobbyMatchListType {
+    const rawBytes = koffi.decode(result, koffi.array('uint8', 4));
+    const buffer = Buffer.from(rawBytes);
+    
+    return {
+      m_nLobbiesMatching: buffer.readUInt32LE(0)
     };
   }
 }
