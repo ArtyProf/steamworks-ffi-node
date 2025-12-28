@@ -37,7 +37,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Overlay API** - 7 functions for complete Steam overlay control! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)
 
-> 🎉 **NEW: Cloud Storage API** - 14 functions for complete Steam Cloud (Remote Storage) integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)
+> 🎉 **NEW: Cloud Storage API** - 17 functions for complete Steam Cloud (Remote Storage) integration including batch writes! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)
 
 > 🎉 **NEW: Workshop API** - 29 functions for complete Steam Workshop/UGC integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)
 
@@ -84,12 +84,13 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Open overlay web browser to URLs
   - ✅ Open store pages with purchase options
   - ✅ Show invite dialogs for multiplayer sessions
-- **Cloud Storage API**: Complete Steam Cloud (Remote Storage) integration (14 functions)
+- **Cloud Storage API**: Complete Steam Cloud (Remote Storage) integration (17 functions)
   - ✅ File operations (write, read, delete, check existence)
   - ✅ File metadata (size, timestamp, persistence status)
   - ✅ File listing (count, iterate, get all with details)
   - ✅ Quota management (track storage usage and limits)
   - ✅ Cloud settings (check/toggle cloud sync for account and app)
+  - ✅ Batch writes (atomic multi-file operations)
 - **Workshop API**: Complete Steam Workshop/UGC integration (29 functions)
   - ✅ Subscription management (subscribe, unsubscribe, list items)
   - ✅ Item state & information (download progress, installation info)

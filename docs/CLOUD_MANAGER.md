@@ -4,7 +4,7 @@ Complete reference for Steam Cloud (Remote Storage) functionality in Steamworks 
 
 ## Overview
 
-The `SteamCloudManager` provides **100% coverage** of essential Steam Cloud file operations with 14 functions for file management, quota tracking, and cloud settings.
+The `SteamCloudManager` provides **100% coverage** of essential Steam Cloud file operations with 17 functions for file management, quota tracking, batch operations, and cloud settings.
 
 ## Quick Reference
 
@@ -13,6 +13,7 @@ The `SteamCloudManager` provides **100% coverage** of essential Steam Cloud file
 | [File Operations](#file-operations) | 4 | Write, read, delete, check existence |
 | [File Metadata](#file-metadata) | 3 | Get size, timestamp, persistence status |
 | [File Listing](#file-listing) | 3 | Count, iterate, list all files |
+| [Batch Operations](#batch-operations) | 3 | Atomic multi-file write operations |
 | [Quota Management](#quota-management) | 1 | Check storage usage and limits |
 | [Cloud Settings](#cloud-settings) | 3 | Check/toggle cloud sync settings |
 
@@ -343,6 +344,129 @@ console.log(`Largest file: ${largest.name} (${largest.size} bytes)`);
 
 ---
 
+## Batch Operations
+
+Atomic multi-file write operations for game saves that span multiple files.
+
+### `beginFileWriteBatch()`
+
+Begin a batch of file write operations. All writes between `beginFileWriteBatch()` and `endFileWriteBatch()` are treated as a single atomic operation.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamRemoteStorage_BeginFileWriteBatch()` - Start batch write
+
+**Returns:** `boolean` - `true` if batch was started successfully
+
+**Example:**
+```typescript
+// Start a batch for multi-file game save
+const batchStarted = steam.cloud.beginFileWriteBatch();
+
+if (batchStarted) {
+  // Write multiple files atomically
+  steam.cloud.fileWrite('save_meta.json', metaBuffer);
+  steam.cloud.fileWrite('save_world.bin', worldBuffer);
+  steam.cloud.fileWrite('save_inventory.json', inventoryBuffer);
+  
+  // Commit the batch
+  steam.cloud.endFileWriteBatch();
+}
+```
+
+---
+
+### `endFileWriteBatch()`
+
+End a batch of file write operations and commit all changes atomically.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamRemoteStorage_EndFileWriteBatch()` - End and commit batch
+
+**Returns:** `boolean` - `true` if batch was committed successfully
+
+**Remarks:**
+- If a batch is started but not ended (e.g., due to a crash), Steam will rollback the changes when the user next plays the game
+- All files written since `beginFileWriteBatch()` are committed together
+
+**Example:**
+```typescript
+steam.cloud.beginFileWriteBatch();
+
+// Write game save files
+const wrote1 = steam.cloud.fileWrite('player.dat', playerData);
+const wrote2 = steam.cloud.fileWrite('world.dat', worldData);
+
+// Commit the batch
+const committed = steam.cloud.endFileWriteBatch();
+
+if (committed && wrote1 && wrote2) {
+  console.log('✅ All save files committed atomically');
+} else {
+  console.error('❌ Batch write failed');
+}
+```
+
+---
+
+### `writeFilesBatch(files)`
+
+Convenience method to write multiple files atomically as a single batch operation.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamRemoteStorage_BeginFileWriteBatch()` - Start batch
+- `SteamAPI_ISteamRemoteStorage_FileWrite()` - Write each file
+- `SteamAPI_ISteamRemoteStorage_EndFileWriteBatch()` - Commit batch
+
+**Parameters:**
+- `files: Array<{ filename: string; data: Buffer }>` - Array of files to write
+
+**Returns:** `CloudBatchWriteResult`
+
+**Type:**
+```typescript
+interface CloudBatchWriteResult {
+  success: boolean;      // Whether all files were written successfully
+  filesWritten: number;  // Number of files successfully written
+  failedFiles: string[]; // List of filenames that failed to write
+}
+```
+
+**Example:**
+```typescript
+// Write multiple save files in one atomic operation
+const result = steam.cloud.writeFilesBatch([
+  { 
+    filename: 'save_meta.json', 
+    data: Buffer.from(JSON.stringify({ 
+      version: '1.0', 
+      timestamp: Date.now() 
+    })) 
+  },
+  { 
+    filename: 'save_world.bin', 
+    data: worldBuffer 
+  },
+  { 
+    filename: 'save_inventory.json', 
+    data: Buffer.from(JSON.stringify(inventory)) 
+  }
+]);
+
+if (result.success) {
+  console.log(`✅ All ${result.filesWritten} files saved atomically`);
+} else {
+  console.error(`❌ Batch failed. Written: ${result.filesWritten}`);
+  console.error(`Failed files: ${result.failedFiles.join(', ')}`);
+}
+```
+
+**Use Cases:**
+- **Game saves with multiple files** - Ensure all save data is written together
+- **Configuration files** - Update related config files atomically
+- **Progress data** - Save level progress, inventory, and stats together
+
+---
+
 ## Quota Management
 
 Monitor Steam Cloud storage usage and limits.
@@ -510,6 +634,15 @@ interface CloudFileReadResult {
 }
 ```
 
+### CloudBatchWriteResult
+```typescript
+interface CloudBatchWriteResult {
+  success: boolean;      // Whether all files were written successfully
+  filesWritten: number;  // Number of files successfully written
+  failedFiles: string[]; // List of filenames that failed to write
+}
+```
+
 ### CloudFileWriteResult
 ```typescript
 interface CloudFileWriteResult {
@@ -616,6 +749,67 @@ function autoSave(data: any) {
   
   return success;
 }
+```
+
+---
+
+### Atomic Multi-File Game Save (Batch Write)
+
+```typescript
+interface GameSaveData {
+  meta: { version: string; timestamp: number; playTime: number };
+  world: Buffer;
+  inventory: { items: string[]; gold: number };
+  progress: { level: number; checkpoints: string[] };
+}
+
+function saveGameAtomic(saveSlot: number, data: GameSaveData): boolean {
+  const prefix = `save_${saveSlot}_`;
+  
+  const files = [
+    {
+      filename: `${prefix}meta.json`,
+      data: Buffer.from(JSON.stringify(data.meta))
+    },
+    {
+      filename: `${prefix}world.bin`,
+      data: data.world
+    },
+    {
+      filename: `${prefix}inventory.json`,
+      data: Buffer.from(JSON.stringify(data.inventory))
+    },
+    {
+      filename: `${prefix}progress.json`,
+      data: Buffer.from(JSON.stringify(data.progress))
+    }
+  ];
+  
+  // Write all files atomically
+  const result = steam.cloud.writeFilesBatch(files);
+  
+  if (result.success) {
+    console.log(`✅ Save slot ${saveSlot}: All ${result.filesWritten} files saved`);
+    return true;
+  } else {
+    console.error(`❌ Save slot ${saveSlot} failed`);
+    console.error(`   Written: ${result.filesWritten}/${files.length}`);
+    if (result.failedFiles.length > 0) {
+      console.error(`   Failed: ${result.failedFiles.join(', ')}`);
+    }
+    return false;
+  }
+}
+
+// Usage
+const gameData: GameSaveData = {
+  meta: { version: '1.0.0', timestamp: Date.now(), playTime: 3600 },
+  world: worldBuffer,
+  inventory: { items: ['sword', 'shield'], gold: 500 },
+  progress: { level: 5, checkpoints: ['forest', 'cave'] }
+};
+
+saveGameAtomic(1, gameData);
 ```
 
 ---
@@ -729,13 +923,15 @@ npm run test:cloud:ts
 npm run test:cloud:js
 ```
 
-**Test Coverage (14/14 functions):**
+**Test Coverage (17/17 functions):**
 - ✅ File Write & Read
 - ✅ File Existence & Deletion
 - ✅ File Size & Timestamp
 - ✅ File Persistence Status
 - ✅ File Count & Listing
 - ✅ Manual File Iteration
+- ✅ Batch Write (beginFileWriteBatch/endFileWriteBatch)
+- ✅ Batch Write Convenience (writeFilesBatch)
 - ✅ Quota Management
 - ✅ Cloud Settings (Account & App)
 - ✅ Enable/Disable Cloud for App
@@ -767,6 +963,13 @@ npm run test:cloud:js
 5. **Clean up old files** to manage quota
 6. **Use meaningful filenames** for easier debugging
 7. **Test with Spacewar** (AppID 480) during development
+8. **Use batch writes** for multi-file saves to ensure atomicity
+
+### Batch Write Benefits
+- **Atomicity**: All files are committed together or not at all
+- **Crash recovery**: Incomplete batches are rolled back on next launch
+- **Data integrity**: Prevents partial saves that could corrupt game state
+- **Recommended for**: Game saves spanning multiple files
 
 ### Platform Support
 - ✅ Windows
@@ -828,3 +1031,5 @@ const data = steam.cloud.fileRead('save.dat').data; // Could be null!
 - `SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount()`
 - `SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp()`
 - `SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp()`
+- `SteamAPI_ISteamRemoteStorage_BeginFileWriteBatch()`
+- `SteamAPI_ISteamRemoteStorage_EndFileWriteBatch()`

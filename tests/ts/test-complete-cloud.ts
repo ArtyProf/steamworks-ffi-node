@@ -156,9 +156,117 @@ async function testAllCloudFunctions(): Promise<void> {
   // Verify deletion
   const stillExists = steam.cloud.fileExists(testFilename);
   console.log(`   Verification: ${stillExists ? '❌ Still exists' : '✅ Successfully deleted'}`);
+
+  // ============================================================================
+  // BATCH WRITE OPERATIONS TEST
+  // ============================================================================
+  
+  console.log('\n10. Testing Batch Write Operations...');
+  console.log('    --------------------------------');
+  
+  // Test beginFileWriteBatch() and endFileWriteBatch()
+  console.log('\n    a) Testing manual batch write (beginFileWriteBatch/endFileWriteBatch):');
+  
+  const batchFile1 = 'batch_test_meta.json';
+  const batchFile2 = 'batch_test_world.dat';
+  const batchFile3 = 'batch_test_config.json';
+  
+  const metaData = Buffer.from(JSON.stringify({
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    saveSlot: 1
+  }));
+  
+  const worldData = Buffer.from('WORLD_DATA_BINARY_CONTENT_12345');
+  
+  const configData = Buffer.from(JSON.stringify({
+    graphics: 'high',
+    audio: 80,
+    controls: 'keyboard'
+  }));
+  
+  // Begin batch
+  const batchStarted = steam.cloud.beginFileWriteBatch();
+  console.log(`       Begin batch: ${batchStarted ? '✅ Success' : '❌ Failed'}`);
+  
+  if (batchStarted) {
+    // Write multiple files within the batch
+    const wrote1 = steam.cloud.fileWrite(batchFile1, metaData);
+    const wrote2 = steam.cloud.fileWrite(batchFile2, worldData);
+    const wrote3 = steam.cloud.fileWrite(batchFile3, configData);
+    
+    console.log(`       Write ${batchFile1}: ${wrote1 ? '✅' : '❌'}`);
+    console.log(`       Write ${batchFile2}: ${wrote2 ? '✅' : '❌'}`);
+    console.log(`       Write ${batchFile3}: ${wrote3 ? '✅' : '❌'}`);
+    
+    // End batch (commit)
+    const batchEnded = steam.cloud.endFileWriteBatch();
+    console.log(`       End batch: ${batchEnded ? '✅ Committed' : '❌ Failed'}`);
+    
+    // Verify files exist
+    const exists1 = steam.cloud.fileExists(batchFile1);
+    const exists2 = steam.cloud.fileExists(batchFile2);
+    const exists3 = steam.cloud.fileExists(batchFile3);
+    console.log(`       Verify files exist: ${exists1 && exists2 && exists3 ? '✅ All exist' : '❌ Some missing'}`);
+    
+    // Clean up batch test files
+    steam.cloud.fileDelete(batchFile1);
+    steam.cloud.fileDelete(batchFile2);
+    steam.cloud.fileDelete(batchFile3);
+    console.log('       Cleaned up batch test files');
+  }
+  
+  // Test writeFilesBatch() convenience method
+  console.log('\n    b) Testing writeFilesBatch() convenience method:');
+  
+  const batchFiles = [
+    { filename: 'convenience_batch_1.json', data: Buffer.from(JSON.stringify({ slot: 1, name: 'Save 1' })) },
+    { filename: 'convenience_batch_2.json', data: Buffer.from(JSON.stringify({ slot: 2, name: 'Save 2' })) },
+    { filename: 'convenience_batch_3.bin', data: Buffer.from('BINARY_SAVE_DATA_FOR_SLOT_3') }
+  ];
+  
+  const batchResult = steam.cloud.writeFilesBatch(batchFiles);
+  
+  console.log(`       Batch success: ${batchResult.success ? '✅ Yes' : '❌ No'}`);
+  console.log(`       Files written: ${batchResult.filesWritten}/${batchFiles.length}`);
+  
+  if (batchResult.failedFiles.length > 0) {
+    console.log(`       Failed files: ${batchResult.failedFiles.join(', ')}`);
+  }
+  
+  // Verify all files exist
+  let allExist = true;
+  for (const file of batchFiles) {
+    const fileExists = steam.cloud.fileExists(file.filename);
+    if (!fileExists) {
+      console.log(`       ❌ Missing: ${file.filename}`);
+      allExist = false;
+    }
+  }
+  
+  if (allExist) {
+    console.log('       ✅ All batch files verified');
+  }
+  
+  // Read back one file to verify content
+  const readBack = steam.cloud.fileRead('convenience_batch_1.json');
+  if (readBack.success && readBack.data) {
+    const parsed = JSON.parse(readBack.data.toString());
+    console.log(`       Content verification: ${parsed.slot === 1 && parsed.name === 'Save 1' ? '✅ Correct' : '❌ Mismatch'}`);
+  }
+  
+  // Clean up convenience batch files
+  for (const file of batchFiles) {
+    steam.cloud.fileDelete(file.filename);
+  }
+  console.log('       Cleaned up convenience batch files');
+  
+  // ============================================================================
+  // END BATCH WRITE TESTS
+  // ============================================================================
   
   // Final quota check
-  console.log('\n10. Final Quota Check...');
+  console.log('\n11. Final Quota Check...');
   const finalQuota = steam.cloud.getQuota();
   console.log(`   Total: ${finalQuota.totalBytes} bytes (${(finalQuota.totalBytes / 1024).toFixed(2)} KB)`);
   console.log(`   Used: ${finalQuota.usedBytes} bytes`);

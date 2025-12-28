@@ -191,6 +191,10 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp!: koffi.KoffiFunction;
   public SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp!: koffi.KoffiFunction;
 
+  // Batch operations
+  public SteamAPI_ISteamRemoteStorage_BeginFileWriteBatch!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_EndFileWriteBatch!: koffi.KoffiFunction;
+
   // ========================================
   // ISteamUGC (Workshop) API Functions
   // ========================================
@@ -596,6 +600,10 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount = this.steamLib.func('SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount', 'bool', ['void*']);
     this.SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp = this.steamLib.func('SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp', 'bool', ['void*']);
     this.SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp = this.steamLib.func('SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp', 'void', ['void*', 'bool']);
+
+    // Batch operations
+    this.SteamAPI_ISteamRemoteStorage_BeginFileWriteBatch = this.steamLib.func('SteamAPI_ISteamRemoteStorage_BeginFileWriteBatch', 'bool', ['void*']);
+    this.SteamAPI_ISteamRemoteStorage_EndFileWriteBatch = this.steamLib.func('SteamAPI_ISteamRemoteStorage_EndFileWriteBatch', 'bool', ['void*']);
     
     // ========================================
     // ISteamUGC (Workshop) Functions

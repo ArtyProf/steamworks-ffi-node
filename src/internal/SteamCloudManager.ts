@@ -3,10 +3,8 @@ import { SteamAPICore } from './SteamAPICore';
 import {
   CloudFileInfo,
   CloudQuota,
-  CloudFileWriteResult,
   CloudFileReadResult,
-  CloudConstants,
-  ERemoteStoragePlatform
+  CloudBatchWriteResult
 } from '../types';
 
 /**
@@ -655,5 +653,156 @@ export class SteamCloudManager {
     } catch (error) {
       console.error('[Steamworks] Error setting cloud enabled for app:', error);
     }
+  }
+
+  // ============================================================================
+  // BATCH OPERATIONS
+  // ============================================================================
+
+  /**
+   * Begins a batch of file write operations
+   * 
+   * @returns True if the batch was started successfully, false otherwise
+   * 
+   * @remarks
+   * Use this when you need to update multiple files atomically, such as a game save
+   * that consists of multiple files. Steam will treat all writes between
+   * BeginFileWriteBatch() and EndFileWriteBatch() as a single atomic operation.
+   * 
+   * If a batch is started but not ended (e.g., due to a crash), Steam will
+   * rollback the changes when the user next plays the game.
+   * 
+   * @example
+   * ```typescript
+   * // Write multiple save files atomically
+   * const success = steam.cloud.beginFileWriteBatch();
+   * if (success) {
+   *   steam.cloud.fileWrite('save_meta.json', metaBuffer);
+   *   steam.cloud.fileWrite('save_world.bin', worldBuffer);
+   *   steam.cloud.fileWrite('save_inventory.json', inventoryBuffer);
+   *   steam.cloud.endFileWriteBatch();
+   * }
+   * ```
+   * 
+   * @see {@link endFileWriteBatch}
+   */
+  beginFileWriteBatch(): boolean {
+    if (!this.apiCore.isInitialized()) {
+      console.error('[Steamworks] Steam API not initialized');
+      return false;
+    }
+
+    const remoteStorage = this.apiCore.getRemoteStorageInterface();
+    if (!remoteStorage) {
+      console.error('[Steamworks] ISteamRemoteStorage interface not available');
+      return false;
+    }
+
+    try {
+      return this.libraryLoader.SteamAPI_ISteamRemoteStorage_BeginFileWriteBatch(remoteStorage);
+    } catch (error) {
+      console.error('[Steamworks] Error beginning file write batch:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Ends a batch of file write operations
+   * 
+   * @returns True if the batch was ended successfully, false otherwise
+   * 
+   * @remarks
+   * Call this after all files in the batch have been written. If this returns
+   * true, all the files written since BeginFileWriteBatch() will be committed
+   * atomically.
+   * 
+   * @example
+   * ```typescript
+   * // Complete a batch write
+   * steam.cloud.beginFileWriteBatch();
+   * steam.cloud.fileWrite('file1.dat', data1);
+   * steam.cloud.fileWrite('file2.dat', data2);
+   * const committed = steam.cloud.endFileWriteBatch();
+   * if (committed) {
+   *   console.log('All files saved atomically');
+   * }
+   * ```
+   * 
+   * @see {@link beginFileWriteBatch}
+   */
+  endFileWriteBatch(): boolean {
+    if (!this.apiCore.isInitialized()) {
+      console.error('[Steamworks] Steam API not initialized');
+      return false;
+    }
+
+    const remoteStorage = this.apiCore.getRemoteStorageInterface();
+    if (!remoteStorage) {
+      console.error('[Steamworks] ISteamRemoteStorage interface not available');
+      return false;
+    }
+
+    try {
+      return this.libraryLoader.SteamAPI_ISteamRemoteStorage_EndFileWriteBatch(remoteStorage);
+    } catch (error) {
+      console.error('[Steamworks] Error ending file write batch:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Writes multiple files atomically as a batch operation
+   * 
+   * @param files - Array of objects containing filename and data pairs
+   * @returns Object with success status and individual file results
+   * 
+   * @remarks
+   * This is a convenience method that wraps BeginFileWriteBatch(), multiple
+   * fileWrite() calls, and EndFileWriteBatch() into a single operation.
+   * 
+   * If any file fails to write, the entire batch is considered failed and
+   * Steam may rollback the changes.
+   * 
+   * @example
+   * ```typescript
+   * const result = steam.cloud.writeFilesBatch([
+   *   { filename: 'save_meta.json', data: Buffer.from(JSON.stringify(meta)) },
+   *   { filename: 'save_world.bin', data: worldBuffer },
+   *   { filename: 'save_inventory.json', data: Buffer.from(JSON.stringify(inventory)) }
+   * ]);
+   * 
+   * if (result.success) {
+   *   console.log(`All ${result.filesWritten} files saved`);
+   * } else {
+   *   console.error('Batch write failed:', result.failedFiles);
+   * }
+   * ```
+   */
+  writeFilesBatch(files: Array<{ filename: string; data: Buffer }>): CloudBatchWriteResult {
+    const result = {
+      success: false,
+      filesWritten: 0,
+      failedFiles: [] as string[]
+    };
+
+    if (!this.beginFileWriteBatch()) {
+      console.error('[Steamworks] Failed to begin file write batch');
+      return result;
+    }
+
+    for (const file of files) {
+      const written = this.fileWrite(file.filename, file.data);
+      if (written) {
+        result.filesWritten++;
+      } else {
+        result.failedFiles.push(file.filename);
+      }
+    }
+
+    if (this.endFileWriteBatch() && result.failedFiles.length === 0) {
+      result.success = true;
+    }
+
+    return result;
   }
 }

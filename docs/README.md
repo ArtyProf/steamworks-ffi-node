@@ -105,12 +105,13 @@ This design:
 ### Cloud Storage System
 
 - **[Cloud Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)**
-  - **14 Functions** - Complete Steam Cloud (Remote Storage) support
+  - **17 Functions** - Complete Steam Cloud (Remote Storage) support
   - File operations (write, read, delete, check existence)
   - File metadata (size, timestamp, persistence status)
   - File listing (count, iterate, get all with details)
   - Quota management (track storage usage and limits)
   - Cloud settings (check/toggle cloud sync for account and app)
+  - Batch writes (atomic multi-file operations)
 
 ### Workshop System
 
@@ -149,7 +150,7 @@ This design:
 - Run Stats Tests: `npm run test:stats:js` - Tests all 14 stats functions
 - Run Leaderboard Tests: `npm run test:leaderboards:js` - Tests all 7 leaderboard functions
 - Run Friends Tests: `npm run test:friends:js` - Tests all 22 friends functions
-- Run Cloud Tests: `npm run test:cloud:js` - Tests all 14 cloud storage functions
+- Run Cloud Tests: `npm run test:cloud:js` - Tests all 17 cloud storage functions
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:js` - Tests 6 rich presence + 7 overlay functions
 - Run Workshop Tests: `npm run test:workshop:js` - Tests all 29 Workshop/UGC functions
 - Run Input Tests: `npm run test:input-xbox:js` or `npm run test:input-ps4:js` - Tests 35+ input functions with virtual gamepad

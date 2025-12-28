@@ -57,20 +57,6 @@ export interface CloudQuota {
 }
 
 /**
- * Result of a file write operation
- */
-export interface CloudFileWriteResult {
-  /** Whether the write was successful */
-  success: boolean;
-  
-  /** The filename that was written */
-  filename: string;
-  
-  /** Number of bytes written */
-  bytesWritten: number;
-}
-
-/**
  * Result of a file read operation
  */
 export interface CloudFileReadResult {
@@ -85,6 +71,20 @@ export interface CloudFileReadResult {
   
   /** Number of bytes read */
   bytesRead: number;
+}
+
+/**
+ * Result of a batch file write operation
+ */
+export interface CloudBatchWriteResult {
+  /** Whether all files were written successfully */
+  success: boolean;
+  
+  /** Number of files that were written successfully */
+  filesWritten: number;
+  
+  /** List of filenames that failed to write */
+  failedFiles: string[];
 }
 
 /**
