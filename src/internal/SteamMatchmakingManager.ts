@@ -14,19 +14,16 @@ import {
   ELobbyType,
   ELobbyComparison,
   ELobbyDistanceFilter,
-  EChatMemberStateChange,
   EChatEntryType,
   EChatRoomEnterResponse,
-  EFavoriteFlags,
   LobbyId,
-  LobbyInfo,
-  LobbyMember,
   LobbyChatEntry,
+  LobbyChatMessageEvent,
+  LobbyChatHandler,
   LobbyCreateResult,
   LobbyJoinResult,
   LobbyListResult,
   LobbyGameServer,
-  LobbyFilter,
   FavoriteGame,
 } from '../types/matchmaking';
 
@@ -88,11 +85,172 @@ export class SteamMatchmakingManager {
   private libraryLoader: SteamLibraryLoader;
   private apiCore: SteamAPICore;
   private callbackPoller: SteamCallbackPoller;
+  
+  // Simple chat polling state - tracks last read message index per lobby
+  private lobbyChatIndexes: Map<string, number> = new Map();
+  
+  // Event handlers
+  private chatMessageHandlers: LobbyChatHandler[] = [];
+  
+  // Queued chat messages (for polling approach)
+  private pendingChatMessages: LobbyChatMessageEvent[] = [];
 
   constructor(libraryLoader: SteamLibraryLoader, apiCore: SteamAPICore) {
     this.libraryLoader = libraryLoader;
     this.apiCore = apiCore;
     this.callbackPoller = new SteamCallbackPoller(libraryLoader, apiCore);
+  }
+
+  // ============================================================================
+  // Chat Message Polling (Simple Approach)
+  // ============================================================================
+
+  /**
+   * Start tracking chat messages for a lobby
+   * 
+   * Call this after joining a lobby to enable chat message polling.
+   * 
+   * @param lobbyId - Steam ID of the lobby to track
+   */
+  startChatPolling(lobbyId: LobbyId): void {
+    // Start from index 0 - we'll read all existing messages
+    // Or set to -1 to skip existing messages and only get new ones
+    this.lobbyChatIndexes.set(lobbyId, 0);
+  }
+
+  /**
+   * Stop tracking chat messages for a lobby
+   * 
+   * Call this when leaving a lobby.
+   * 
+   * @param lobbyId - Steam ID of the lobby to stop tracking
+   */
+  stopChatPolling(lobbyId: LobbyId): void {
+    this.lobbyChatIndexes.delete(lobbyId);
+  }
+
+  /**
+   * Poll for new chat messages in all tracked lobbies
+   * 
+   * Call this regularly in your game loop. It will check for new messages
+   * in all lobbies you're tracking and dispatch them to handlers.
+   * 
+   * @returns Number of new messages found
+   * 
+   * @example
+   * ```typescript
+   * // After joining a lobby:
+   * steam.matchmaking.startChatPolling(lobbyId);
+   * 
+   * // In your game loop:
+   * steam.runCallbacks();
+   * steam.matchmaking.pollChatMessages();
+   * 
+   * // When leaving:
+   * steam.matchmaking.stopChatPolling(lobbyId);
+   * ```
+   */
+  pollChatMessages(): number {
+    let newMessageCount = 0;
+
+    for (const [lobbyId, lastIndex] of this.lobbyChatIndexes.entries()) {
+      // Try to read messages starting from lastIndex
+      let currentIndex = lastIndex;
+      
+      while (true) {
+        const entry = this.getLobbyChatEntry(lobbyId, currentIndex);
+        
+        if (!entry) {
+          // No more messages at this index
+          break;
+        }
+
+        // Found a message!
+        const event: LobbyChatMessageEvent = {
+          lobbyId,
+          senderId: entry.senderId,
+          chatId: currentIndex,
+          entryType: entry.entryType,
+          message: entry.message
+        };
+
+        // Add to pending queue
+        this.pendingChatMessages.push(event);
+
+        // Notify handlers
+        for (const handler of this.chatMessageHandlers) {
+          try {
+            handler(event);
+          } catch (err) {
+            console.error('[Steamworks] Chat message handler error:', (err as Error).message);
+          }
+        }
+
+        newMessageCount++;
+        currentIndex++;
+      }
+
+      // Update the last read index
+      if (currentIndex > lastIndex) {
+        this.lobbyChatIndexes.set(lobbyId, currentIndex);
+      }
+    }
+
+    return newMessageCount;
+  }
+  
+  /**
+   * Subscribe to lobby chat message events
+   * 
+   * Registers a handler that will be called whenever a chat message is received.
+   * You must call `startChatPolling(lobbyId)` after joining a lobby and
+   * `pollChatMessages()` regularly to receive messages.
+   * 
+   * @param handler - Function to call when a chat message is received
+   * @returns Unsubscribe function to remove the handler
+   * 
+   * @example
+   * ```typescript
+   * const unsubscribe = steam.matchmaking.onChatMessage((event) => {
+   *   console.log(`[${event.senderId}]: ${event.message}`);
+   * });
+   * 
+   * // Later, to stop receiving events:
+   * unsubscribe();
+   * ```
+   */
+  onChatMessage(handler: LobbyChatHandler): () => void {
+    this.chatMessageHandlers.push(handler);
+    return () => {
+      const index = this.chatMessageHandlers.indexOf(handler);
+      if (index > -1) {
+        this.chatMessageHandlers.splice(index, 1);
+      }
+    };
+  }
+
+  /**
+   * Get pending chat messages (alternative to event handlers)
+   * 
+   * Returns and clears all queued chat messages received since the last call.
+   * Use this if you prefer polling over event handlers.
+   * 
+   * @returns Array of pending chat message events
+   * 
+   * @example
+   * ```typescript
+   * // In your game loop:
+   * steam.matchmaking.pollChatMessages();
+   * const messages = steam.matchmaking.getPendingChatMessages();
+   * for (const msg of messages) {
+   *   console.log(`${msg.senderId}: ${msg.message}`);
+   * }
+   * ```
+   */
+  getPendingChatMessages(): LobbyChatMessageEvent[] {
+    const messages = [...this.pendingChatMessages];
+    this.pendingChatMessages = [];
+    return messages;
   }
 
   // ============================================================================

@@ -29,6 +29,9 @@
  *   - getLobbyMemberData()
  *   - sendLobbyChatMsg()
  *   - leaveLobby()
+ *   - startChatPolling()
+ *   - pollChatMessages()
+ *   - onChatMessage()
  */
 
 import { SteamworksSDK, ELobbyType, ELobbyComparison, ELobbyDistanceFilter } from '../../src';
@@ -258,6 +261,28 @@ async function testMatchmakingJoin(): Promise<void> {
   console.log(`Chat message sent: ${chatSent}`);
   console.log('');
 
+  // Set up chat message polling
+  console.log('-'.repeat(60));
+  console.log('SETTING UP CHAT POLLING');
+  console.log('-'.repeat(60));
+  
+  // Start polling for chat messages in this lobby
+  steam.matchmaking.startChatPolling(lobbyId);
+  console.log('Chat polling started for lobby');
+  
+  // Subscribe to chat messages
+  steam.matchmaking.onChatMessage((event) => {
+    const senderName = steam.friends.getFriendPersonaName(event.senderId);
+    console.log('');
+    console.log('*** CHAT MESSAGE RECEIVED ***');
+    console.log(`  From: ${senderName} (${event.senderId})`);
+    console.log(`  Message: "${event.message}"`);
+    console.log('');
+  });
+  
+  console.log('Chat message handler registered.');
+  console.log('');
+
   // Stay in lobby and monitor
   console.log('-'.repeat(60));
   console.log('MONITORING LOBBY');
@@ -277,8 +302,11 @@ async function testMatchmakingJoin(): Promise<void> {
 
   // Main loop
   while (running) {
-    // Run callbacks
+    // Run Steam callbacks (for all Steam systems)
     steam.runCallbacks();
+    
+    // Poll for new chat messages
+    steam.matchmaking.pollChatMessages();
 
     // Check member count
     const newMemberCount = steam.matchmaking.getNumLobbyMembers(lobbyId);
@@ -300,9 +328,6 @@ async function testMatchmakingJoin(): Promise<void> {
       previousMemberCount = newMemberCount;
     }
 
-    // Note: Chat message receiving requires LobbyChatMsg_t callback handling
-    // getLobbyChatEntry() needs the chatId from that callback, not polling with 0
-
     // Wait a bit before next check
     await sleep(100);
   }
@@ -313,6 +338,9 @@ async function testMatchmakingJoin(): Promise<void> {
   console.log('CLEANUP');
   console.log('-'.repeat(60));
 
+  console.log('Stopping chat polling...');
+  steam.matchmaking.stopChatPolling(lobbyId);
+  
   console.log('Leaving lobby...');
   steam.matchmaking.leaveLobby(lobbyId);
   console.log('Left lobby.');

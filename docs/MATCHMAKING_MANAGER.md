@@ -361,6 +361,93 @@ const isReady = steam.matchmaking.getLobbyMemberData(lobbyId, memberId, 'ready')
 
 ### Lobby Chat
 
+The chat system uses a simple index-based polling approach. You track which messages you've read and poll for new ones.
+
+#### Setting Up Chat Message Handling
+
+```typescript
+import { SteamworksSDK } from 'steamworks-ffi-node';
+
+const steam = SteamworksSDK.getInstance();
+
+// After joining a lobby, start chat polling
+steam.matchmaking.startChatPolling(lobbyId);
+
+// Subscribe to chat messages
+steam.matchmaking.onChatMessage((event) => {
+  console.log(`[${event.senderId}]: ${event.message}`);
+});
+
+// In your game loop
+function gameLoop() {
+  steam.runCallbacks();               // Process Steam callbacks
+  steam.matchmaking.pollChatMessages(); // Check for new chat messages
+  // ... other game logic
+}
+
+// When leaving the lobby
+steam.matchmaking.stopChatPolling(lobbyId);
+steam.matchmaking.leaveLobby(lobbyId);
+```
+
+#### `startChatPolling(lobbyId: LobbyId): void`
+
+Start tracking chat messages for a lobby. Call this after joining a lobby.
+
+```typescript
+steam.matchmaking.startChatPolling(lobbyId);
+```
+
+#### `stopChatPolling(lobbyId: LobbyId): void`
+
+Stop tracking chat messages for a lobby. Call this before leaving.
+
+```typescript
+steam.matchmaking.stopChatPolling(lobbyId);
+```
+
+#### `pollChatMessages(): number`
+
+Polls for new chat messages in all tracked lobbies. Call this regularly (e.g., every frame or every 100ms). Returns the number of new messages found.
+
+```typescript
+// In your game loop:
+steam.runCallbacks();
+const newMessages = steam.matchmaking.pollChatMessages();
+```
+
+#### `onChatMessage(handler: LobbyChatHandler): () => void`
+
+Subscribes to chat message events. Returns an unsubscribe function.
+
+```typescript
+const unsubscribe = steam.matchmaking.onChatMessage((event) => {
+  console.log(`Message from ${event.senderId}: ${event.message}`);
+});
+
+// Later, to stop receiving events:
+unsubscribe();
+```
+
+**Event Data:**
+- `lobbyId: string` - Lobby where the message was sent
+- `senderId: string` - Steam ID of the sender
+- `chatId: number` - Message index
+- `entryType: EChatEntryType` - Type of chat entry
+- `message?: string` - Message content
+
+#### `getPendingChatMessages(): LobbyChatMessageEvent[]`
+
+Alternative to event handlers - returns and clears all queued messages.
+
+```typescript
+steam.matchmaking.pollChatMessages();
+const messages = steam.matchmaking.getPendingChatMessages();
+for (const msg of messages) {
+  console.log(`${msg.senderId}: ${msg.message}`);
+}
+```
+
 #### `sendLobbyChatMsg(lobbyId: LobbyId, message: string): boolean`
 
 Sends a text message to the lobby.
@@ -371,7 +458,7 @@ const sent = steam.matchmaking.sendLobbyChatMsg(lobbyId, 'Hello everyone!');
 
 #### `getLobbyChatEntry(lobbyId: LobbyId, chatId: number): LobbyChatEntry | null`
 
-Reads a chat message by ID.
+Reads a chat message by index (called automatically by `pollChatMessages()`).
 
 ```typescript
 const entry = steam.matchmaking.getLobbyChatEntry(lobbyId, chatId);

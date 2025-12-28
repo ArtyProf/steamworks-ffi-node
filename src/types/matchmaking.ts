@@ -165,6 +165,28 @@ export interface LobbyChatEntry {
 }
 
 /**
+ * Lobby chat message event data
+ * Used when polling for chat messages
+ */
+export interface LobbyChatMessageEvent {
+  /** Lobby where the message was sent */
+  lobbyId: LobbyId;
+  /** Steam ID of the sender */
+  senderId: string;
+  /** Chat message index */
+  chatId: number;
+  /** Entry type (chat, typing, etc.) */
+  entryType: EChatEntryType;
+  /** Message content */
+  message?: string;
+}
+
+/**
+ * Event handler type for chat message events
+ */
+export type LobbyChatHandler = (event: LobbyChatMessageEvent) => void;
+
+/**
  * Result from creating a lobby
  */
 export interface LobbyCreateResult {

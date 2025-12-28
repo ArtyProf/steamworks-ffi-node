@@ -13,6 +13,7 @@ export class SteamLibraryLoader {
   public SteamAPI_Shutdown!: koffi.KoffiFunction;
   public SteamAPI_RunCallbacks!: koffi.KoffiFunction;
   public SteamAPI_IsSteamRunning!: koffi.KoffiFunction;
+  
   public SteamAPI_SteamUserStats_v013!: koffi.KoffiFunction;
   public SteamAPI_SteamUser_v023!: koffi.KoffiFunction;
   public SteamAPI_SteamUtils_v010!: koffi.KoffiFunction;

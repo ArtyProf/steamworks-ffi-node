@@ -24,10 +24,9 @@
  *   - deleteLobbyData()
  *   - sendLobbyChatMsg()
  *   - leaveLobby()
- * 
- * Note: Chat messages require LobbyChatMsg_t callback handling which needs
- * proper callback registration. The getLobbyChatEntry() requires the chatId
- * from that callback - polling with 0 won't work for receiving messages.
+ *   - startChatPolling()
+ *   - pollChatMessages()
+ *   - onChatMessage()
  */
 
 import { SteamworksSDK, ELobbyType, type LobbyId } from '../../src';
@@ -209,6 +208,28 @@ async function testMatchmakingHost(): Promise<void> {
   console.log('Press Ctrl+C to leave lobby and exit.');
   console.log('');
 
+  // Set up chat message polling
+  console.log('-'.repeat(60));
+  console.log('SETTING UP CHAT POLLING');
+  console.log('-'.repeat(60));
+  
+  // Start polling for chat messages in this lobby
+  steam.matchmaking.startChatPolling(lobbyId);
+  console.log('Chat polling started for lobby');
+  
+  // Subscribe to chat messages
+  steam.matchmaking.onChatMessage((event) => {
+    const senderName = steam.friends.getFriendPersonaName(event.senderId);
+    console.log('');
+    console.log('*** CHAT MESSAGE RECEIVED ***');
+    console.log(`  From: ${senderName} (${event.senderId})`);
+    console.log(`  Message: "${event.message}"`);
+    console.log('');
+  });
+  
+  console.log('Chat message handler registered.');
+  console.log('');
+
   // Track members we've seen
   let previousMemberCount = currentMembers;
   let running = true;
@@ -222,8 +243,11 @@ async function testMatchmakingHost(): Promise<void> {
 
   // Main loop - check for new members
   while (running) {
-    // Run callbacks
+    // Run Steam callbacks (for all Steam systems)
     steam.runCallbacks();
+    
+    // Poll for new chat messages
+    steam.matchmaking.pollChatMessages();
 
     // Check member count
     const newMemberCount = steam.matchmaking.getNumLobbyMembers(lobbyId);
@@ -298,6 +322,9 @@ async function testMatchmakingHost(): Promise<void> {
   console.log('CLEANUP');
   console.log('-'.repeat(60));
 
+  console.log('Stopping chat polling...');
+  steam.matchmaking.stopChatPolling(lobbyId);
+  
   console.log('Leaving lobby...');
   steam.matchmaking.leaveLobby(lobbyId);
   console.log('Left lobby.');
