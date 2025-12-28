@@ -19,6 +19,7 @@
     "test:input:js": "node tests/js/test-input.js",
     "test:input-xbox:js": "node tests/js/test-input.js --virtual --type=xbox",
     "test:input-ps4:js": "node tests/js/test-input.js --virtual --type=ps4",
+    "test:screenshots:js": "node tests/js/test-screenshots.js",
     "test:core:ts": "ts-node tests/ts/test-core-api.ts",
     "test:achievements:ts": "ts-node tests/ts/test-complete-achievements.ts",
     "test:stats:ts": "ts-node tests/ts/test-complete-stats.ts",
@@ -30,6 +31,7 @@
     "test:input:ts": "ts-node tests/ts/test-input.ts",
     "test:input-xbox:ts": "ts-node tests/ts/test-input.ts --virtual --type=xbox",
     "test:input-ps4:ts": "ts-node tests/ts/test-input.ts --virtual --type=ps4",
+    "test:screenshots:ts": "ts-node tests/ts/test-screenshots.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

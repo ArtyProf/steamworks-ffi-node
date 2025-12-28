@@ -21,6 +21,8 @@ steam.richPresence.*   // Rich Presence operations
 steam.overlay.*        // Overlay control operations
 steam.cloud.*          // Cloud storage operations
 steam.workshop.*       // Workshop/UGC operations
+steam.input.*          // Controller input operations
+steam.screenshots.*    // Screenshots operations
 ```
 
 This design:
@@ -134,6 +136,18 @@ This design:
   - Motion data (gyro, accelerometer for supported controllers)
   - Haptics (vibration, LED control for DualShock/DualSense)
   - ⚠️ **Tested with virtual gamepad only** - not yet tested in production projects
+
+### Screenshots System
+
+- **[Screenshot Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SCREENSHOT_MANAGER.md)**
+  - **9 Functions** - Complete Steam Screenshots support
+  - Screenshot capture (programmatic and user-triggered)
+  - Add existing images to Steam library (from files or raw RGB data)
+  - Location tagging (geotag screenshots with location names)
+  - User tagging (tag friends who appear in screenshots)
+  - Workshop integration (link screenshots to published items)
+  - Screenshot hooks (intercept F12 to handle screenshots yourself)
+  - VR screenshot support (side-by-side and cubemap formats)
 
 ## 🚀 Quick Links
 

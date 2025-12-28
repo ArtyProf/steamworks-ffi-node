@@ -13,6 +13,7 @@ import { SteamOverlayManager } from './internal/SteamOverlayManager';
 import { SteamCloudManager } from './internal/SteamCloudManager';
 import { SteamWorkshopManager } from './internal/SteamWorkshopManager';
 import { SteamInputManager } from './internal/SteamInputManager';
+import { SteamScreenshotManager } from './internal/SteamScreenshotManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -28,6 +29,7 @@ import { SteamInputManager } from './internal/SteamInputManager';
  * - cloud: SteamCloudManager - Steam Cloud / Remote Storage operations
  * - workshop: SteamWorkshopManager - Steam Workshop / UGC operations
  * - input: SteamInputManager - Unified controller input operations
+ * - screenshots: SteamScreenshotManager - Screenshot capture and management
  * 
  * @example
  * ```typescript
@@ -45,6 +47,7 @@ import { SteamInputManager } from './internal/SteamInputManager';
  * const items = await steam.workshop.getSubscribedItems();
  * steam.input.init();
  * steam.input.runFrame();
+ * const handle = steam.screenshots.addScreenshotToLibrary('/path/to/image.jpg', null, 1920, 1080);
  * ```
  */
 class SteamworksSDK {
@@ -375,6 +378,44 @@ class SteamworksSDK {
    */
   public readonly input!: SteamInputManager;
 
+  /**
+   * Screenshot Manager - Handle Steam Screenshot operations
+   * 
+   * Provides screenshot functionality including:
+   * - Capture screenshots from raw RGB data
+   * - Add screenshots from files to Steam library
+   * - Tag screenshots with location metadata
+   * - Tag users and Workshop items in screenshots
+   * - Hook screenshots for custom capture handling
+   * - VR screenshot support
+   * 
+   * @example
+   * ```typescript
+   * // Add screenshot from file
+   * const handle = steam.screenshots.addScreenshotToLibrary(
+   *   '/path/to/screenshot.jpg',
+   *   null,  // Auto-generate thumbnail
+   *   1920,
+   *   1080
+   * );
+   * 
+   * // Tag with location
+   * if (handle !== INVALID_SCREENSHOT_HANDLE) {
+   *   steam.screenshots.setLocation(handle, 'Level 5 - Boss Arena');
+   * }
+   * 
+   * // Write raw RGB data
+   * const rgbData = myRenderer.captureFrame();
+   * const handle2 = steam.screenshots.writeScreenshot(rgbData, 1920, 1080);
+   * 
+   * // Hook screenshots for custom handling
+   * steam.screenshots.hookScreenshots(true);
+   * ```
+   * 
+   * @see {@link SteamScreenshotManager} for complete API documentation
+   */
+  public readonly screenshots!: SteamScreenshotManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -390,6 +431,7 @@ class SteamworksSDK {
     this.cloud = new SteamCloudManager(this.libraryLoader, this.apiCore);
     this.workshop = new SteamWorkshopManager(this.libraryLoader, this.apiCore);
     this.input = new SteamInputManager(this.libraryLoader);
+    this.screenshots = new SteamScreenshotManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {

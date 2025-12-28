@@ -42,3 +42,6 @@ export * from './workshop';
 
 // Input types
 export * from './input';
+
+// Screenshots types
+export * from './screenshots';

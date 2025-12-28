@@ -323,6 +323,28 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamInput_GetRemotePlaySessionID!: koffi.KoffiFunction;
   public SteamAPI_ISteamInput_GetSessionInputConfigurationSettings!: koffi.KoffiFunction;
 
+  // ========================================
+  // ISteamScreenshots Functions
+  // ========================================
+  
+  // Interface accessor
+  public SteamAPI_SteamScreenshots_v003!: koffi.KoffiFunction;
+  
+  // Screenshot capture
+  public SteamAPI_ISteamScreenshots_WriteScreenshot!: koffi.KoffiFunction;
+  public SteamAPI_ISteamScreenshots_AddScreenshotToLibrary!: koffi.KoffiFunction;
+  public SteamAPI_ISteamScreenshots_TriggerScreenshot!: koffi.KoffiFunction;
+  public SteamAPI_ISteamScreenshots_HookScreenshots!: koffi.KoffiFunction;
+  public SteamAPI_ISteamScreenshots_IsScreenshotsHooked!: koffi.KoffiFunction;
+  
+  // Screenshot tagging
+  public SteamAPI_ISteamScreenshots_SetLocation!: koffi.KoffiFunction;
+  public SteamAPI_ISteamScreenshots_TagUser!: koffi.KoffiFunction;
+  public SteamAPI_ISteamScreenshots_TagPublishedFile!: koffi.KoffiFunction;
+  
+  // VR screenshots
+  public SteamAPI_ISteamScreenshots_AddVRScreenshotToLibrary!: koffi.KoffiFunction;
+
   /**
    * Get platform-specific Steam library path
    * Users must download and install Steamworks SDK redistributables separately
@@ -735,6 +757,28 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamInput_GetDeviceBindingRevision = this.steamLib.func('SteamAPI_ISteamInput_GetDeviceBindingRevision', 'bool', ['void*', 'uint64', 'int*', 'int*']);
     this.SteamAPI_ISteamInput_GetRemotePlaySessionID = this.steamLib.func('SteamAPI_ISteamInput_GetRemotePlaySessionID', 'uint32', ['void*', 'uint64']);
     this.SteamAPI_ISteamInput_GetSessionInputConfigurationSettings = this.steamLib.func('SteamAPI_ISteamInput_GetSessionInputConfigurationSettings', 'uint16', ['void*']);
+    
+    // ========================================
+    // ISteamScreenshots Functions
+    // ========================================
+    
+    // Interface accessor
+    this.SteamAPI_SteamScreenshots_v003 = this.steamLib.func('SteamAPI_SteamScreenshots_v003', 'void*', []);
+    
+    // Screenshot capture
+    this.SteamAPI_ISteamScreenshots_WriteScreenshot = this.steamLib.func('SteamAPI_ISteamScreenshots_WriteScreenshot', 'uint32', ['void*', 'void*', 'uint32', 'int', 'int']);
+    this.SteamAPI_ISteamScreenshots_AddScreenshotToLibrary = this.steamLib.func('SteamAPI_ISteamScreenshots_AddScreenshotToLibrary', 'uint32', ['void*', 'str', 'str', 'int', 'int']);
+    this.SteamAPI_ISteamScreenshots_TriggerScreenshot = this.steamLib.func('SteamAPI_ISteamScreenshots_TriggerScreenshot', 'void', ['void*']);
+    this.SteamAPI_ISteamScreenshots_HookScreenshots = this.steamLib.func('SteamAPI_ISteamScreenshots_HookScreenshots', 'void', ['void*', 'bool']);
+    this.SteamAPI_ISteamScreenshots_IsScreenshotsHooked = this.steamLib.func('SteamAPI_ISteamScreenshots_IsScreenshotsHooked', 'bool', ['void*']);
+    
+    // Screenshot tagging
+    this.SteamAPI_ISteamScreenshots_SetLocation = this.steamLib.func('SteamAPI_ISteamScreenshots_SetLocation', 'bool', ['void*', 'uint32', 'str']);
+    this.SteamAPI_ISteamScreenshots_TagUser = this.steamLib.func('SteamAPI_ISteamScreenshots_TagUser', 'bool', ['void*', 'uint32', 'uint64']);
+    this.SteamAPI_ISteamScreenshots_TagPublishedFile = this.steamLib.func('SteamAPI_ISteamScreenshots_TagPublishedFile', 'bool', ['void*', 'uint32', 'uint64']);
+    
+    // VR screenshots
+    this.SteamAPI_ISteamScreenshots_AddVRScreenshotToLibrary = this.steamLib.func('SteamAPI_ISteamScreenshots_AddVRScreenshotToLibrary', 'uint32', ['void*', 'int', 'str', 'str']);
   }
 
   /**

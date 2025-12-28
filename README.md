@@ -43,6 +43,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Input API** - 35+ functions for complete Steam Input (controller) support! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/INPUT_MANAGER.md) ⚠️ Tested with virtual gamepad only
 
+> 🎉 **NEW: Screenshots API** - 9 functions for Steam Screenshots integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SCREENSHOT_MANAGER.md)
+
 ## Features
 
 - **Core API**: Essential Steam application functions
@@ -104,6 +106,13 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Digital actions (buttons) and analog actions (sticks/triggers)
   - ✅ Motion data (gyro, accelerometer for supported controllers)
   - ✅ Haptics (vibration, LED control for DualShock/DualSense)
+- **Screenshots API**: Steam Screenshots integration (9 functions)
+  - ✅ Screenshot capture (programmatic and user-triggered)
+  - ✅ Add existing images to Steam library
+  - ✅ Location and user tagging (geotag, tag friends)
+  - ✅ Workshop integration (tag published files)
+  - ✅ Screenshot hooks (intercept F12 screenshots)
+  - ✅ VR screenshot support
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Easy Setup**: Simple installation with clear SDK setup guide
