@@ -24,6 +24,7 @@ steam.workshop.*       // Workshop/UGC operations
 steam.input.*          // Controller input operations
 steam.screenshots.*    // Screenshots operations
 steam.apps.*           // DLC and app ownership operations
+steam.matchmaking.*    // Multiplayer lobby operations
 ```
 
 This design:
@@ -162,6 +163,19 @@ This design:
   - Launch parameters (Steam URL launch params)
   - Timed trial status
 
+### Matchmaking System
+
+- **[Matchmaking Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/MATCHMAKING_MANAGER.md)**
+  - **30+ Functions** - Complete lobby matchmaking support
+  - Lobby creation (public, private, friends-only, invisible)
+  - Lobby searching with filters (string, numerical, near, distance)
+  - Lobby joining and leaving
+  - Lobby data (get/set metadata for searching and game state)
+  - Member management (list, limit, ownership transfer)
+  - Lobby chat (send/receive messages between members)
+  - Game server association (link dedicated servers to lobbies)
+  - ⚠️ **Requires two Steam accounts for full testing** - multiplayer API
+
 ## 🚀 Quick Links
 
 ### Getting Started
@@ -183,6 +197,9 @@ This design:
 - Run Workshop Tests: `npm run test:workshop:js` - Tests all 30 Workshop/UGC functions
 - Run Input Tests: `npm run test:input-xbox:js` or `npm run test:input-ps4:js` - Tests 35+ input functions with virtual gamepad
 - Run Apps/DLC Tests: `npm run test:apps:js` - Tests all 28 apps/DLC functions
+- Run Screenshots Tests: `npm run test:screenshots:js` - Tests all 9 screenshot functions
+- Run Matchmaking Host: `npm run test:matchmaking:host:js` - Creates lobby, waits for players
+- Run Matchmaking Join: `npm run test:matchmaking:join:js` - Searches and joins lobbies
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
 
@@ -195,6 +212,11 @@ This design:
 - Run Workshop Tests: `npm run test:workshop:ts` - With type safety ✨
 - Run Input Tests: `npm run test:input-xbox:ts` or `npm run test:input-ps4:ts` - With type safety ✨
 - Run Apps/DLC Tests: `npm run test:apps:ts` - With type safety ✨
+- Run Screenshots Tests: `npm run test:screenshots:ts` - With type safety ✨
+- Run Matchmaking Host: `npm run test:matchmaking:host:ts` - Creates lobby, waits for players ✨
+- Run Matchmaking Join: `npm run test:matchmaking:join:ts` - Searches and joins lobbies ✨
+
+⚠️ **Note:** Matchmaking tests require two separate Steam accounts to fully test multiplayer functionality. Run the host test on one machine, then the join test on another machine with a different Steam account.
 
 📁 All tests are in `tests/` folder with separate `js/` and `ts/` subfolders.
 

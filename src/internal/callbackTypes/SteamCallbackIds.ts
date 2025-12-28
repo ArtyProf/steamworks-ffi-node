@@ -42,3 +42,16 @@ export const K_I_GET_USER_ITEM_VOTE_RESULT = 3409;
 
 /** Callback for DeleteItemResult_t */
 export const K_I_DELETE_ITEM_RESULT = 3417;
+
+// ========================================
+// Steam Matchmaking Callback IDs
+// ========================================
+
+/** Callback for LobbyEnter_t */
+export const K_I_LOBBY_ENTER = 504;
+
+/** Callback for LobbyMatchList_t */
+export const K_I_LOBBY_MATCH_LIST = 510;
+
+/** Callback for LobbyCreated_t */
+export const K_I_LOBBY_CREATED = 513;

@@ -13,6 +13,7 @@ export class SteamLibraryLoader {
   public SteamAPI_Shutdown!: koffi.KoffiFunction;
   public SteamAPI_RunCallbacks!: koffi.KoffiFunction;
   public SteamAPI_IsSteamRunning!: koffi.KoffiFunction;
+  
   public SteamAPI_SteamUserStats_v013!: koffi.KoffiFunction;
   public SteamAPI_SteamUser_v023!: koffi.KoffiFunction;
   public SteamAPI_SteamUtils_v010!: koffi.KoffiFunction;
@@ -392,6 +393,71 @@ export class SteamLibraryLoader {
   // Misc
   public SteamAPI_ISteamApps_MarkContentCorrupt!: koffi.KoffiFunction;
   public SteamAPI_ISteamApps_GetFileDetails!: koffi.KoffiFunction;
+
+  // ========================================
+  // ISteamMatchmaking Functions (Lobbies)
+  // ========================================
+  
+  // Interface accessor
+  public SteamAPI_SteamMatchmaking_v009!: koffi.KoffiFunction;
+  
+  // Favorite servers
+  public SteamAPI_ISteamMatchmaking_GetFavoriteGameCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetFavoriteGame!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddFavoriteGame!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_RemoveFavoriteGame!: koffi.KoffiFunction;
+  
+  // Lobby list requests
+  public SteamAPI_ISteamMatchmaking_RequestLobbyList!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListNumericalFilter!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListNearValueFilter!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListFilterSlotsAvailable!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListCompatibleMembersFilter!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyByIndex!: koffi.KoffiFunction;
+  
+  // Lobby creation and joining
+  public SteamAPI_ISteamMatchmaking_CreateLobby!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_JoinLobby!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_LeaveLobby!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_InviteUserToLobby!: koffi.KoffiFunction;
+  
+  // Lobby members
+  public SteamAPI_ISteamMatchmaking_GetNumLobbyMembers!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex!: koffi.KoffiFunction;
+  
+  // Lobby data
+  public SteamAPI_ISteamMatchmaking_GetLobbyData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyDataCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyDataByIndex!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_DeleteLobbyData!: koffi.KoffiFunction;
+  
+  // Lobby member data
+  public SteamAPI_ISteamMatchmaking_GetLobbyMemberData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyMemberData!: koffi.KoffiFunction;
+  
+  // Lobby chat
+  public SteamAPI_ISteamMatchmaking_SendLobbyChatMsg!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyChatEntry!: koffi.KoffiFunction;
+  
+  // Lobby metadata request
+  public SteamAPI_ISteamMatchmaking_RequestLobbyData!: koffi.KoffiFunction;
+  
+  // Lobby game server
+  public SteamAPI_ISteamMatchmaking_SetLobbyGameServer!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyGameServer!: koffi.KoffiFunction;
+  
+  // Lobby settings
+  public SteamAPI_ISteamMatchmaking_SetLobbyMemberLimit!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyMemberLimit!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyType!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyJoinable!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyOwner!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyOwner!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLinkedLobby!: koffi.KoffiFunction;
 
   /**
    * Get platform-specific Steam library path
@@ -875,6 +941,71 @@ export class SteamLibraryLoader {
     // Misc
     this.SteamAPI_ISteamApps_MarkContentCorrupt = this.steamLib.func('SteamAPI_ISteamApps_MarkContentCorrupt', 'bool', ['void*', 'bool']);
     this.SteamAPI_ISteamApps_GetFileDetails = this.steamLib.func('SteamAPI_ISteamApps_GetFileDetails', 'uint64', ['void*', 'str']);
+    
+    // ========================================
+    // ISteamMatchmaking Functions (Lobbies)
+    // ========================================
+    
+    // Interface accessor
+    this.SteamAPI_SteamMatchmaking_v009 = this.steamLib.func('SteamAPI_SteamMatchmaking_v009', 'void*', []);
+    
+    // Favorite servers
+    this.SteamAPI_ISteamMatchmaking_GetFavoriteGameCount = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetFavoriteGameCount', 'int', ['void*']);
+    this.SteamAPI_ISteamMatchmaking_GetFavoriteGame = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetFavoriteGame', 'bool', ['void*', 'int', 'uint32*', 'uint32*', 'uint16*', 'uint16*', 'uint32*', 'uint32*']);
+    this.SteamAPI_ISteamMatchmaking_AddFavoriteGame = this.steamLib.func('SteamAPI_ISteamMatchmaking_AddFavoriteGame', 'int', ['void*', 'uint32', 'uint32', 'uint16', 'uint16', 'uint32', 'uint32']);
+    this.SteamAPI_ISteamMatchmaking_RemoveFavoriteGame = this.steamLib.func('SteamAPI_ISteamMatchmaking_RemoveFavoriteGame', 'bool', ['void*', 'uint32', 'uint32', 'uint16', 'uint16', 'uint32']);
+    
+    // Lobby list requests
+    this.SteamAPI_ISteamMatchmaking_RequestLobbyList = this.steamLib.func('SteamAPI_ISteamMatchmaking_RequestLobbyList', 'uint64', ['void*']);
+    this.SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter = this.steamLib.func('SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter', 'void', ['void*', 'str', 'str', 'int']);
+    this.SteamAPI_ISteamMatchmaking_AddRequestLobbyListNumericalFilter = this.steamLib.func('SteamAPI_ISteamMatchmaking_AddRequestLobbyListNumericalFilter', 'void', ['void*', 'str', 'int', 'int']);
+    this.SteamAPI_ISteamMatchmaking_AddRequestLobbyListNearValueFilter = this.steamLib.func('SteamAPI_ISteamMatchmaking_AddRequestLobbyListNearValueFilter', 'void', ['void*', 'str', 'int']);
+    this.SteamAPI_ISteamMatchmaking_AddRequestLobbyListFilterSlotsAvailable = this.steamLib.func('SteamAPI_ISteamMatchmaking_AddRequestLobbyListFilterSlotsAvailable', 'void', ['void*', 'int']);
+    this.SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter = this.steamLib.func('SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter', 'void', ['void*', 'int']);
+    this.SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter = this.steamLib.func('SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter', 'void', ['void*', 'int']);
+    this.SteamAPI_ISteamMatchmaking_AddRequestLobbyListCompatibleMembersFilter = this.steamLib.func('SteamAPI_ISteamMatchmaking_AddRequestLobbyListCompatibleMembersFilter', 'void', ['void*', 'uint64']);
+    this.SteamAPI_ISteamMatchmaking_GetLobbyByIndex = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyByIndex', 'uint64', ['void*', 'int']);
+    
+    // Lobby creation and joining
+    this.SteamAPI_ISteamMatchmaking_CreateLobby = this.steamLib.func('SteamAPI_ISteamMatchmaking_CreateLobby', 'uint64', ['void*', 'int', 'int']);
+    this.SteamAPI_ISteamMatchmaking_JoinLobby = this.steamLib.func('SteamAPI_ISteamMatchmaking_JoinLobby', 'uint64', ['void*', 'uint64']);
+    this.SteamAPI_ISteamMatchmaking_LeaveLobby = this.steamLib.func('SteamAPI_ISteamMatchmaking_LeaveLobby', 'void', ['void*', 'uint64']);
+    this.SteamAPI_ISteamMatchmaking_InviteUserToLobby = this.steamLib.func('SteamAPI_ISteamMatchmaking_InviteUserToLobby', 'bool', ['void*', 'uint64', 'uint64']);
+    
+    // Lobby members
+    this.SteamAPI_ISteamMatchmaking_GetNumLobbyMembers = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetNumLobbyMembers', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex', 'uint64', ['void*', 'uint64', 'int']);
+    
+    // Lobby data
+    this.SteamAPI_ISteamMatchmaking_GetLobbyData = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyData', 'str', ['void*', 'uint64', 'str']);
+    this.SteamAPI_ISteamMatchmaking_SetLobbyData = this.steamLib.func('SteamAPI_ISteamMatchmaking_SetLobbyData', 'bool', ['void*', 'uint64', 'str', 'str']);
+    this.SteamAPI_ISteamMatchmaking_GetLobbyDataCount = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyDataCount', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamMatchmaking_GetLobbyDataByIndex = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyDataByIndex', 'bool', ['void*', 'uint64', 'int', 'char*', 'int', 'char*', 'int']);
+    this.SteamAPI_ISteamMatchmaking_DeleteLobbyData = this.steamLib.func('SteamAPI_ISteamMatchmaking_DeleteLobbyData', 'bool', ['void*', 'uint64', 'str']);
+    
+    // Lobby member data
+    this.SteamAPI_ISteamMatchmaking_GetLobbyMemberData = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyMemberData', 'str', ['void*', 'uint64', 'uint64', 'str']);
+    this.SteamAPI_ISteamMatchmaking_SetLobbyMemberData = this.steamLib.func('SteamAPI_ISteamMatchmaking_SetLobbyMemberData', 'void', ['void*', 'uint64', 'str', 'str']);
+    
+    // Lobby chat
+    this.SteamAPI_ISteamMatchmaking_SendLobbyChatMsg = this.steamLib.func('SteamAPI_ISteamMatchmaking_SendLobbyChatMsg', 'bool', ['void*', 'uint64', 'void*', 'int']);
+    this.SteamAPI_ISteamMatchmaking_GetLobbyChatEntry = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyChatEntry', 'int', ['void*', 'uint64', 'int', 'uint64*', 'void*', 'int', 'int*']);
+    
+    // Lobby metadata request
+    this.SteamAPI_ISteamMatchmaking_RequestLobbyData = this.steamLib.func('SteamAPI_ISteamMatchmaking_RequestLobbyData', 'bool', ['void*', 'uint64']);
+    
+    // Lobby game server
+    this.SteamAPI_ISteamMatchmaking_SetLobbyGameServer = this.steamLib.func('SteamAPI_ISteamMatchmaking_SetLobbyGameServer', 'void', ['void*', 'uint64', 'uint32', 'uint16', 'uint64']);
+    this.SteamAPI_ISteamMatchmaking_GetLobbyGameServer = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyGameServer', 'bool', ['void*', 'uint64', 'uint32*', 'uint16*', 'uint64*']);
+    
+    // Lobby settings
+    this.SteamAPI_ISteamMatchmaking_SetLobbyMemberLimit = this.steamLib.func('SteamAPI_ISteamMatchmaking_SetLobbyMemberLimit', 'bool', ['void*', 'uint64', 'int']);
+    this.SteamAPI_ISteamMatchmaking_GetLobbyMemberLimit = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyMemberLimit', 'int', ['void*', 'uint64']);
+    this.SteamAPI_ISteamMatchmaking_SetLobbyType = this.steamLib.func('SteamAPI_ISteamMatchmaking_SetLobbyType', 'bool', ['void*', 'uint64', 'int']);
+    this.SteamAPI_ISteamMatchmaking_SetLobbyJoinable = this.steamLib.func('SteamAPI_ISteamMatchmaking_SetLobbyJoinable', 'bool', ['void*', 'uint64', 'bool']);
+    this.SteamAPI_ISteamMatchmaking_GetLobbyOwner = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyOwner', 'uint64', ['void*', 'uint64']);
+    this.SteamAPI_ISteamMatchmaking_SetLobbyOwner = this.steamLib.func('SteamAPI_ISteamMatchmaking_SetLobbyOwner', 'bool', ['void*', 'uint64', 'uint64']);
+    this.SteamAPI_ISteamMatchmaking_SetLinkedLobby = this.steamLib.func('SteamAPI_ISteamMatchmaking_SetLinkedLobby', 'bool', ['void*', 'uint64', 'uint64']);
   }
 
   /**

@@ -15,6 +15,7 @@ import { SteamWorkshopManager } from './internal/SteamWorkshopManager';
 import { SteamInputManager } from './internal/SteamInputManager';
 import { SteamScreenshotManager } from './internal/SteamScreenshotManager';
 import { SteamAppsManager } from './internal/SteamAppsManager';
+import { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -31,6 +32,7 @@ import { SteamAppsManager } from './internal/SteamAppsManager';
  * - workshop: SteamWorkshopManager - Steam Workshop / UGC operations
  * - input: SteamInputManager - Unified controller input operations
  * - screenshots: SteamScreenshotManager - Screenshot capture and management
+ * - matchmaking: SteamMatchmakingManager - Lobby matchmaking operations
  * 
  * @example
  * ```typescript
@@ -49,6 +51,7 @@ import { SteamAppsManager } from './internal/SteamAppsManager';
  * steam.input.init();
  * steam.input.runFrame();
  * const handle = steam.screenshots.addScreenshotToLibrary('/path/to/image.jpg', null, 1920, 1080);
+ * const lobby = await steam.matchmaking.createLobby(ELobbyType.Public, 4);
  * ```
  */
 class SteamworksSDK {
@@ -459,6 +462,46 @@ class SteamworksSDK {
    */
   public readonly apps!: SteamAppsManager;
 
+  /**
+   * Steam Matchmaking Manager - Manages multiplayer lobbies and matchmaking
+   * 
+   * Provides comprehensive access to the ISteamMatchmaking interface for:
+   * - Creating and managing lobbies (public, private, friends-only, invisible)
+   * - Searching for and joining existing lobbies
+   * - Managing lobby members and data
+   * - Sending and receiving lobby chat messages
+   * - Configuring lobby game servers
+   * 
+   * @example
+   * ```typescript
+   * // Create a public lobby for up to 4 players
+   * const result = await steam.matchmaking.createLobby(ELobbyType.Public, 4);
+   * if (result.success) {
+   *   console.log(`Lobby created: ${result.lobbyId}`);
+   *   
+   *   // Set lobby data for searching
+   *   steam.matchmaking.setLobbyData(result.lobbyId, 'gameMode', 'deathmatch');
+   *   steam.matchmaking.setLobbyData(result.lobbyId, 'map', 'dust2');
+   * }
+   * 
+   * // Search for lobbies with filters
+   * steam.matchmaking.addRequestLobbyListStringFilter('gameMode', 'deathmatch', ELobbyComparison.Equal);
+   * steam.matchmaking.addRequestLobbyListResultCountFilter(10);
+   * const lobbies = await steam.matchmaking.requestLobbyList();
+   * 
+   * // Join a lobby
+   * if (lobbies.lobbies.length > 0) {
+   *   const joinResult = await steam.matchmaking.joinLobby(lobbies.lobbies[0].lobbyId);
+   *   if (joinResult.success) {
+   *     console.log('Joined lobby successfully!');
+   *   }
+   * }
+   * ```
+   * 
+   * @see {@link SteamMatchmakingManager} for complete API documentation
+   */
+  public readonly matchmaking!: SteamMatchmakingManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -476,6 +519,7 @@ class SteamworksSDK {
     this.input = new SteamInputManager(this.libraryLoader);
     this.screenshots = new SteamScreenshotManager(this.libraryLoader, this.apiCore);
     this.apps = new SteamAppsManager(this.libraryLoader, this.apiCore);
+    this.matchmaking = new SteamMatchmakingManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {
