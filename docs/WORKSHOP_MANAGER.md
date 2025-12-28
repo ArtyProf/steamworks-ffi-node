@@ -15,8 +15,9 @@ The `SteamWorkshopManager` provides comprehensive access to the Steam Workshop A
 | [Query Operations](#query-operations) | 8 | Search and browse Workshop content |
 | [Item Creation & Update](#item-creation--update) | 9 | Create and update your own Workshop items |
 | [Voting & Favorites](#voting--favorites) | 4 | Vote on items and manage favorites |
+| [Item Deletion](#item-deletion) | 1 | Delete Workshop items you created |
 
-**Total: 29 Functions**
+**Total: 30 Functions**
 
 ---
 
@@ -1423,6 +1424,42 @@ if (success) {
 
 **Notes:**
 - Waits up to 5 seconds for Steam server response
+
+---
+
+## Item Deletion
+
+Functions for permanently deleting Workshop items you created.
+
+### `deleteItem(publishedFileId)`
+
+Permanently delete a Workshop item that you created. This action cannot be undone.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_DeleteItem()` - Delete Workshop item
+
+**Parameters:**
+- `publishedFileId: PublishedFileId` - Workshop item ID to delete
+
+**Returns:** `Promise<boolean>` - `true` if deleted successfully, `false` otherwise
+
+**Example:**
+```typescript
+const itemId = BigInt('123456789');
+const success = await steam.workshop.deleteItem(itemId);
+
+if (success) {
+  console.log('Workshop item deleted permanently');
+} else {
+  console.log('Failed to delete - you may not be the owner');
+}
+```
+
+**Notes:**
+- You can only delete items that you created
+- This action is permanent and cannot be undone
+- All subscribers will lose access to the item
+- Waits up to 10 seconds for Steam server response
 
 ---
 

@@ -98,3 +98,13 @@ export interface UserFavoriteItemsListChangedType {
   m_eResult: number;
   m_bWasAddRequest: boolean;
 }
+
+/**
+ * DeleteItemResult_t callback structure
+ * 
+ * Result of ISteamUGC::DeleteItem call
+ */
+export interface DeleteItemResultType {
+  m_eResult: number;
+  m_nPublishedFileId: bigint;
+}

@@ -247,6 +247,9 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUGC_GetUserItemVote!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_AddItemToFavorites!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_RemoveItemFromFavorites!: koffi.KoffiFunction;
+  
+  // Deletion
+  public SteamAPI_ISteamUGC_DeleteItem!: koffi.KoffiFunction;
 
   // ========================================
   // ISteamInput Functions
@@ -657,6 +660,9 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUGC_GetUserItemVote = this.steamLib.func('SteamAPI_ISteamUGC_GetUserItemVote', 'uint64', ['void*', 'uint64']);
     this.SteamAPI_ISteamUGC_AddItemToFavorites = this.steamLib.func('SteamAPI_ISteamUGC_AddItemToFavorites', 'uint64', ['void*', 'uint32', 'uint64']);
     this.SteamAPI_ISteamUGC_RemoveItemFromFavorites = this.steamLib.func('SteamAPI_ISteamUGC_RemoveItemFromFavorites', 'uint64', ['void*', 'uint32', 'uint64']);
+    
+    // Deletion
+    this.SteamAPI_ISteamUGC_DeleteItem = this.steamLib.func('SteamAPI_ISteamUGC_DeleteItem', 'uint64', ['void*', 'uint64']);
     
     // ========================================
     // ISteamInput Functions

@@ -39,7 +39,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Cloud Storage API** - 17 functions for complete Steam Cloud (Remote Storage) integration including batch writes! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)
 
-> 🎉 **NEW: Workshop API** - 29 functions for complete Steam Workshop/UGC integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)
+> 🎉 **NEW: Workshop API** - 30 functions for complete Steam Workshop/UGC integration including item deletion! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)
 
 > 🎉 **NEW: Input API** - 35+ functions for complete Steam Input (controller) support! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/INPUT_MANAGER.md) ⚠️ Tested with virtual gamepad only
 
@@ -91,12 +91,13 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Quota management (track storage usage and limits)
   - ✅ Cloud settings (check/toggle cloud sync for account and app)
   - ✅ Batch writes (atomic multi-file operations)
-- **Workshop API**: Complete Steam Workshop/UGC integration (29 functions)
+- **Workshop API**: Complete Steam Workshop/UGC integration (30 functions)
   - ✅ Subscription management (subscribe, unsubscribe, list items)
   - ✅ Item state & information (download progress, installation info)
   - ✅ Query operations (text search, browse, filter Workshop content)
   - ✅ Item creation & update (create, upload, manage your Workshop items)
   - ✅ Voting & favorites (vote on items, manage favorites)
+  - ✅ Item deletion (permanently delete your Workshop items)
 - **Input API**: Complete Steam Input (controller) support (35+ functions) ⚠️ _Tested with virtual gamepad only_
   - ✅ Controller detection (Xbox, PlayStation, Switch, Steam Controller, Steam Deck)
   - ✅ Action sets and layers (menu controls, gameplay controls, etc.)

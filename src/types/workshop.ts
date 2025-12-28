@@ -313,6 +313,15 @@ export interface UserItemVoteResult {
 }
 
 /**
+ * Delete item result
+ */
+export interface DeleteItemResult {
+  success: boolean;
+  result: number;                      // EResult
+  publishedFileId: PublishedFileId;
+}
+
+/**
  * Workshop constants
  */
 export const WorkshopConstants = {

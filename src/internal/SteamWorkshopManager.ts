@@ -30,6 +30,7 @@ import {
   K_I_GET_USER_ITEM_VOTE_RESULT,
   K_I_REMOTE_STORAGE_SUBSCRIBE_PUBLISHED_FILE_RESULT,
   K_I_REMOTE_STORAGE_UNSUBSCRIBE_PUBLISHED_FILE_RESULT,
+  K_I_DELETE_ITEM_RESULT,
   CreateItemResultType,
   SubmitItemUpdateResultType,
   RemoteStorageSubscribePublishedFileResultType,
@@ -37,7 +38,8 @@ import {
   SteamUGCQueryCompletedType,
   SetUserItemVoteResultType,
   GetUserItemVoteResultType,
-  UserFavoriteItemsListChangedType
+  UserFavoriteItemsListChangedType,
+  DeleteItemResultType
 } from './callbackTypes';
 import * as koffi from 'koffi';
 
@@ -99,6 +101,13 @@ const UserFavoriteItemsListChanged_t = koffi.struct('UserFavoriteItemsListChange
   m_nPublishedFileId: 'uint64',         // PublishedFileId_t (8 bytes)
   m_eResult: 'int',                     // EResult (4 bytes)
   m_bWasAddRequest: 'bool'              // bool (1 byte)
+});
+
+// Manual buffer parsing for DeleteItemResult_t callback
+// Steam uses #pragma pack causing tight packing - Koffi can't handle this properly
+// Layout: [int32:0-3][uint64:4-11] = 12 bytes (NO padding!)
+const DeleteItemResult_t = koffi.struct('DeleteItemResult_t', {
+  rawBytes: koffi.array('uint8', 12)
 });
 
 // Manual buffer parsing for SteamUGCDetails_t
@@ -2004,6 +2013,86 @@ export class SteamWorkshopManager {
       return false;
     } catch (error) {
       console.error('[Steamworks] Error removing item from favorites:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Deletes a Workshop item that you created
+   * 
+   * @param publishedFileId - Workshop item ID to delete
+   * @returns True if deleted successfully, false otherwise
+   * 
+   * @remarks
+   * - You can only delete items that you created
+   * - This action is permanent and cannot be undone
+   * - Subscribers will lose access to the item
+   * 
+   * @example
+   * ```typescript
+   * const itemId = BigInt('123456789');
+   * const success = await steam.workshop.deleteItem(itemId);
+   * 
+   * if (success) {
+   *   console.log('Workshop item deleted permanently');
+   * } else {
+   *   console.log('Failed to delete item - you may not be the owner');
+   * }
+   * ```
+   */
+  async deleteItem(publishedFileId: PublishedFileId): Promise<boolean> {
+    if (!this.apiCore.isInitialized()) {
+      console.error('[Steamworks] Steam API not initialized');
+      return false;
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      console.error('[Steamworks] ISteamUGC interface not available');
+      return false;
+    }
+
+    try {
+      const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_DeleteItem(ugc, publishedFileId);
+      
+      if (callHandle === BigInt(0)) {
+        console.error('[Steamworks] Failed to initiate item deletion');
+        return false;
+      }
+
+      // Wait for the callback result
+      const result = await this.callbackPoller.poll<DeleteItemResultType>(
+        BigInt(callHandle),
+        DeleteItemResult_t,
+        K_I_DELETE_ITEM_RESULT,
+        100, // max retries (10 seconds total)
+        100  // delay ms
+      );
+
+      // Parse the raw bytes manually due to tight packing
+      if (result) {
+        const rawBytes = (result as unknown as { rawBytes: number[] }).rawBytes;
+        if (rawBytes) {
+          // Layout: [int32:0-3][uint64:4-11]
+          const eResult = rawBytes[0] | (rawBytes[1] << 8) | (rawBytes[2] << 16) | (rawBytes[3] << 24);
+          
+          if (eResult === 1) { // k_EResultOK = 1
+            return true;
+          }
+          console.error(`[Steamworks] Delete item failed with result: ${eResult}`);
+          return false;
+        }
+        
+        // Fallback to direct property access
+        if (result.m_eResult === 1) {
+          return true;
+        }
+        console.error(`[Steamworks] Delete item failed with result: ${result.m_eResult || 'unknown'}`);
+      }
+
+      return false;
+    } catch (error) {
+      console.error('[Steamworks] Error deleting item:', error);
       return false;
     }
   }

@@ -423,6 +423,27 @@ async function testCompleteWorkshopLifecycle(): Promise<void> {
     await sleep(1000);
     
     // ============================================================
+    // STEP 9: DELETE WORKSHOP ITEM (only if we created it)
+    // ============================================================
+    console.log('\n📋 STEP 9: Delete Workshop Item');
+    console.log('================================');
+    
+    if (itemCreated && createdItemId) {
+      console.log('\n🗑️  Deleting Workshop item...');
+      const deleted = await steam.workshop.deleteItem(createdItemId);
+      if (deleted) {
+        console.log(`✅ Successfully deleted Workshop item: ${createdItemId}`);
+      } else {
+        console.log(`⚠️  Failed to delete item - you may need to delete it manually`);
+        console.log(`   Visit: https://steamcommunity.com/sharedfiles/filedetails/?id=${createdItemId}`);
+      }
+    } else {
+      console.log('⏭️  Skipping deletion - using existing subscribed item, not one we created');
+    }
+    
+    await sleep(1000);
+    
+    // ============================================================
     // SUMMARY
     // ============================================================
     console.log('\n\n📊 TEST SUMMARY');
@@ -437,11 +458,15 @@ async function testCompleteWorkshopLifecycle(): Promise<void> {
     console.log('  6. ✅ Subscription management tested');
     console.log('  7. ✅ Voting and favorites tested');
     console.log('  8. ✅ Cleanup completed');
+    console.log('  9. ✅ Item deletion tested');
     
     console.log('\n💡 NOTES:');
     console.log('  • Workshop item was kept private for testing');
-    console.log('  • Item unsubscribed but not deleted (requires web browser)');
-    console.log('  • To delete: Visit https://steamcommunity.com/sharedfiles/filedetails/?id=' + createdItemId);
+    if (itemCreated) {
+      console.log('  • Item was deleted via API');
+    } else {
+      console.log('  • Item unsubscribed but not deleted (was not created by this test)');
+    }
     console.log('  • All async operations now use built-in async/await callbacks!');
     
     // Final callback processing

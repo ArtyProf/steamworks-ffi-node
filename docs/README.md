@@ -116,12 +116,13 @@ This design:
 ### Workshop System
 
 - **[Workshop Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)**
-  - **29 Functions** - Complete Steam Workshop/UGC support
+  - **30 Functions** - Complete Steam Workshop/UGC support
   - Subscription management (subscribe, unsubscribe, list items)
   - Item state & information (download progress, installation info)
   - Query operations (text search, browse, filter Workshop content)
   - Item creation & update (create, upload, manage your Workshop items)
   - Voting & favorites (vote on items, manage favorites)
+  - Item deletion (permanently delete your Workshop items)
 
 ### Input System
 
@@ -152,7 +153,7 @@ This design:
 - Run Friends Tests: `npm run test:friends:js` - Tests all 22 friends functions
 - Run Cloud Tests: `npm run test:cloud:js` - Tests all 17 cloud storage functions
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:js` - Tests 6 rich presence + 7 overlay functions
-- Run Workshop Tests: `npm run test:workshop:js` - Tests all 29 Workshop/UGC functions
+- Run Workshop Tests: `npm run test:workshop:js` - Tests all 30 Workshop/UGC functions
 - Run Input Tests: `npm run test:input-xbox:js` or `npm run test:input-ps4:js` - Tests 35+ input functions with virtual gamepad
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):

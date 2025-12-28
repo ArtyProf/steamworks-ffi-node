@@ -39,3 +39,6 @@ export const K_I_SET_USER_ITEM_VOTE_RESULT = 3408;
 
 /** Callback for GetUserItemVoteResult_t */
 export const K_I_GET_USER_ITEM_VOTE_RESULT = 3409;
+
+/** Callback for DeleteItemResult_t */
+export const K_I_DELETE_ITEM_RESULT = 3417;
