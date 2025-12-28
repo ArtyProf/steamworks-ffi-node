@@ -292,7 +292,13 @@ async function testMatchmakingJoin(): Promise<void> {
   console.log('');
 
   let running = true;
-  let previousMemberCount = currentMembers;
+  
+  // Track members for detecting joins/leaves
+  let previousMembers: Set<string> = new Set();
+  for (let i = 0; i < currentMembers; i++) {
+    const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
+    if (memberId) previousMembers.add(memberId);
+  }
 
   // Set up signal handler for clean exit
   process.on('SIGINT', () => {
@@ -308,25 +314,58 @@ async function testMatchmakingJoin(): Promise<void> {
     // Poll for new chat messages
     steam.matchmaking.pollChatMessages();
 
-    // Check member count
+    // Get current members
+    const currentMemberIds: Set<string> = new Set();
     const newMemberCount = steam.matchmaking.getNumLobbyMembers(lobbyId);
+    for (let i = 0; i < newMemberCount; i++) {
+      const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
+      if (memberId) currentMemberIds.add(memberId);
+    }
     
-    if (newMemberCount !== previousMemberCount) {
-      console.log('');
-      console.log('*** MEMBER UPDATE ***');
-      console.log(`Members: ${previousMemberCount} -> ${newMemberCount}`);
-      
-      // List all current members with their data
-      for (let i = 0; i < newMemberCount; i++) {
-        const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
+    // Detect joins
+    for (const memberId of currentMemberIds) {
+      if (!previousMembers.has(memberId)) {
         const memberName = steam.friends.getFriendPersonaName(memberId);
+        console.log('');
+        console.log('╔════════════════════════════════════════════════════════════╗');
+        console.log(`║  🟢 JOINED: ${memberName.padEnd(45)} ║`);
+        console.log(`║     Steam ID: ${memberId.padEnd(43)} ║`);
+        console.log('╚════════════════════════════════════════════════════════════╝');
+      }
+    }
+    
+    // Detect leaves
+    for (const memberId of previousMembers) {
+      if (!currentMemberIds.has(memberId)) {
+        const memberName = steam.friends.getFriendPersonaName(memberId);
+        console.log('');
+        console.log('╔════════════════════════════════════════════════════════════╗');
+        console.log(`║  🔴 LEFT: ${memberName.padEnd(47)} ║`);
+        console.log(`║     Steam ID: ${memberId.padEnd(43)} ║`);
+        console.log('╚════════════════════════════════════════════════════════════╝');
+      }
+    }
+    
+    // If member count changed, show current roster
+    if (currentMemberIds.size !== previousMembers.size) {
+      const maxMembers = steam.matchmaking.getLobbyMemberLimit(lobbyId);
+      console.log('');
+      console.log(`📋 Current Members (${currentMemberIds.size}/${maxMembers}):`);
+      let idx = 1;
+      for (const memberId of currentMemberIds) {
+        const memberName = steam.friends.getFriendPersonaName(memberId);
+        const isOwner = memberId === steam.matchmaking.getLobbyOwner(lobbyId);
         const memberStatus = steam.matchmaking.getLobbyMemberData(lobbyId, memberId, 'status');
-        console.log(`  Member ${i + 1}: ${memberName} (status: ${memberStatus || 'not set'})`);
+        const ownerTag = isOwner ? ' 👑' : '';
+        const statusTag = memberStatus ? ` [${memberStatus}]` : '';
+        console.log(`   ${idx}. ${memberName}${ownerTag}${statusTag}`);
+        idx++;
       }
       console.log('');
-      
-      previousMemberCount = newMemberCount;
     }
+    
+    // Update previous members for next iteration
+    previousMembers = currentMemberIds;
 
     // Wait a bit before next check
     await sleep(100);

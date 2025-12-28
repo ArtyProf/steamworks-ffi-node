@@ -230,8 +230,14 @@ async function testMatchmakingHost(): Promise<void> {
   console.log('Chat message handler registered.');
   console.log('');
 
-  // Track members we've seen
-  let previousMemberCount = currentMembers;
+  // Track members we've seen (for detecting joins/leaves)
+  let previousMembers: Set<string> = new Set();
+  // Initialize with current members
+  for (let i = 0; i < currentMembers; i++) {
+    const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
+    if (memberId) previousMembers.add(memberId);
+  }
+  
   let running = true;
   let ownershipTransferred = false;
 
@@ -249,49 +255,83 @@ async function testMatchmakingHost(): Promise<void> {
     // Poll for new chat messages
     steam.matchmaking.pollChatMessages();
 
-    // Check member count
+    // Get current members
+    const currentMemberIds: Set<string> = new Set();
     const newMemberCount = steam.matchmaking.getNumLobbyMembers(lobbyId);
+    for (let i = 0; i < newMemberCount; i++) {
+      const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
+      if (memberId) currentMemberIds.add(memberId);
+    }
     
-    if (newMemberCount !== previousMemberCount) {
-      console.log('');
-      console.log('*** MEMBER UPDATE ***');
-      console.log(`Members: ${previousMemberCount} -> ${newMemberCount}`);
-      
-      // List all current members
-      for (let i = 0; i < newMemberCount; i++) {
-        const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
+    // Detect joins - members in current but not in previous
+    for (const memberId of currentMemberIds) {
+      if (!previousMembers.has(memberId)) {
         const memberName = steam.friends.getFriendPersonaName(memberId);
-        console.log(`  Member ${i + 1}: ${memberName} (${memberId})`);
+        console.log('');
+        console.log('╔════════════════════════════════════════════════════════════╗');
+        console.log(`║  🟢 JOINED: ${memberName.padEnd(45)} ║`);
+        console.log(`║     Steam ID: ${memberId.padEnd(43)} ║`);
+        console.log('╚════════════════════════════════════════════════════════════╝');
         
-        // Read member data if available
+        // Send welcome message
+        const welcomeMsg = `Welcome ${memberName}! ${currentMemberIds.size} players in lobby.`;
+        steam.matchmaking.sendLobbyChatMsg(lobbyId, welcomeMsg);
+      }
+    }
+    
+    // Detect leaves - members in previous but not in current
+    for (const memberId of previousMembers) {
+      if (!currentMemberIds.has(memberId)) {
+        const memberName = steam.friends.getFriendPersonaName(memberId);
+        console.log('');
+        console.log('╔════════════════════════════════════════════════════════════╗');
+        console.log(`║  🔴 LEFT: ${memberName.padEnd(47)} ║`);
+        console.log(`║     Steam ID: ${memberId.padEnd(43)} ║`);
+        console.log('╚════════════════════════════════════════════════════════════╝');
+        
+        // Notify remaining members
+        if (currentMemberIds.size > 0) {
+          const leaveMsg = `${memberName} has left the lobby. ${currentMemberIds.size} players remaining.`;
+          steam.matchmaking.sendLobbyChatMsg(lobbyId, leaveMsg);
+        }
+      }
+    }
+    
+    // If member count changed, show current roster
+    if (currentMemberIds.size !== previousMembers.size) {
+      console.log('');
+      console.log(`📋 Current Members (${currentMemberIds.size}/${maxMembers}):`);
+      let idx = 1;
+      for (const memberId of currentMemberIds) {
+        const memberName = steam.friends.getFriendPersonaName(memberId);
+        const isOwner = memberId === steam.matchmaking.getLobbyOwner(lobbyId);
         const memberStatus = steam.matchmaking.getLobbyMemberData(lobbyId, memberId, 'status');
         const memberChar = steam.matchmaking.getLobbyMemberData(lobbyId, memberId, 'character');
-        if (memberStatus || memberChar) {
-          console.log(`    Data: status="${memberStatus}", character="${memberChar}"`);
-        }
+        const ownerTag = isOwner ? ' 👑' : '';
+        const statusTag = memberStatus ? ` [${memberStatus}]` : '';
+        const charTag = memberChar ? ` (${memberChar})` : '';
+        console.log(`   ${idx}. ${memberName}${ownerTag}${statusTag}${charTag}`);
+        idx++;
       }
       
       // Test setLobbyOwner when second player joins
-      if (newMemberCount >= 2 && !ownershipTransferred) {
+      if (currentMemberIds.size >= 2 && !ownershipTransferred) {
         console.log('');
         console.log('--- Testing setLobbyOwner() ---');
         
         // Find the other member
-        for (let i = 0; i < newMemberCount; i++) {
-          const memberId = steam.matchmaking.getLobbyMemberByIndex(lobbyId, i);
+        for (const memberId of currentMemberIds) {
           if (memberId !== steamId) {
-            console.log(`Attempting to transfer ownership to: ${memberId}`);
+            const memberName = steam.friends.getFriendPersonaName(memberId);
+            console.log(`Attempting to transfer ownership to: ${memberName}`);
             const transferResult = steam.matchmaking.setLobbyOwner(lobbyId, memberId);
             console.log(`setLobbyOwner() result: ${transferResult}`);
             
             const newOwner = steam.matchmaking.getLobbyOwner(lobbyId);
-            console.log(`New owner: ${newOwner}`);
+            const newOwnerName = steam.friends.getFriendPersonaName(newOwner);
+            console.log(`New owner: ${newOwnerName}`);
             
-            // Transfer back
             if (transferResult) {
-              console.log('Transferring ownership back...');
-              // Note: This won't work because we're no longer the owner!
-              // The new owner would need to transfer it back
               console.log('(Cannot transfer back - we are no longer the owner)');
             }
             
@@ -301,16 +341,11 @@ async function testMatchmakingHost(): Promise<void> {
         }
       }
       
-      // Send a welcome message when someone joins
-      if (newMemberCount > previousMemberCount) {
-        const welcomeMsg = `Welcome! ${newMemberCount} players in lobby.`;
-        const sent = steam.matchmaking.sendLobbyChatMsg(lobbyId, welcomeMsg);
-        console.log(`Sent welcome message: ${sent}`);
-      }
-      
       console.log('');
-      previousMemberCount = newMemberCount;
     }
+    
+    // Update previous members for next iteration
+    previousMembers = currentMemberIds;
 
     // Wait a bit before next check
     await sleep(100);
