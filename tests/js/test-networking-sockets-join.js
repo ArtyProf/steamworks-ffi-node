@@ -16,19 +16,40 @@ const {
   EResult,
   getConnectionStateName,
 } = require('../../dist');
+const readline = require('readline');
 
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function promptForSteamId() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  
+  return new Promise((resolve) => {
+    rl.question('Enter host Steam ID: ', (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
 async function testNetworkingSocketsJoin() {
-  // Get host Steam ID from command line
-  const hostSteamId = process.argv[2];
+  // Get host Steam ID from command line or prompt
+  let hostSteamId = process.argv[2];
   
   if (!hostSteamId) {
-    console.error('Usage: npm run test:sockets:join:js -- <host_steam_id>');
-    console.error('Example: npm run test:sockets:join:js -- 76561198000000000');
-    process.exit(1);
+    console.log('Usage: npm run test:sockets:join:js -- <host_steam_id>');
+    console.log('Example: npm run test:sockets:join:js -- 76561198000000000');
+    console.log('');
+    hostSteamId = await promptForSteamId();
+    
+    if (!hostSteamId) {
+      console.error('No Steam ID provided. Exiting.');
+      process.exit(1);
+    }
   }
 
   console.log('='.repeat(60));
