@@ -1,5 +1,5 @@
 import * as koffi from 'koffi';
-import { SteamLibraryLoader } from './SteamLibraryLoader';
+import { SteamLibraryLoader, FnSteamNetConnectionStatusChanged } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamCallbackPoller } from './SteamCallbackPoller';
 import {
@@ -127,15 +127,15 @@ export class SteamNetworkingSocketsManager {
     if (this.callbackRegistered) return;
 
     try {
-      // Define the callback prototype: void (*)(SteamNetConnectionStatusChangedCallback_t*)
-      const CallbackProto = koffi.proto('ConnectionStatusCallback', 'void', ['void*']);
+      // Use the callback prototype exported from SteamLibraryLoader
+      // (must be the same proto used in the FFI declaration)
       
       // Create the callback function that will be called from native code
       this.connectionStatusCallback = koffi.register(
         (infoPtr: any) => {
           this.handleConnectionStatusChanged(infoPtr);
         },
-        CallbackProto
+        FnSteamNetConnectionStatusChanged
       );
 
       // Get the NetworkingUtils interface
