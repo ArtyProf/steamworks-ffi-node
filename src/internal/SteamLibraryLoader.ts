@@ -2,10 +2,16 @@ import * as koffi from 'koffi';
 import * as path from 'path';
 import * as fs from 'fs';
 
-// Define callback prototypes at module level for use in FFI declarations
-// These must be defined before they're used in function signatures
-// Export for use in other modules that need to register callbacks
-export const FnSteamNetConnectionStatusChanged = koffi.proto('FnSteamNetConnectionStatusChanged', 'void', ['void*']);
+// Define callback prototype at module level
+// The callback receives a pointer to SteamNetConnectionStatusChangedCallback_t
+// Using 'void*' for the parameter since we'll decode it manually
+export const FnSteamNetConnectionStatusChanged = koffi.proto(
+  'FnSteamNetConnectionStatusChanged', 
+  'void', 
+  ['void*']
+);
+// Pointer type for the callback - needed for FFI declarations
+export const FnSteamNetConnectionStatusChangedPtr = koffi.pointer(FnSteamNetConnectionStatusChanged);
 
 /**
  * Handles loading the Steamworks native library and FFI function declarations
@@ -862,7 +868,7 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged = this.steamLib.func(
       'SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged', 
       'bool', 
-      ['void*', koffi.pointer(FnSteamNetConnectionStatusChanged)]
+      ['void*', FnSteamNetConnectionStatusChangedPtr]
     );
     
     // ========================================

@@ -1,5 +1,5 @@
 import * as koffi from 'koffi';
-import { SteamLibraryLoader, FnSteamNetConnectionStatusChanged } from './SteamLibraryLoader';
+import { SteamLibraryLoader, FnSteamNetConnectionStatusChangedPtr } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamCallbackPoller } from './SteamCallbackPoller';
 import {
@@ -116,6 +116,8 @@ export class SteamNetworkingSocketsManager {
    */
   private ensureCallbackRegistered(): void {
     if (this.callbackRegistered) return;
+    
+    // Try to register the actual callback for receiving connection state changes
     this.registerGlobalCallback();
   }
 
@@ -127,16 +129,18 @@ export class SteamNetworkingSocketsManager {
     if (this.callbackRegistered) return;
 
     try {
-      // Use the callback prototype exported from SteamLibraryLoader
-      // koffi.register() expects a pointer to the callback type
-      const callbackPtrType = koffi.pointer(FnSteamNetConnectionStatusChanged);
-      
       // Create the callback function that will be called from native code
+      // The callback receives a pointer to SteamNetConnectionStatusChangedCallback_t
+      // Use the same pointer type that's used in the FFI declaration
       this.connectionStatusCallback = koffi.register(
         (infoPtr: any) => {
-          this.handleConnectionStatusChanged(infoPtr);
+          try {
+            this.handleConnectionStatusChanged(infoPtr);
+          } catch (error) {
+            console.error('[Steamworks] Error in connection status callback:', error);
+          }
         },
-        callbackPtrType
+        FnSteamNetConnectionStatusChangedPtr
       );
 
       // Get the NetworkingUtils interface
@@ -167,7 +171,9 @@ export class SteamNetworkingSocketsManager {
    * Called by native code when any connection state changes
    */
   private handleConnectionStatusChanged(infoPtr: any): void {
-    if (!infoPtr) return;
+    if (!infoPtr) {
+      return;
+    }
 
     try {
       // Use centralized parser from SteamCallbackPoller
@@ -368,14 +374,21 @@ export class SteamNetworkingSocketsManager {
     const iface = this.getInterface();
     
     // Create SteamNetworkingIdentity structure for the remote peer
+    // Struct layout (136 bytes total):
+    //   offset 0: m_eType (ESteamNetworkingIdentityType, 4 bytes)
+    //   offset 4: m_cbSize (int, 4 bytes) - size of data in union
+    //   offset 8: union (128 bytes) - m_steamID64 at start for SteamID type
     const identityBuffer = Buffer.alloc(STEAM_NETWORKING_IDENTITY_SIZE);
     
     // Set identity type to SteamID (16)
     identityBuffer.writeInt32LE(ESteamNetworkingIdentityType.SteamID, 0);
     
-    // Set the SteamID (at offset 4, the union starts)
+    // Set m_cbSize - size of the SteamID64 (8 bytes)
+    identityBuffer.writeInt32LE(8, 4);
+    
+    // Set the SteamID at offset 8 (union starts after m_eType and m_cbSize)
     const steamIdBigInt = typeof remoteSteamId === 'string' ? BigInt(remoteSteamId) : remoteSteamId;
-    identityBuffer.writeBigUInt64LE(steamIdBigInt, 4);
+    identityBuffer.writeBigUInt64LE(steamIdBigInt, 8);
     
     const connection = this.libraryLoader.SteamAPI_ISteamNetworkingSockets_ConnectP2P(
       iface,
@@ -1009,9 +1022,8 @@ export class SteamNetworkingSocketsManager {
    * Processes pending networking callbacks. Call this regularly (e.g., in your
    * game loop) to receive connection state changes.
    * 
-   * Note: With the global callback registered, state changes are automatically
-   * processed. This method still needs to be called to trigger Steam's internal
-   * callback dispatch.
+   * With the global callback registered, state changes are processed via the callback.
+   * The polling fallback catches any changes for tracked connections.
    */
   runCallbacks(): void {
     // Ensure callback is registered
@@ -1021,7 +1033,7 @@ export class SteamNetworkingSocketsManager {
     this.libraryLoader.SteamAPI_ISteamNetworkingSockets_RunCallbacks(iface);
     
     // Also poll all active connections for state changes as fallback
-    // This catches any changes that might be missed by the global callback
+    // This catches any changes for connections we're already tracking
     this.pollConnectionStates();
   }
 
