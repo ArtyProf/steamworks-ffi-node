@@ -106,6 +106,47 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUtils_IsAPICallCompleted!: koffi.KoffiFunction;
   public SteamAPI_ISteamUtils_GetAPICallResult!: koffi.KoffiFunction;
   public SteamAPI_ISteamUtils_GetAPICallFailureReason!: koffi.KoffiFunction;
+  
+  // System information
+  public SteamAPI_ISteamUtils_GetIPCountry!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetCurrentBatteryPower!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetAppID!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetSecondsSinceAppActive!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetSecondsSinceComputerActive!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetServerRealTime!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetSteamUILanguage!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetConnectedUniverse!: koffi.KoffiFunction;
+  
+  // Steam Deck / Device detection
+  public SteamAPI_ISteamUtils_IsSteamRunningOnSteamDeck!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_IsSteamInBigPictureMode!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_IsVRHeadsetStreamingEnabled!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_SetVRHeadsetStreamingEnabled!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_IsSteamChinaLauncher!: koffi.KoffiFunction;
+  
+  // Overlay notifications
+  public SteamAPI_ISteamUtils_SetOverlayNotificationPosition!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_SetOverlayNotificationInset!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_BOverlayNeedsPresent!: koffi.KoffiFunction;
+  
+  // Image loading
+  public SteamAPI_ISteamUtils_GetImageSize!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetImageRGBA!: koffi.KoffiFunction;
+  
+  // Gamepad text input
+  public SteamAPI_ISteamUtils_ShowGamepadTextInput!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetEnteredGamepadTextLength!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetEnteredGamepadTextInput!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_ShowFloatingGamepadTextInput!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_DismissFloatingGamepadTextInput!: koffi.KoffiFunction;
+  
+  // App update checking
+  public SteamAPI_ISteamUtils_GetIPCCallCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_StartVRDashboard!: koffi.KoffiFunction;
+  
+  // Text filtering
+  public SteamAPI_ISteamUtils_FilterText!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_InitFilterText!: koffi.KoffiFunction;
 
   // ========================================
   // ISteamFriends API Functions
@@ -654,6 +695,47 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUtils_IsAPICallCompleted = this.steamLib.func('SteamAPI_ISteamUtils_IsAPICallCompleted', 'bool', ['void*', 'uint64', 'bool*']);
     this.SteamAPI_ISteamUtils_GetAPICallResult = this.steamLib.func('SteamAPI_ISteamUtils_GetAPICallResult', 'bool', ['void*', 'uint64', 'void*', 'int', 'int', 'bool*']);
     this.SteamAPI_ISteamUtils_GetAPICallFailureReason = this.steamLib.func('SteamAPI_ISteamUtils_GetAPICallFailureReason', 'int', ['void*', 'uint64']);
+    
+    // System information
+    this.SteamAPI_ISteamUtils_GetIPCountry = this.steamLib.func('SteamAPI_ISteamUtils_GetIPCountry', 'str', ['void*']);
+    this.SteamAPI_ISteamUtils_GetCurrentBatteryPower = this.steamLib.func('SteamAPI_ISteamUtils_GetCurrentBatteryPower', 'uint8', ['void*']);
+    this.SteamAPI_ISteamUtils_GetAppID = this.steamLib.func('SteamAPI_ISteamUtils_GetAppID', 'uint32', ['void*']);
+    this.SteamAPI_ISteamUtils_GetSecondsSinceAppActive = this.steamLib.func('SteamAPI_ISteamUtils_GetSecondsSinceAppActive', 'uint32', ['void*']);
+    this.SteamAPI_ISteamUtils_GetSecondsSinceComputerActive = this.steamLib.func('SteamAPI_ISteamUtils_GetSecondsSinceComputerActive', 'uint32', ['void*']);
+    this.SteamAPI_ISteamUtils_GetServerRealTime = this.steamLib.func('SteamAPI_ISteamUtils_GetServerRealTime', 'uint32', ['void*']);
+    this.SteamAPI_ISteamUtils_GetSteamUILanguage = this.steamLib.func('SteamAPI_ISteamUtils_GetSteamUILanguage', 'str', ['void*']);
+    this.SteamAPI_ISteamUtils_GetConnectedUniverse = this.steamLib.func('SteamAPI_ISteamUtils_GetConnectedUniverse', 'int', ['void*']);
+    
+    // Steam Deck / Device detection
+    this.SteamAPI_ISteamUtils_IsSteamRunningOnSteamDeck = this.steamLib.func('SteamAPI_ISteamUtils_IsSteamRunningOnSteamDeck', 'bool', ['void*']);
+    this.SteamAPI_ISteamUtils_IsSteamInBigPictureMode = this.steamLib.func('SteamAPI_ISteamUtils_IsSteamInBigPictureMode', 'bool', ['void*']);
+    this.SteamAPI_ISteamUtils_IsVRHeadsetStreamingEnabled = this.steamLib.func('SteamAPI_ISteamUtils_IsVRHeadsetStreamingEnabled', 'bool', ['void*']);
+    this.SteamAPI_ISteamUtils_SetVRHeadsetStreamingEnabled = this.steamLib.func('SteamAPI_ISteamUtils_SetVRHeadsetStreamingEnabled', 'void', ['void*', 'bool']);
+    this.SteamAPI_ISteamUtils_IsSteamChinaLauncher = this.steamLib.func('SteamAPI_ISteamUtils_IsSteamChinaLauncher', 'bool', ['void*']);
+    
+    // Overlay notifications
+    this.SteamAPI_ISteamUtils_SetOverlayNotificationPosition = this.steamLib.func('SteamAPI_ISteamUtils_SetOverlayNotificationPosition', 'void', ['void*', 'int']);
+    this.SteamAPI_ISteamUtils_SetOverlayNotificationInset = this.steamLib.func('SteamAPI_ISteamUtils_SetOverlayNotificationInset', 'void', ['void*', 'int', 'int']);
+    this.SteamAPI_ISteamUtils_BOverlayNeedsPresent = this.steamLib.func('SteamAPI_ISteamUtils_BOverlayNeedsPresent', 'bool', ['void*']);
+    
+    // Image loading
+    this.SteamAPI_ISteamUtils_GetImageSize = this.steamLib.func('SteamAPI_ISteamUtils_GetImageSize', 'bool', ['void*', 'int', 'uint32*', 'uint32*']);
+    this.SteamAPI_ISteamUtils_GetImageRGBA = this.steamLib.func('SteamAPI_ISteamUtils_GetImageRGBA', 'bool', ['void*', 'int', 'uint8*', 'int']);
+    
+    // Gamepad text input
+    this.SteamAPI_ISteamUtils_ShowGamepadTextInput = this.steamLib.func('SteamAPI_ISteamUtils_ShowGamepadTextInput', 'bool', ['void*', 'int', 'int', 'str', 'uint32', 'str']);
+    this.SteamAPI_ISteamUtils_GetEnteredGamepadTextLength = this.steamLib.func('SteamAPI_ISteamUtils_GetEnteredGamepadTextLength', 'uint32', ['void*']);
+    this.SteamAPI_ISteamUtils_GetEnteredGamepadTextInput = this.steamLib.func('SteamAPI_ISteamUtils_GetEnteredGamepadTextInput', 'bool', ['void*', 'str', 'uint32']);
+    this.SteamAPI_ISteamUtils_ShowFloatingGamepadTextInput = this.steamLib.func('SteamAPI_ISteamUtils_ShowFloatingGamepadTextInput', 'bool', ['void*', 'int', 'int', 'int', 'int', 'int']);
+    this.SteamAPI_ISteamUtils_DismissFloatingGamepadTextInput = this.steamLib.func('SteamAPI_ISteamUtils_DismissFloatingGamepadTextInput', 'bool', ['void*']);
+    
+    // Misc utilities
+    this.SteamAPI_ISteamUtils_GetIPCCallCount = this.steamLib.func('SteamAPI_ISteamUtils_GetIPCCallCount', 'uint32', ['void*']);
+    this.SteamAPI_ISteamUtils_StartVRDashboard = this.steamLib.func('SteamAPI_ISteamUtils_StartVRDashboard', 'void', ['void*']);
+    
+    // Text filtering
+    this.SteamAPI_ISteamUtils_FilterText = this.steamLib.func('SteamAPI_ISteamUtils_FilterText', 'int', ['void*', 'int', 'uint64', 'str', 'str', 'uint32']);
+    this.SteamAPI_ISteamUtils_InitFilterText = this.steamLib.func('SteamAPI_ISteamUtils_InitFilterText', 'bool', ['void*', 'uint32']);
     
     // ========================================
     // ISteamFriends Functions

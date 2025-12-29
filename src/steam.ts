@@ -16,6 +16,7 @@ import { SteamInputManager } from './internal/SteamInputManager';
 import { SteamScreenshotManager } from './internal/SteamScreenshotManager';
 import { SteamAppsManager } from './internal/SteamAppsManager';
 import { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
+import { SteamUtilsManager } from './internal/SteamUtilsManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -33,6 +34,7 @@ import { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
  * - input: SteamInputManager - Unified controller input operations
  * - screenshots: SteamScreenshotManager - Screenshot capture and management
  * - matchmaking: SteamMatchmakingManager - Lobby matchmaking operations
+ * - utils: SteamUtilsManager - System utilities and device detection
  * 
  * @example
  * ```typescript
@@ -52,6 +54,7 @@ import { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
  * steam.input.runFrame();
  * const handle = steam.screenshots.addScreenshotToLibrary('/path/to/image.jpg', null, 1920, 1080);
  * const lobby = await steam.matchmaking.createLobby(ELobbyType.Public, 4);
+ * const isSteamDeck = steam.utils.isSteamRunningOnSteamDeck();
  * ```
  */
 class SteamworksSDK {
@@ -502,6 +505,49 @@ class SteamworksSDK {
    */
   public readonly matchmaking!: SteamMatchmakingManager;
 
+  /**
+   * Steam Utils Manager - System utilities, device detection, and helper functions
+   * 
+   * Provides access to the ISteamUtils interface for:
+   * - System information (battery level, IP country, server time)
+   * - Steam Deck and Big Picture mode detection
+   * - Overlay notification positioning
+   * - Loading images from Steam's cache (avatars, achievement icons)
+   * - Gamepad text input dialogs
+   * - Text filtering for user-generated content
+   * 
+   * @example
+   * ```typescript
+   * // Check if running on Steam Deck
+   * if (steam.utils.isSteamRunningOnSteamDeck()) {
+   *   enableDeckOptimizations();
+   * }
+   * 
+   * // Get battery status
+   * const battery = steam.utils.getCurrentBatteryPower();
+   * if (battery !== BATTERY_POWER_AC && battery < 20) {
+   *   showLowBatteryWarning();
+   * }
+   * 
+   * // Get device environment
+   * const env = steam.utils.getDeviceEnvironment();
+   * console.log(`Country: ${env.ipCountry}, Deck: ${env.isSteamDeck}`);
+   * 
+   * // Load avatar image
+   * const avatarHandle = steam.friends.getSmallFriendAvatar(steamId);
+   * const image = steam.utils.getImageRGBA(avatarHandle);
+   * if (image) {
+   *   // Use image.data (RGBA buffer), image.width, image.height
+   * }
+   * 
+   * // Position notifications
+   * steam.utils.setOverlayNotificationPosition(ENotificationPosition.BottomLeft);
+   * ```
+   * 
+   * @see {@link SteamUtilsManager} for complete API documentation
+   */
+  public readonly utils!: SteamUtilsManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -520,6 +566,7 @@ class SteamworksSDK {
     this.screenshots = new SteamScreenshotManager(this.libraryLoader, this.apiCore);
     this.apps = new SteamAppsManager(this.libraryLoader, this.apiCore);
     this.matchmaking = new SteamMatchmakingManager(this.libraryLoader, this.apiCore);
+    this.utils = new SteamUtilsManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {

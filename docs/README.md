@@ -25,6 +25,7 @@ steam.input.*          // Controller input operations
 steam.screenshots.*    // Screenshots operations
 steam.apps.*           // DLC and app ownership operations
 steam.matchmaking.*    // Multiplayer lobby operations
+steam.utils.*          // System utilities and device detection
 ```
 
 This design:
@@ -176,6 +177,18 @@ This design:
   - Game server association (link dedicated servers to lobbies)
   - ⚠️ **Requires two Steam accounts for full testing** - multiplayer API
 
+### Utils System
+
+- **[Utils Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/UTILS_MANAGER.md)**
+  - **25+ Functions** - Complete Steam Utils support
+  - System information (battery level, IP country, server time)
+  - Device detection (Steam Deck, Big Picture Mode, VR, Steam China)
+  - Overlay notification positioning (corner + inset)
+  - Image loading (avatars, achievement icons from Steam cache)
+  - Gamepad text input (full-screen and floating keyboards)
+  - Text filtering (profanity filter for user-generated content)
+  - Performance monitoring (IPC call count)
+
 ## 🚀 Quick Links
 
 ### Getting Started
@@ -200,6 +213,7 @@ This design:
 - Run Screenshots Tests: `npm run test:screenshots:js` - Tests all 9 screenshot functions
 - Run Matchmaking Host: `npm run test:matchmaking:host:js` - Creates lobby, waits for players
 - Run Matchmaking Join: `npm run test:matchmaking:join:js` - Searches and joins lobbies
+- Run Utils Tests: `npm run test:utils:js` - Tests all utils functions
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
 
@@ -215,6 +229,7 @@ This design:
 - Run Screenshots Tests: `npm run test:screenshots:ts` - With type safety ✨
 - Run Matchmaking Host: `npm run test:matchmaking:host:ts` - Creates lobby, waits for players ✨
 - Run Matchmaking Join: `npm run test:matchmaking:join:ts` - Searches and joins lobbies ✨
+- Run Utils Tests: `npm run test:utils:ts` - With type safety ✨
 
 ⚠️ **Note:** Matchmaking tests require two separate Steam accounts to fully test multiplayer functionality. Run the host test on one machine, then the join test on another machine with a different Steam account.
 

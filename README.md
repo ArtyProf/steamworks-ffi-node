@@ -49,6 +49,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Matchmaking API** - 30+ functions for multiplayer lobby matchmaking! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/MATCHMAKING_MANAGER.md) ⚠️ Requires two Steam accounts for testing
 
+> 🎉 **NEW: Utils API** - 29 functions for system info, Steam Deck detection, image loading, and text filtering! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/UTILS_MANAGER.md)
+
 ## Features
 
 - **Core API**: Essential Steam application functions
@@ -132,6 +134,13 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Member management (list, limit, ownership transfer)
   - ✅ Lobby chat (send/receive messages)
   - ✅ Game server association
+- **Utils API**: Complete Steam utilities and system information (29 functions)
+  - ✅ System information (battery level, IP country, server time)
+  - ✅ Steam Deck and Big Picture mode detection
+  - ✅ Overlay notification positioning
+  - ✅ Image loading from Steam cache (avatars, achievement icons)
+  - ✅ Gamepad text input dialogs
+  - ✅ Text filtering for user-generated content
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Easy Setup**: Simple installation with clear SDK setup guide
@@ -489,6 +498,7 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Apps Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/APPS_MANAGER.md)** - DLC and app ownership (28 functions)
 - **[Screenshot Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SCREENSHOT_MANAGER.md)** - Steam Screenshots integration (9 functions)
 - **[Matchmaking Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/MATCHMAKING_MANAGER.md)** - Multiplayer lobby matchmaking (30+ functions) ⚠️ _Requires two Steam accounts_
+- **[Utils Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/UTILS_MANAGER.md)** - System info, Steam Deck detection, image loading (29 functions)
 
 ## Steamworks Integration
 

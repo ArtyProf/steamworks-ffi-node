@@ -51,3 +51,6 @@ export * from './apps';
 
 // Matchmaking types
 export * from './matchmaking';
+
+// Utils types
+export * from './utils';
