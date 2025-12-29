@@ -516,6 +516,7 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Matchmaking Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/MATCHMAKING_MANAGER.md)** - Multiplayer lobby matchmaking (30+ functions) ⚠️ _Requires two Steam accounts_
 - **[Utils Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/UTILS_MANAGER.md)** - System info, Steam Deck detection, image loading (29 functions)
 - **[Networking Utils Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_UTILS_MANAGER.md)** - Ping location, relay network, data centers (15 functions)
+- **[Networking Sockets Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_SOCKETS_MANAGER.md)** - P2P connections, reliable messaging (19 functions) ⚠️ _Requires two Steam accounts_
 
 ## Steamworks Integration
 
