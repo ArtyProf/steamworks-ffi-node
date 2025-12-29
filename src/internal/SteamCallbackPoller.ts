@@ -485,10 +485,14 @@ export class SteamCallbackPoller {
    */
   static parseConnectionInfo(buffer: Buffer): SteamNetConnectionStatusChangedCallbackType['m_info'] {
     // Parse identity (extract SteamID)
+    // SteamNetworkingIdentity struct layout (136 bytes total):
+    //   offset 0: m_eType (ESteamNetworkingIdentityType, 4 bytes)
+    //   offset 4: m_cbSize (int, 4 bytes) - size of data in union
+    //   offset 8: union (128 bytes) - m_steamID64 at start for SteamID type
     const identityType = buffer.readInt32LE(0);
     let identityRemote = '';
     if (identityType === ESteamNetworkingIdentityType.SteamID) {
-      identityRemote = buffer.readBigUInt64LE(4).toString();
+      identityRemote = buffer.readBigUInt64LE(8).toString();
     }
     
     const userData = buffer.readBigInt64LE(136);
