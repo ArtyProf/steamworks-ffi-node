@@ -1,368 +1,581 @@
-# Networking Utils Manager
+# Networking Utils Manager API Documentation
 
-The Networking Utils Manager provides access to Steam's network utilities through the `ISteamNetworkingUtils` interface. It enables ping location estimation, relay network monitoring, data center information, and high-precision timestamps.
+Complete reference for Steam Networking Utils functionality in Steamworks FFI.
 
-## Table of Contents
+## Overview
 
-- [Quick Start](#quick-start)
-- [Relay Network](#relay-network)
-- [Ping Location](#ping-location)
-- [Ping Estimation](#ping-estimation)
-- [Data Centers (POPs)](#data-centers-pops)
-- [Timestamps](#timestamps)
-- [API Reference](#api-reference)
-- [Testing](#testing)
+The `SteamNetworkingUtilsManager` provides access to the Steam Networking Utils API, enabling you to monitor Steam Relay Network status, estimate ping times between locations, query data center information (POPs), and configure debug output.
 
-## Quick Start
+This manager is useful for:
+1. **Network diagnostics**: Check relay network availability and connection status
+2. **Latency estimation**: Estimate ping between players using Steam's relay infrastructure
+3. **Data center info**: Query available Steam data centers (POPs) and ping times
+4. **Debug output**: Configure Steam networking debug verbosity
 
-```typescript
-import { SteamworksSDK, ESteamNetworkingAvailability } from 'steamworks-ffi-node';
+## Quick Reference
 
-const steam = SteamworksSDK.getInstance();
-steam.init({ appId: YOUR_APP_ID });
+| Category | Functions | Description |
+|----------|-----------|-------------|
+| [Relay Network](#relay-network) | 3 | Initialize and monitor relay network |
+| [Ping Location](#ping-location) | 3 | Get and estimate ping locations |
+| [Data Centers (POPs)](#data-centers-pops) | 4 | Query POP info and ping times |
+| [Utilities](#utilities) | 2 | Timestamps and debug output |
 
-// Initialize relay network (required for ping features)
-steam.networkingUtils.initRelayNetworkAccess();
+**Total: 12 Functions**
 
-// Wait for network to be ready
-while (true) {
-  steam.runCallbacks();
-  const status = steam.networkingUtils.getRelayNetworkStatus();
-  
-  if (status.availability === ESteamNetworkingAvailability.Current) {
-    console.log('Relay network ready!');
-    break;
-  }
-  
-  if (status.availability < 0) {
-    console.error('Relay network failed:', status.availabilityName);
-    break;
-  }
-  
-  await new Promise(r => setTimeout(r, 100));
-}
-
-// Get your ping location (share with other players)
-const myLocation = steam.networkingUtils.getLocalPingLocation();
-console.log('My ping location:', myLocation?.locationString);
-
-// Estimate ping to another player
-const theirLocation = "waw=35+3,fra=43+4,..."; // received from matchmaking
-const estimate = steam.networkingUtils.estimatePingFromString(theirLocation);
-console.log('Estimated ping:', estimate.pingMs, 'ms');
-```
+---
 
 ## Relay Network
 
-Steam's relay network provides the infrastructure for ping estimation and P2P networking. You must initialize it before using most networking features.
+Functions for initializing and monitoring the Steam Relay Network.
 
-### Initializing the Network
+### `initRelayNetworkAccess()`
 
+Starts the process of initializing access to the Steam Relay Network.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess()` - Initialize relay network
+
+**Returns:** `boolean` - `true` if initialization started successfully
+
+**Example:**
 ```typescript
-// Start relay network initialization
-steam.networkingUtils.initRelayNetworkAccess();
+import SteamworksSDK from 'steamworks-ffi-node';
 
-// Poll until ready (usually takes 2-10 seconds)
-const waitForNetwork = async (): Promise<boolean> => {
-  const startTime = Date.now();
-  const timeout = 30000; // 30 second timeout
-  
-  while (Date.now() - startTime < timeout) {
-    steam.runCallbacks();
-    
-    const status = steam.networkingUtils.getRelayNetworkStatus();
-    console.log(`Status: ${status.availabilityName}`);
-    
-    if (status.availability === ESteamNetworkingAvailability.Current) {
-      return true; // Ready!
-    }
-    
-    if (status.availability < 0) {
-      console.error('Failed:', status.availabilityName);
-      return false;
-    }
-    
-    await new Promise(r => setTimeout(r, 100));
-  }
-  
-  return false; // Timeout
-};
+const steam = SteamworksSDK.getInstance();
+steam.init({ appId: 480 });
+
+// Start relay network initialization
+const started = steam.networkingUtils.initRelayNetworkAccess();
+if (started) {
+  console.log('✅ Relay network initialization started');
+}
+
+// Check status after some time
+setTimeout(() => {
+  const status = steam.networkingUtils.getRelayNetworkStatus();
+  console.log('Relay availability:', status.availabilityName);
+}, 2000);
 ```
 
-### Network Status Values
+**Notes:**
+- This is an asynchronous operation - check `getRelayNetworkStatus()` for completion
+- Call early in your application to reduce latency when connecting
 
-| Value | Name | Description |
-|-------|------|-------------|
-| 100 | Current | Network is available and ready |
-| 3 | Attempting | Currently connecting |
-| 2 | Waiting | Waiting for dependencies |
-| 1 | NeverTried | Haven't tried connecting yet |
-| 0 | Unknown | Status unknown |
-| -10 | Retrying | Previously failed, retrying |
-| -100 | Previously | Was working, now failing |
-| -101 | Failed | Failed to connect |
-| -102 | CannotTry | Missing dependencies |
+---
+
+### `getRelayNetworkStatus()`
+
+Gets the current status of the Steam Relay Network connection.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_GetRelayNetworkStatus()` - Get network status
+
+**Returns:** `RelayNetworkStatus`
+
+**Type:**
+```typescript
+interface RelayNetworkStatus {
+  availability: ESteamNetworkingAvailability;  // Numeric status code
+  availabilityName: string;                     // Human-readable status
+  pingMeasurementInProgress: boolean;           // Whether ping measurement is active
+  availableConfig: ESteamNetworkingAvailability;
+  availableRelay: ESteamNetworkingAvailability;
+  debugMessage: string;                         // Status/error message from Steam
+}
+
+enum ESteamNetworkingAvailability {
+  Unknown = 0,
+  CannotTry = -102,
+  Failed = -101,
+  Previously = -100,
+  Retrying = -10,
+  NeverTried = 1,
+  Waiting = 2,
+  Attempting = 3,
+  Current = 100
+}
+```
+
+**Example:**
+```typescript
+const status = steam.networkingUtils.getRelayNetworkStatus();
+
+console.log('Network Status:');
+console.log('  Availability:', status.availabilityName);
+console.log('  Ping in progress:', status.pingMeasurementInProgress);
+console.log('  Debug message:', status.debugMessage);
+
+if (status.availability === 100) { // Current
+  console.log('✅ Relay network is ready');
+}
+```
+
+---
+
+### `checkPingDataUpToDate(maxAgeSeconds)`
+
+Checks if cached ping data is recent enough or triggers a refresh.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_CheckPingDataUpToDate()` - Check/refresh ping data
+
+**Parameters:**
+- `maxAgeSeconds: number` - Maximum age of ping data in seconds before refresh is needed
+
+**Returns:** `boolean` - `true` if ping data is fresh, `false` if refresh was triggered
+
+**Example:**
+```typescript
+// Check if ping data is less than 5 minutes old
+const isUpToDate = steam.networkingUtils.checkPingDataUpToDate(300);
+
+if (isUpToDate) {
+  console.log('✅ Ping data is current');
+} else {
+  console.log('🔄 Refreshing ping data...');
+  // Wait for ping data to update
+}
+```
+
+---
 
 ## Ping Location
 
-Ping locations encode your network position relative to Steam's data centers. They can be shared with other players to estimate ping times without sending actual packets.
+Functions for working with ping locations and latency estimation.
 
-### Getting Your Ping Location
+### `getLocalPingLocation()`
 
+Gets the local user's ping location for latency estimation.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_GetLocalPingLocation()` - Get local ping location
+
+**Returns:** `PingLocation | null` - Ping location data or null if not available
+
+**Type:**
+```typescript
+interface PingLocation {
+  data: number[];  // Internal location data (array of numbers)
+}
+```
+
+**Example:**
 ```typescript
 const location = steam.networkingUtils.getLocalPingLocation();
 
 if (location) {
-  console.log('Location string:', location.locationString);
-  console.log('Data age:', location.dataAge, 'seconds');
+  console.log('✅ Got local ping location');
+  console.log('  Location data:', location.data.slice(0, 4), '...');
   
-  // Send this string to other players via your matchmaking system
-  matchmaking.setPlayerData('pingLocation', location.locationString);
+  // Can be used to estimate ping to other players
 } else {
-  console.log('Ping location not available (network not ready?)');
+  console.log('❌ Ping location not available yet');
+  console.log('  Make sure relay network is initialized');
 }
 ```
 
-### Ping Location Format
+**Notes:**
+- Returns null if relay network is not initialized
+- The location data can be shared with other players for ping estimation
 
-The location string looks like:
-```
-waw=35+3,fra=43+4,lhr=45+4,ams4=46+4,vie=53+5/47+3
-```
+---
 
-Each entry is `datacenter=ping+uncertainty` or `datacenter=ping+uncertainty/altping+altuncertainty`. This is an opaque string - just pass it as-is for ping estimation.
+### `estimatePingBetweenLocations(location1, location2)`
 
-### Checking Data Freshness
+Estimates the ping time between two ping locations.
 
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_EstimatePingTimeBetweenTwoLocations()` - Estimate ping
+
+**Parameters:**
+- `location1: PingLocation` - First player's ping location
+- `location2: PingLocation` - Second player's ping location
+
+**Returns:** `PingEstimate`
+
+**Type:**
 ```typescript
-// Check if ping data was measured within the last 60 seconds
-if (!steam.networkingUtils.checkPingDataUpToDate(60)) {
-  console.log('Ping data is stale, refreshing...');
-  steam.networkingUtils.initRelayNetworkAccess();
+interface PingEstimate {
+  pingMs: number;  // Estimated ping in milliseconds (-1 if cannot estimate)
+  isValid: boolean;
 }
 ```
 
-## Ping Estimation
-
-Estimate network latency between players without sending actual ping packets.
-
-### Estimate From Local Host
-
+**Example:**
 ```typescript
-// When you receive another player's ping location from matchmaking:
-const theirLocation = matchmaking.getPlayerData(playerId, 'pingLocation');
+// Get locations from two players
+const myLocation = steam.networkingUtils.getLocalPingLocation();
+const theirLocation = receivedFromOtherPlayer; // PingLocation from another user
 
-const estimate = steam.networkingUtils.estimatePingFromString(theirLocation);
-
-if (estimate.valid) {
-  console.log(`Estimated ping to player: ${estimate.pingMs}ms`);
+if (myLocation && theirLocation) {
+  const estimate = steam.networkingUtils.estimatePingBetweenLocations(
+    myLocation,
+    theirLocation
+  );
   
-  if (estimate.pingMs < 50) {
-    console.log('Excellent connection!');
-  } else if (estimate.pingMs < 100) {
-    console.log('Good connection');
-  } else if (estimate.pingMs < 150) {
-    console.log('Acceptable connection');
+  if (estimate.isValid) {
+    console.log(`Estimated ping to player: ${estimate.pingMs}ms`);
   } else {
-    console.log('High latency - may affect gameplay');
+    console.log('Could not estimate ping');
   }
-} else {
-  console.log('Could not estimate ping:', estimate.error);
 }
 ```
 
-### Estimate Between Two Locations
+---
 
-Useful for server-side matchmaking where you have both players' locations:
+### `estimatePingFromString(locationString)`
 
+Estimates ping to a location encoded as a string.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_ParsePingLocationString()` - Parse location string
+- `SteamAPI_ISteamNetworkingUtils_EstimatePingTimeBetweenTwoLocations()` - Estimate ping
+
+**Parameters:**
+- `locationString: string` - Encoded ping location string
+
+**Returns:** `PingEstimate`
+
+**Example:**
 ```typescript
-const player1Location = "waw=35+3,fra=43+4,...";
-const player2Location = "iad=20+2,ord=35+3,...";
+// Location string received from another player or server
+const locationString = 'abc123...'; // Encoded location
 
-const estimate = steam.networkingUtils.estimatePingBetweenLocations(
-  player1Location,
-  player2Location
-);
+const estimate = steam.networkingUtils.estimatePingFromString(locationString);
 
-if (estimate.valid) {
-  console.log(`Estimated ping between players: ${estimate.pingMs}ms`);
+if (estimate.isValid) {
+  console.log(`Estimated ping: ${estimate.pingMs}ms`);
+} else {
+  console.log('Invalid location string or ping unavailable');
 }
 ```
+
+---
 
 ## Data Centers (POPs)
 
-POPs (Points of Presence) are Steam's data centers around the world. You can query ping times to each one.
+Functions for querying Steam data center information.
 
-### Getting the POP List
+### `getPOPCount()`
 
+Gets the number of available Steam Points of Presence (data centers).
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_GetPOPCount()` - Get POP count
+
+**Returns:** `number` - Number of available POPs
+
+**Example:**
+```typescript
+const popCount = steam.networkingUtils.getPOPCount();
+console.log(`Steam has ${popCount} data centers available`);
+```
+
+---
+
+### `getPOPList()`
+
+Gets a list of all available Steam Points of Presence (data centers).
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_GetPOPList()` - Get list of POPs
+
+**Returns:** `POPInfo[]` - Array of POP information
+
+**Type:**
+```typescript
+interface POPInfo {
+  popId: number;    // Numeric POP identifier
+  popCode: string;  // Human-readable POP code (e.g., 'ams', 'iad', 'sea')
+}
+```
+
+**Example:**
 ```typescript
 const pops = steam.networkingUtils.getPOPList();
 
-console.log(`${pops.length} data centers available:`);
+console.log(`Available Steam Data Centers (${pops.length}):`);
+pops.forEach(pop => {
+  console.log(`  ${pop.popCode} (ID: ${pop.popId})`);
+});
 
-// Sort by direct ping
-const sortedPops = [...pops]
-  .filter(p => p.directPing > 0)
-  .sort((a, b) => a.directPing - b.directPing);
-
-for (const pop of sortedPops.slice(0, 10)) {
-  console.log(`  ${pop.popCode}: ${pop.directPing}ms direct, ${pop.pingViaRelay}ms via relay`);
-}
+// Example output:
+// Available Steam Data Centers (24):
+//   ams4 (ID: 1634558260)
+//   sto2 (ID: 1937006642)
+//   lhr (ID: 7499634)
+//   ...
 ```
 
-### POP Information
+---
 
-Each POP includes:
+### `getPingToDataCenter(popId)`
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `popId` | number | Internal uint32 ID |
-| `popCode` | string | Human-readable code (e.g., 'waw', 'iad', 'ams4') |
-| `directPing` | number | Direct ping in ms (-1 if unavailable) |
-| `pingViaRelay` | number | Ping via relay network in ms |
-| `viaRelayPOP` | number | ID of relay POP used |
-| `viaRelayPOPCode` | string | Code of relay POP used |
+Gets the ping time to a specific data center.
 
-### Common POP Codes
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_GetPingToDataCenter()` - Get ping to POP
 
-| Code | Location |
-|------|----------|
-| waw | Warsaw, Poland |
-| fra | Frankfurt, Germany |
-| lhr | London, UK |
-| ams, ams4 | Amsterdam, Netherlands |
-| par | Paris, France |
-| vie | Vienna, Austria |
-| sto, sto2 | Stockholm, Sweden |
-| iad | Ashburn, Virginia, USA |
-| ord | Chicago, USA |
-| lax | Los Angeles, USA |
-| sea, eat | Seattle, USA |
-| sgp | Singapore |
-| tyo | Tokyo, Japan |
-| syd | Sydney, Australia |
+**Parameters:**
+- `popId: number` - The POP ID to query
 
-### Getting Ping to Specific Data Center
+**Returns:** `number` - Ping time in milliseconds (-1 if unavailable)
 
+**Example:**
 ```typescript
-import { stringToPopId, popIdToString } from 'steamworks-ffi-node';
+const pops = steam.networkingUtils.getPOPList();
 
-// Convert code to ID
-const iadId = stringToPopId('iad');
-
-// Get ping info
-const pingInfo = steam.networkingUtils.getPingToDataCenter(iadId);
-if (pingInfo) {
-  console.log(`Ping to IAD: ${pingInfo.pingMs}ms`);
-  console.log(`Via relay: ${popIdToString(pingInfo.viaRelayPOP)}`);
-}
-
-// Get direct ping only
-const directPing = steam.networkingUtils.getDirectPingToPOP(iadId);
-console.log(`Direct ping to IAD: ${directPing}ms`);
+console.log('Ping to data centers:');
+pops.forEach(pop => {
+  const ping = steam.networkingUtils.getPingToDataCenter(pop.popId);
+  if (ping >= 0) {
+    console.log(`  ${pop.popCode}: ${ping}ms`);
+  } else {
+    console.log(`  ${pop.popCode}: unavailable`);
+  }
+});
 ```
 
-## Timestamps
+---
 
-High-precision local timestamps for measuring time intervals.
+### `getDirectPingToPOP(popId)`
 
+Gets the direct (non-relayed) ping to a specific POP.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_GetDirectPingToPOP()` - Get direct ping to POP
+
+**Parameters:**
+- `popId: number` - The POP ID to query
+
+**Returns:** `number` - Direct ping time in milliseconds (-1 if unavailable)
+
+**Example:**
 ```typescript
-// Measure operation duration with microsecond precision
+const pops = steam.networkingUtils.getPOPList();
+
+console.log('Direct ping to data centers:');
+pops.slice(0, 5).forEach(pop => {
+  const directPing = steam.networkingUtils.getDirectPingToPOP(pop.popId);
+  const relayPing = steam.networkingUtils.getPingToDataCenter(pop.popId);
+  
+  console.log(`  ${pop.popCode}:`);
+  console.log(`    Direct: ${directPing >= 0 ? directPing + 'ms' : 'N/A'}`);
+  console.log(`    Relay:  ${relayPing >= 0 ? relayPing + 'ms' : 'N/A'}`);
+});
+```
+
+---
+
+## Utilities
+
+General utility functions for networking.
+
+### `getLocalTimestamp()`
+
+Gets the current Steam networking timestamp.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_GetLocalTimestamp()` - Get local timestamp
+
+**Returns:** `bigint` - Timestamp in microseconds
+
+**Example:**
+```typescript
+const timestamp = steam.networkingUtils.getLocalTimestamp();
+console.log(`Steam networking timestamp: ${timestamp}`);
+
+// Can be used for timing measurements
 const start = steam.networkingUtils.getLocalTimestamp();
-
 // ... do some work ...
-
 const end = steam.networkingUtils.getLocalTimestamp();
-const elapsedMicroseconds = end - start;
-const elapsedMs = Number(elapsedMicroseconds) / 1000;
-
-console.log(`Operation took ${elapsedMs.toFixed(3)}ms`);
+const elapsedUs = end - start;
+console.log(`Elapsed: ${elapsedUs} microseconds`);
 ```
 
-Note: The timestamp is relative to an arbitrary reference point and uses BigInt for precision.
+---
 
-## API Reference
+### `setDebugOutputLevel(detailLevel)`
 
-### `initRelayNetworkAccess(): void`
+Sets the debug output verbosity level for Steam Networking.
 
-Starts initializing the relay network. Call this before using ping features.
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction()` - Set debug output level and handler
 
-### `getRelayNetworkStatus(): RelayNetworkStatus`
+**Parameters:**
+- `detailLevel: ESteamNetworkingSocketsDebugOutputType` - The verbosity level
 
-Returns current relay network status including availability and debug info.
-
-### `getLocalPingLocation(): PingLocation | null`
-
-Gets your local ping location data for sharing with other players.
-
-### `estimatePingFromString(remoteLocation: string): PingEstimate`
-
-Estimates ping from your location to a remote player's location string.
-
-### `estimatePingBetweenLocations(location1: string, location2: string): PingEstimate`
-
-Estimates ping between two ping location strings.
-
-### `checkPingDataUpToDate(maxAgeSeconds: number): boolean`
-
-Checks if ping data has been refreshed within the specified time.
-
-### `getPOPCount(): number`
-
-Returns the number of available data centers.
-
-### `getPOPList(): POPInfo[]`
-
-Returns detailed information about all data centers including ping times.
-
-### `getPingToDataCenter(popId: number): { pingMs: number; viaRelayPOP: number } | null`
-
-Gets ping time to a specific data center via the relay network.
-
-### `getDirectPingToPOP(popId: number): number`
-
-Gets direct ping time to a specific POP (-1 if unavailable).
-
-### `getLocalTimestamp(): bigint`
-
-Returns a high-precision local timestamp in microseconds.
-
-### `setDebugOutputLevel(level: ESteamNetworkingSocketsDebugOutputType): void`
-
-Sets the debug output verbosity level.
-
-## Testing
-
-Run the test files to verify functionality:
-
-```bash
-# TypeScript tests
-npm run test:networking:host:ts  # Shows your ping location and POP info
-npm run test:networking:join:ts  # Estimates ping to a remote location
-
-# JavaScript tests
-npm run test:networking:host:js
-npm run test:networking:join:js
+**Type:**
+```typescript
+enum ESteamNetworkingSocketsDebugOutputType {
+  None = 0,      // No output
+  Bug = 1,       // Only critical bugs
+  Error = 2,     // Errors
+  Important = 3, // Important messages
+  Warning = 4,   // Warnings
+  Msg = 5,       // General messages
+  Verbose = 6,   // Verbose output
+  Debug = 7,     // Debug info
+  Everything = 8 // All possible output
+}
 ```
 
-### Host/Join Test Pattern
+**Returns:** `void`
 
-1. Run the host test on one machine:
-   ```bash
-   npm run test:networking:host:ts
-   ```
-   Copy the ping location string that's displayed.
+**Example:**
+```typescript
+import { ESteamNetworkingSocketsDebugOutputType } from 'steamworks-ffi-node';
 
-2. Run the join test on another machine:
-   ```bash
-   npm run test:networking:join:ts "paste_ping_location_here"
-   ```
-   Or run it and paste the string when prompted.
+// Enable verbose logging for debugging
+steam.networkingUtils.setDebugOutputLevel(
+  ESteamNetworkingSocketsDebugOutputType.Verbose
+);
 
-This demonstrates cross-machine ping estimation using Steam's relay network.
+// Or use numeric value directly
+steam.networkingUtils.setDebugOutputLevel(6); // Verbose
+
+// Disable debug output
+steam.networkingUtils.setDebugOutputLevel(
+  ESteamNetworkingSocketsDebugOutputType.None
+);
+```
+
+**Notes:**
+- Higher levels include all messages from lower levels
+- Use `Verbose` or `Debug` when troubleshooting networking issues
+- Set to `None` or `Error` for production builds
+
+---
+
+## Helper Functions
+
+The module also exports helper functions for working with POP identifiers.
+
+### `popIdToString(popId)`
+
+Converts a numeric POP ID to its string code.
+
+**Parameters:**
+- `popId: number` - Numeric POP identifier
+
+**Returns:** `string` - POP code (e.g., 'ams', 'iad', 'sea')
+
+**Example:**
+```typescript
+import { popIdToString } from 'steamworks-ffi-node';
+
+const popCode = popIdToString(1634558260);
+console.log(popCode); // 'ams4'
+```
+
+---
+
+### `stringToPopId(str)`
+
+Converts a POP string code to its numeric ID.
+
+**Parameters:**
+- `str: string` - POP code string
+
+**Returns:** `number` - Numeric POP identifier
+
+**Example:**
+```typescript
+import { stringToPopId } from 'steamworks-ffi-node';
+
+const popId = stringToPopId('ams');
+console.log(popId); // 7561569
+```
+
+---
+
+### `getAvailabilityName(availability)`
+
+Converts an availability enum value to a human-readable name.
+
+**Parameters:**
+- `availability: ESteamNetworkingAvailability` - Availability value
+
+**Returns:** `string` - Human-readable name
+
+**Example:**
+```typescript
+import { getAvailabilityName, ESteamNetworkingAvailability } from 'steamworks-ffi-node';
+
+console.log(getAvailabilityName(100));  // 'Current'
+console.log(getAvailabilityName(2));    // 'Waiting'
+console.log(getAvailabilityName(-101)); // 'Failed'
+```
+
+---
+
+## Complete Example
+
+```typescript
+import SteamworksSDK, { 
+  ESteamNetworkingSocketsDebugOutputType 
+} from 'steamworks-ffi-node';
+
+async function networkingUtilsDemo() {
+  const steam = SteamworksSDK.getInstance();
+  steam.init({ appId: 480 });
+
+  // Enable debug output
+  steam.networkingUtils.setDebugOutputLevel(
+    ESteamNetworkingSocketsDebugOutputType.Verbose
+  );
+
+  // Initialize relay network
+  console.log('Initializing relay network...');
+  steam.networkingUtils.initRelayNetworkAccess();
+
+  // Wait for network to be ready
+  await new Promise<void>((resolve) => {
+    const check = setInterval(() => {
+      const status = steam.networkingUtils.getRelayNetworkStatus();
+      console.log('Status:', status.availabilityName);
+      
+      if (status.availability === 100) { // Current
+        clearInterval(check);
+        resolve();
+      }
+    }, 500);
+  });
+
+  console.log('✅ Relay network ready!');
+
+  // Get local ping location
+  const myLocation = steam.networkingUtils.getLocalPingLocation();
+  if (myLocation) {
+    console.log('Local ping location acquired');
+  }
+
+  // List data centers
+  const pops = steam.networkingUtils.getPOPList();
+  console.log(`\nAvailable data centers: ${pops.length}`);
+
+  // Show ping to first 5 POPs
+  console.log('\nPing to data centers:');
+  for (const pop of pops.slice(0, 5)) {
+    const ping = steam.networkingUtils.getPingToDataCenter(pop.popId);
+    console.log(`  ${pop.popCode}: ${ping >= 0 ? ping + 'ms' : 'N/A'}`);
+  }
+
+  // Get timestamp
+  const timestamp = steam.networkingUtils.getLocalTimestamp();
+  console.log(`\nNetworking timestamp: ${timestamp}`);
+
+  steam.shutdown();
+}
+
+networkingUtilsDemo().catch(console.error);
+```
+
+---
 
 ## See Also
 
-- [Steam ISteamNetworkingUtils Documentation](https://partner.steamgames.com/doc/api/ISteamNetworkingUtils)
-- [Matchmaking Manager](./MATCHMAKING_MANAGER.md) - For lobby-based matchmaking
-- [Friends Manager](./FRIENDS_MANAGER.md) - For social features
+- [Matchmaking Manager](./MATCHMAKING_MANAGER.md) - Lobby and matchmaking functionality
+- [Steam API Core](./STEAM_API_CORE.md) - Core initialization and callbacks
+- [Steamworks SDK Setup](./STEAMWORKS_SDK_SETUP.md) - SDK installation guide
