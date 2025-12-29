@@ -131,7 +131,7 @@ export class SteamNetworkingSocketsManager {
     try {
       // Create the callback function that will be called from native code
       // The callback receives a pointer to SteamNetConnectionStatusChangedCallback_t
-      // Use the same pointer type that's used in the FFI declaration
+      // Use the pointer type for koffi.register
       this.connectionStatusCallback = koffi.register(
         (infoPtr: any) => {
           try {

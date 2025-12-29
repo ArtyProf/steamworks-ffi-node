@@ -441,15 +441,26 @@ export class SteamCallbackPoller {
     if (!infoPtr) return null;
 
     try {
-      const rawBytes = koffi.decode(infoPtr, koffi.array('uint8', SteamCallbackPoller.STEAM_NET_CONNECTION_STATUS_CHANGED_CALLBACK_SIZE));
+      // On Windows 64-bit with pack(8), the struct layout is:
+      // - HSteamNetConnection m_hConn (4 bytes) @ offset 0
+      // - 4 bytes padding @ offset 4 (for 8-byte alignment of m_info)
+      // - SteamNetConnectionInfo_t m_info @ offset 8
+      // - ESteamNetworkingConnectionState m_eOldState @ offset 8 + INFO_SIZE
+      
+      // Determine layout based on platform
+      // Windows 64-bit: connection at 0, info at 8 (with padding)
+      // Other platforms may have info at 4 (no padding)
+      const IS_WIN64 = process.platform === 'win32' && process.arch === 'x64';
+      const INFO_START = IS_WIN64 ? 8 : 4;
+      const TOTAL_SIZE = INFO_START + STEAM_NET_CONNECTION_INFO_SIZE + 4;
+      
+      const rawBytes = koffi.decode(infoPtr, koffi.array('uint8', TOTAL_SIZE));
       const buffer = Buffer.from(rawBytes);
       
       const connection = buffer.readUInt32LE(0);
-      const oldState = buffer.readInt32LE(4 + STEAM_NET_CONNECTION_INFO_SIZE);
-      
-      // Parse the connection info from the middle of the struct
-      const infoBuffer = buffer.subarray(4, 4 + STEAM_NET_CONNECTION_INFO_SIZE);
+      const infoBuffer = buffer.subarray(INFO_START, INFO_START + STEAM_NET_CONNECTION_INFO_SIZE);
       const info = SteamCallbackPoller.parseConnectionInfo(infoBuffer);
+      const oldState = buffer.readInt32LE(INFO_START + STEAM_NET_CONNECTION_INFO_SIZE);
       
       return {
         m_hConn: connection,
