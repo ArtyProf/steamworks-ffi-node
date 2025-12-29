@@ -18,6 +18,7 @@ import { SteamAppsManager } from './internal/SteamAppsManager';
 import { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
 import { SteamUtilsManager } from './internal/SteamUtilsManager';
 import { SteamNetworkingUtilsManager } from './internal/SteamNetworkingUtilsManager';
+import { SteamNetworkingSocketsManager } from './internal/SteamNetworkingSocketsManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -594,6 +595,50 @@ class SteamworksSDK {
    */
   public readonly networkingUtils!: SteamNetworkingUtilsManager;
 
+  /**
+   * Steam Networking Sockets Manager - P2P networking for multiplayer games
+   * 
+   * Provides access to the ISteamNetworkingSockets interface for:
+   * - Creating P2P connections between Steam users
+   * - Hosting listen sockets to accept incoming connections
+   * - Sending reliable and unreliable messages
+   * - Managing connection state and lifecycle
+   * - Poll groups for efficient message receiving from multiple connections
+   * 
+   * @example
+   * ```typescript
+   * // HOST: Create a listen socket
+   * const listenSocket = steam.networkingSockets.createListenSocketP2P(0);
+   * 
+   * // CLIENT: Connect to host
+   * const connection = steam.networkingSockets.connectP2P(hostSteamId, 0);
+   * 
+   * // Wait for connection
+   * steam.networkingSockets.onConnectionStateChange((change) => {
+   *   if (change.newState === ESteamNetworkingConnectionState.Connected) {
+   *     console.log('Connected!');
+   *   }
+   * });
+   * 
+   * // Send messages
+   * steam.networkingSockets.sendReliable(connection, Buffer.from('Hello!'));
+   * steam.networkingSockets.sendUnreliable(connection, positionData);
+   * 
+   * // Receive messages
+   * const messages = steam.networkingSockets.receiveMessages(connection);
+   * messages.forEach(msg => {
+   *   console.log('Received:', msg.data.toString());
+   * });
+   * 
+   * // Close when done
+   * steam.networkingSockets.closeConnection(connection);
+   * steam.networkingSockets.closeListenSocket(listenSocket);
+   * ```
+   * 
+   * @see {@link SteamNetworkingSocketsManager} for complete API documentation
+   */
+  public readonly networkingSockets!: SteamNetworkingSocketsManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -614,6 +659,7 @@ class SteamworksSDK {
     this.matchmaking = new SteamMatchmakingManager(this.libraryLoader, this.apiCore);
     this.utils = new SteamUtilsManager(this.libraryLoader, this.apiCore);
     this.networkingUtils = new SteamNetworkingUtilsManager(this.libraryLoader, this.apiCore);
+    this.networkingSockets = new SteamNetworkingSocketsManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {

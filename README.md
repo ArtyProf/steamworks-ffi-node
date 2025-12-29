@@ -53,6 +53,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Networking Utils API** - 15 functions for ping location, relay network, and data center information! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_UTILS_MANAGER.md)
 
+> 🎉 **NEW: Networking Sockets API** - 19 functions for P2P connections, reliable messaging, and multi-player networking! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_SOCKETS_MANAGER.md) ⚠️ Requires two Steam accounts for testing
+
 ## Features
 
 - **Core API**: Essential Steam application functions
@@ -148,6 +150,12 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Ping location for matchmaking (share with other players)
   - ✅ Ping estimation between players (without sending packets)
   - ✅ Data center (POP) information and ping times
+- **Networking Sockets API**: Complete P2P networking (19 functions) ⚠️ _Requires two Steam accounts for testing_
+  - ✅ P2P connections (connect to players via Steam ID)
+  - ✅ Listen sockets (accept incoming connections)
+  - ✅ Reliable and unreliable messaging
+  - ✅ Poll groups (efficiently handle multiple connections)
+  - ✅ Connection status (state, ping, quality metrics)
   - ✅ High-precision local timestamps
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support

@@ -27,6 +27,7 @@ steam.apps.*              // DLC and app ownership operations
 steam.matchmaking.*       // Multiplayer lobby operations
 steam.utils.*             // System utilities and device detection
 steam.networkingUtils.*   // Ping location and relay network
+steam.networkingSockets.* // P2P connections and messaging
 ```
 
 This design:
@@ -200,6 +201,17 @@ This design:
   - Data center (POP) information and ping times
   - High-precision local timestamps
 
+### Networking Sockets System
+
+- **[Networking Sockets Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_SOCKETS_MANAGER.md)**
+  - **19 Functions** - Complete P2P networking support
+  - P2P connections (connect to players via Steam ID)
+  - Listen sockets (accept incoming connections)
+  - Message sending (reliable and unreliable modes)
+  - Poll groups (efficiently handle multiple connections)
+  - Connection status (state, ping, quality metrics)
+  - ⚠️ **Requires two Steam accounts for full testing** - P2P API
+
 ## 🚀 Quick Links
 
 ### Getting Started
@@ -227,6 +239,8 @@ This design:
 - Run Utils Tests: `npm run test:utils:js` - Tests all utils functions
 - Run Networking Utils Host: `npm run test:networking:host:js` - Gets ping location, shows POPs
 - Run Networking Utils Join: `npm run test:networking:join:js` - Estimates ping to remote location
+- Run Networking Sockets Host: `npm run test:sockets:host:js` - Creates P2P listen socket
+- Run Networking Sockets Join: `npm run test:sockets:join:js` - Connects to host via Steam ID
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
 

@@ -313,3 +313,280 @@ export function stringToPopId(code: string): number {
 export function getAvailabilityName(availability: ESteamNetworkingAvailability): string {
   return NetworkingAvailabilityNames[availability] || `Unknown (${availability})`;
 }
+
+// ========================================
+// ISteamNetworkingSockets Types
+// ========================================
+
+/**
+ * Handle to a listen socket (for receiving P2P connections)
+ */
+export type HSteamListenSocket = number;
+
+/**
+ * Handle to a P2P connection
+ */
+export type HSteamNetConnection = number;
+
+/**
+ * Handle to a poll group (for receiving messages from multiple connections)
+ */
+export type HSteamNetPollGroup = number;
+
+/**
+ * Invalid handle constants
+ */
+export const k_HSteamListenSocket_Invalid: HSteamListenSocket = 0;
+export const k_HSteamNetConnection_Invalid: HSteamNetConnection = 0;
+export const k_HSteamNetPollGroup_Invalid: HSteamNetPollGroup = 0;
+
+/**
+ * Connection state enum
+ */
+export enum ESteamNetworkingConnectionState {
+  /** Dummy value used to indicate an error condition */
+  None = 0,
+  /** We are trying to establish whether peers can talk to each other */
+  Connecting = 1,
+  /** We've found each other's location and are trying to setup a route */
+  FindingRoute = 2,
+  /** The connection has been established, we can send/receive data */
+  Connected = 3,
+  /** The connection was closed by the peer */
+  ClosedByPeer = 4,
+  /** A problem was detected locally */
+  ProblemDetectedLocally = 5,
+  /** Internal connection states */
+  FinWait = -1,
+  Linger = -2,
+  Dead = -3,
+}
+
+/**
+ * Human-readable names for connection states
+ */
+export const ConnectionStateNames: Record<number, string> = {
+  [0]: 'None',
+  [1]: 'Connecting',
+  [2]: 'Finding Route',
+  [3]: 'Connected',
+  [4]: 'Closed By Peer',
+  [5]: 'Problem Detected Locally',
+  [-1]: 'FinWait',
+  [-2]: 'Linger',
+  [-3]: 'Dead',
+};
+
+/**
+ * Identity type for Steam networking
+ */
+export enum ESteamNetworkingIdentityType {
+  Invalid = 0,
+  SteamID = 16,
+  IPAddress = 1,
+  GenericString = 2,
+  GenericBytes = 3,
+  UnknownType = 4,
+}
+
+/**
+ * Send message flags
+ */
+export const k_nSteamNetworkingSend_Unreliable = 0;
+export const k_nSteamNetworkingSend_NoNagle = 1;
+export const k_nSteamNetworkingSend_UnreliableNoNagle = 0 | 1;
+export const k_nSteamNetworkingSend_NoDelay = 4;
+export const k_nSteamNetworkingSend_UnreliableNoDelay = 0 | 4 | 1;
+export const k_nSteamNetworkingSend_Reliable = 8;
+export const k_nSteamNetworkingSend_ReliableNoNagle = 8 | 1;
+export const k_nSteamNetworkingSend_UseCurrentThread = 16;
+export const k_nSteamNetworkingSend_AutoRestartBrokenSession = 32;
+
+/**
+ * EResult values relevant to networking
+ */
+export enum EResult {
+  OK = 1,
+  Fail = 2,
+  InvalidParam = 8,
+  InvalidState = 11,
+  NoConnection = 3,
+  Ignored = 32,
+  LimitExceeded = 25,
+}
+
+/**
+ * Connection end reason codes
+ * Values >= 1000 are application codes
+ */
+export const k_ESteamNetConnectionEnd_Invalid = 0;
+export const k_ESteamNetConnectionEnd_App_Min = 1000;
+export const k_ESteamNetConnectionEnd_App_Max = 1999;
+export const k_ESteamNetConnectionEnd_AppException_Min = 2000;
+export const k_ESteamNetConnectionEnd_AppException_Max = 2999;
+export const k_ESteamNetConnectionEnd_Local_Min = 3000;
+export const k_ESteamNetConnectionEnd_Local_Max = 3999;
+export const k_ESteamNetConnectionEnd_Remote_Min = 4000;
+export const k_ESteamNetConnectionEnd_Remote_Max = 4999;
+export const k_ESteamNetConnectionEnd_Misc_Min = 5000;
+export const k_ESteamNetConnectionEnd_Misc_Max = 5999;
+
+/**
+ * SteamNetworkingIdentity structure size
+ * Contains: m_eType (4 bytes) + union (128 bytes) + m_cbSize (4 bytes) = 136 bytes
+ * But the actual C++ structure is 136 bytes with padding
+ */
+export const STEAM_NETWORKING_IDENTITY_SIZE = 136;
+
+/**
+ * SteamNetConnectionInfo_t structure size (approximate - contains padding and reserved space)
+ */
+export const STEAM_NET_CONNECTION_INFO_SIZE = 696;
+
+/**
+ * SteamNetConnectionRealTimeStatus_t structure size
+ */
+export const STEAM_NET_CONNECTION_REALTIME_STATUS_SIZE = 64;
+
+/**
+ * SteamNetworkingIPAddr structure size
+ */
+export const STEAM_NETWORKING_IP_ADDR_SIZE = 18;
+
+/**
+ * Max connection close reason string length
+ */
+export const k_cchSteamNetworkingMaxConnectionCloseReason = 128;
+
+/**
+ * Max connection description string length
+ */
+export const k_cchSteamNetworkingMaxConnectionDescription = 128;
+
+/**
+ * Connection information
+ */
+export interface ConnectionInfo {
+  /** The remote peer's identity (Steam ID as string for SteamID type) */
+  identityRemote: string;
+  /** User data set on the connection */
+  userData: bigint;
+  /** Listen socket this connection came from (0 if we initiated) */
+  listenSocket: HSteamListenSocket;
+  /** Remote IP address (if applicable) */
+  remoteAddress: string;
+  /** POP ID of remote data center */
+  popIdRemote: number;
+  /** POP ID of relay being used */
+  popIdRelay: number;
+  /** Current connection state */
+  state: ESteamNetworkingConnectionState;
+  /** Human-readable state name */
+  stateName: string;
+  /** End reason code (if connection ended) */
+  endReason: number;
+  /** Debug message for end reason */
+  endDebugMessage: string;
+  /** Connection description string */
+  connectionDescription: string;
+}
+
+/**
+ * Real-time connection status
+ */
+export interface ConnectionRealTimeStatus {
+  /** Current connection state */
+  state: ESteamNetworkingConnectionState;
+  /** Current ping in milliseconds */
+  ping: number;
+  /** Connection quality (0-1, higher is better) */
+  connectionQualityLocal: number;
+  /** Remote connection quality (0-1) */
+  connectionQualityRemote: number;
+  /** Outgoing rate in bytes per second */
+  outPacketsPerSec: number;
+  /** Outgoing data in bytes per second */
+  outBytesPerSec: number;
+  /** Incoming rate in packets per second */
+  inPacketsPerSec: number;
+  /** Incoming data in bytes per second */
+  inBytesPerSec: number;
+  /** Estimated bandwidth of the connection */
+  sendRateBytesPerSecond: number;
+  /** Number of bytes pending to be sent */
+  pendingUnreliable: number;
+  /** Number of bytes pending reliable send */
+  pendingReliable: number;
+  /** Bytes of data in sent packets waiting for acknowledgment */
+  sentUnackedReliable: number;
+  /** Time when the connection was established (microseconds) */
+  usecQueueTime: bigint;
+}
+
+/**
+ * A received network message
+ */
+export interface NetworkMessage {
+  /** The message data */
+  data: Buffer;
+  /** Size of the message in bytes */
+  size: number;
+  /** Connection this message came from */
+  connection: HSteamNetConnection;
+  /** Identity of the sender */
+  identityPeer: string;
+  /** User data associated with the connection */
+  connectionUserData: bigint;
+  /** Time the message was received (microseconds) */
+  timeReceived: bigint;
+  /** Message number assigned by the sender */
+  messageNumber: bigint;
+  /** Channel number (for lane support) */
+  channel: number;
+  /** Flags (includes k_nSteamNetworkingSend_Reliable if message was reliable) */
+  flags: number;
+}
+
+/**
+ * Result of sending a message
+ */
+export interface SendMessageResult {
+  /** Whether the message was successfully queued */
+  success: boolean;
+  /** EResult code */
+  result: EResult;
+  /** Message number if successful */
+  messageNumber: bigint;
+}
+
+/**
+ * P2P connection request event (for listen sockets)
+ */
+export interface P2PConnectionRequest {
+  /** The connection handle */
+  connection: HSteamNetConnection;
+  /** Identity of the remote peer */
+  identityRemote: string;
+}
+
+/**
+ * Connection state change event
+ */
+export interface ConnectionStateChange {
+  /** The connection handle */
+  connection: HSteamNetConnection;
+  /** Previous connection state */
+  oldState: ESteamNetworkingConnectionState;
+  /** New connection state */
+  newState: ESteamNetworkingConnectionState;
+  /** Connection info at the time of the change */
+  info: ConnectionInfo;
+}
+
+/**
+ * Gets a human-readable name for a connection state
+ */
+export function getConnectionStateName(state: ESteamNetworkingConnectionState): string {
+  return ConnectionStateNames[state] || `Unknown (${state})`;
+}
+

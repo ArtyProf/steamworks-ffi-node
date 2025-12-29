@@ -11,6 +11,7 @@ export { SteamCloudManager } from './internal/SteamCloudManager';
 export { SteamWorkshopManager } from './internal/SteamWorkshopManager';
 export { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
 export { SteamNetworkingUtilsManager } from './internal/SteamNetworkingUtilsManager';
+export { SteamNetworkingSocketsManager } from './internal/SteamNetworkingSocketsManager';
 
 // Export all types from organized structure
 export * from './types';

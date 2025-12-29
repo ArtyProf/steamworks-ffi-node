@@ -180,6 +180,55 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction!: koffi.KoffiFunction;
 
   // ========================================
+  // ISteamNetworkingSockets API Functions
+  // ========================================
+  
+  // Interface accessor
+  public SteamAPI_SteamNetworkingSockets_SteamAPI_v012!: koffi.KoffiFunction;
+  
+  // P2P Listen/Connect
+  public SteamAPI_ISteamNetworkingSockets_CreateListenSocketP2P!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_ConnectP2P!: koffi.KoffiFunction;
+  
+  // Connection management
+  public SteamAPI_ISteamNetworkingSockets_AcceptConnection!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_CloseConnection!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_CloseListenSocket!: koffi.KoffiFunction;
+  
+  // Connection data
+  public SteamAPI_ISteamNetworkingSockets_SetConnectionUserData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetConnectionUserData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_SetConnectionName!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetConnectionName!: koffi.KoffiFunction;
+  
+  // Messaging
+  public SteamAPI_ISteamNetworkingSockets_SendMessageToConnection!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_FlushMessagesOnConnection!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnConnection!: koffi.KoffiFunction;
+  
+  // Connection info
+  public SteamAPI_ISteamNetworkingSockets_GetConnectionInfo!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetConnectionRealTimeStatus!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetDetailedConnectionStatus!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetListenSocketAddress!: koffi.KoffiFunction;
+  
+  // Poll groups
+  public SteamAPI_ISteamNetworkingSockets_CreatePollGroup!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_DestroyPollGroup!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_SetConnectionPollGroup!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnPollGroup!: koffi.KoffiFunction;
+  
+  // Identity
+  public SteamAPI_ISteamNetworkingSockets_GetIdentity!: koffi.KoffiFunction;
+  
+  // Authentication
+  public SteamAPI_ISteamNetworkingSockets_InitAuthentication!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetAuthenticationStatus!: koffi.KoffiFunction;
+  
+  // Callbacks
+  public SteamAPI_ISteamNetworkingSockets_RunCallbacks!: koffi.KoffiFunction;
+
+  // ========================================
   // ISteamFriends API Functions
   // ========================================
   
@@ -799,6 +848,59 @@ export class SteamLibraryLoader {
     // Debug output - uses callback function pointer
     this.SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction', 'void', ['void*', 'int', 'void*']);
     
+    // ========================================
+    // ISteamNetworkingSockets Functions
+    // ========================================
+    
+    // Interface accessor
+    this.SteamAPI_SteamNetworkingSockets_SteamAPI_v012 = this.steamLib.func('SteamAPI_SteamNetworkingSockets_SteamAPI_v012', 'void*', []);
+    
+    // P2P Listen/Connect
+    // CreateListenSocketP2P(nLocalVirtualPort, nOptions, pOptions) -> HSteamListenSocket
+    this.SteamAPI_ISteamNetworkingSockets_CreateListenSocketP2P = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_CreateListenSocketP2P', 'uint32', ['void*', 'int', 'int', 'void*']);
+    // ConnectP2P(identityRemote, nRemoteVirtualPort, nOptions, pOptions) -> HSteamNetConnection
+    this.SteamAPI_ISteamNetworkingSockets_ConnectP2P = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_ConnectP2P', 'uint32', ['void*', 'void*', 'int', 'int', 'void*']);
+    
+    // Connection management
+    this.SteamAPI_ISteamNetworkingSockets_AcceptConnection = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_AcceptConnection', 'int', ['void*', 'uint32']);
+    this.SteamAPI_ISteamNetworkingSockets_CloseConnection = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_CloseConnection', 'bool', ['void*', 'uint32', 'int', 'str', 'bool']);
+    this.SteamAPI_ISteamNetworkingSockets_CloseListenSocket = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_CloseListenSocket', 'bool', ['void*', 'uint32']);
+    
+    // Connection data
+    this.SteamAPI_ISteamNetworkingSockets_SetConnectionUserData = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_SetConnectionUserData', 'bool', ['void*', 'uint32', 'int64']);
+    this.SteamAPI_ISteamNetworkingSockets_GetConnectionUserData = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_GetConnectionUserData', 'int64', ['void*', 'uint32']);
+    this.SteamAPI_ISteamNetworkingSockets_SetConnectionName = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_SetConnectionName', 'void', ['void*', 'uint32', 'str']);
+    this.SteamAPI_ISteamNetworkingSockets_GetConnectionName = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_GetConnectionName', 'bool', ['void*', 'uint32', 'char*', 'int']);
+    
+    // Messaging
+    // SendMessageToConnection(hConn, pData, cbData, nSendFlags, pOutMessageNumber) -> EResult
+    this.SteamAPI_ISteamNetworkingSockets_SendMessageToConnection = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_SendMessageToConnection', 'int', ['void*', 'uint32', 'void*', 'uint32', 'int', 'int64*']);
+    this.SteamAPI_ISteamNetworkingSockets_FlushMessagesOnConnection = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_FlushMessagesOnConnection', 'int', ['void*', 'uint32']);
+    // ReceiveMessagesOnConnection(hConn, ppOutMessages, nMaxMessages) -> int
+    this.SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnConnection = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnConnection', 'int', ['void*', 'uint32', 'void*', 'int']);
+    
+    // Connection info
+    this.SteamAPI_ISteamNetworkingSockets_GetConnectionInfo = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_GetConnectionInfo', 'bool', ['void*', 'uint32', 'void*']);
+    this.SteamAPI_ISteamNetworkingSockets_GetConnectionRealTimeStatus = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_GetConnectionRealTimeStatus', 'int', ['void*', 'uint32', 'void*', 'int', 'void*']);
+    this.SteamAPI_ISteamNetworkingSockets_GetDetailedConnectionStatus = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_GetDetailedConnectionStatus', 'int', ['void*', 'uint32', 'char*', 'int']);
+    this.SteamAPI_ISteamNetworkingSockets_GetListenSocketAddress = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_GetListenSocketAddress', 'bool', ['void*', 'uint32', 'void*']);
+    
+    // Poll groups
+    this.SteamAPI_ISteamNetworkingSockets_CreatePollGroup = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_CreatePollGroup', 'uint32', ['void*']);
+    this.SteamAPI_ISteamNetworkingSockets_DestroyPollGroup = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_DestroyPollGroup', 'bool', ['void*', 'uint32']);
+    this.SteamAPI_ISteamNetworkingSockets_SetConnectionPollGroup = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_SetConnectionPollGroup', 'bool', ['void*', 'uint32', 'uint32']);
+    this.SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnPollGroup = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnPollGroup', 'int', ['void*', 'uint32', 'void*', 'int']);
+    
+    // Identity
+    this.SteamAPI_ISteamNetworkingSockets_GetIdentity = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_GetIdentity', 'bool', ['void*', 'void*']);
+    
+    // Authentication
+    this.SteamAPI_ISteamNetworkingSockets_InitAuthentication = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_InitAuthentication', 'int', ['void*']);
+    this.SteamAPI_ISteamNetworkingSockets_GetAuthenticationStatus = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_GetAuthenticationStatus', 'int', ['void*', 'void*']);
+    
+    // Callbacks
+    this.SteamAPI_ISteamNetworkingSockets_RunCallbacks = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_RunCallbacks', 'void', ['void*']);
+
     // ========================================
     // ISteamFriends Functions
     // ========================================

@@ -26,6 +26,8 @@
     "test:utils:js": "node tests/js/test-utils.js",
     "test:networking:host:js": "node tests/js/test-networking-utils-host.js",
     "test:networking:join:js": "node tests/js/test-networking-utils-join.js",
+    "test:sockets:host:js": "node tests/js/test-networking-sockets-host.js",
+    "test:sockets:join:js": "node tests/js/test-networking-sockets-join.js",
     "test:core:ts": "ts-node tests/ts/test-core-api.ts",
     "test:achievements:ts": "ts-node tests/ts/test-complete-achievements.ts",
     "test:stats:ts": "ts-node tests/ts/test-complete-stats.ts",
@@ -44,6 +46,8 @@
     "test:utils:ts": "ts-node tests/ts/test-utils.ts",
     "test:networking:host:ts": "ts-node tests/ts/test-networking-utils-host.ts",
     "test:networking:join:ts": "ts-node tests/ts/test-networking-utils-join.ts",
+    "test:sockets:host:ts": "ts-node tests/ts/test-networking-sockets-host.ts",
+    "test:sockets:join:ts": "ts-node tests/ts/test-networking-sockets-join.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
