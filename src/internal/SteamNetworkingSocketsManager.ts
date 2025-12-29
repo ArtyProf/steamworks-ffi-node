@@ -631,7 +631,10 @@ export class SteamNetworkingSocketsManager {
   /**
    * Parse a SteamNetworkingMessage_t pointer into our NetworkMessage structure
    * 
-   * SteamNetworkingMessage_t layout (64-bit):
+   * SteamNetworkingMessage_t is defined AFTER #pragma pack(pop), so it uses
+   * default/natural alignment (not the 4/8 byte Steam callback packing).
+   * 
+   * Layout on 64-bit (natural alignment):
    * - void* m_pData;              // offset 0, 8 bytes
    * - int m_cbSize;               // offset 8, 4 bytes
    * - HSteamNetConnection m_conn; // offset 12, 4 bytes
@@ -646,7 +649,7 @@ export class SteamNetworkingSocketsManager {
    * - int64 m_nUserData;          // offset 200, 8 bytes
    * - uint16 m_idxLane;           // offset 208, 2 bytes
    * - uint16 _pad1__;             // offset 210, 2 bytes
-   * Total: ~212 bytes (may vary with padding)
+   * Total: 212 bytes (may have trailing padding to 216 for 8-byte alignment)
    * 
    * @param msgPtr - Native pointer to SteamNetworkingMessage_t (from koffi)
    */
@@ -654,13 +657,12 @@ export class SteamNetworkingSocketsManager {
     if (!msgPtr) return null;
     
     try {
-      // Read the message struct header (first 212 bytes)
-      const HEADER_SIZE = 212;
+      // Read the message struct header
+      const HEADER_SIZE = 216;
       const headerBytes = koffi.decode(msgPtr, koffi.array('uint8', HEADER_SIZE));
       const header = Buffer.from(headerBytes);
       
-      // Parse header fields
-      const pDataPtr = header.readBigUInt64LE(0);
+      // Parse header fields - offsets for 64-bit with natural alignment
       const cbSize = header.readInt32LE(8);
       const conn = header.readUInt32LE(12);
       
@@ -679,11 +681,9 @@ export class SteamNetworkingSocketsManager {
       const flags = header.readInt32LE(196);
       
       // Read the actual message data using the data pointer
-      // The data pointer is at offset 0 in the header, we need to read from that address
       let data = Buffer.alloc(0);
       if (cbSize > 0) {
-        // Read the m_pData pointer value and decode from there
-        // First, get the raw pointer from offset 0 (8 bytes as void*)
+        // The m_pData pointer is at offset 0, we can use koffi to read it directly
         const dataPtr = koffi.decode(msgPtr, 'void*');
         if (dataPtr) {
           const dataBytes = koffi.decode(dataPtr, koffi.array('uint8', cbSize));
