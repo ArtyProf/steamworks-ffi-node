@@ -241,6 +241,9 @@ export class SteamLibraryLoader {
   
   // Callbacks
   public SteamAPI_ISteamNetworkingSockets_RunCallbacks!: koffi.KoffiFunction;
+  
+  // Message utilities
+  public SteamAPI_SteamNetworkingMessage_t_Release!: koffi.KoffiFunction;
 
   // ========================================
   // ISteamFriends API Functions
@@ -923,6 +926,9 @@ export class SteamLibraryLoader {
     
     // Callbacks
     this.SteamAPI_ISteamNetworkingSockets_RunCallbacks = this.steamLib.func('SteamAPI_ISteamNetworkingSockets_RunCallbacks', 'void', ['void*']);
+    
+    // Message utilities
+    this.SteamAPI_SteamNetworkingMessage_t_Release = this.steamLib.func('SteamAPI_SteamNetworkingMessage_t_Release', 'void', ['void*']);
 
     // ========================================
     // ISteamFriends Functions

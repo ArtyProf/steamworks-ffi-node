@@ -596,7 +596,8 @@ export class SteamNetworkingSocketsManager {
     const iface = this.getInterface();
     
     // Allocate array of pointers to receive message pointers
-    const messagePtrs = new BigUint64Array(maxMessages);
+    // Use void* array - koffi will fill with native pointers
+    const messagePtrs = koffi.alloc('void*', maxMessages);
     
     const numMessages = this.libraryLoader.SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnConnection(
       iface,
@@ -605,12 +606,22 @@ export class SteamNetworkingSocketsManager {
       maxMessages
     );
     
+    if (numMessages <= 0) {
+      return [];
+    }
+    
+    // Decode the array of pointers
+    const ptrArray = koffi.decode(messagePtrs, koffi.array('void*', numMessages));
+    
     const messages: NetworkMessage[] = [];
     
     for (let i = 0; i < numMessages; i++) {
-      const msg = this.parseNetworkMessage(messagePtrs[i]);
-      if (msg) {
-        messages.push(msg);
+      const msgPtr = ptrArray[i];
+      if (msgPtr) {
+        const msg = this.parseNetworkMessage(msgPtr);
+        if (msg) {
+          messages.push(msg);
+        }
       }
     }
     
@@ -619,43 +630,87 @@ export class SteamNetworkingSocketsManager {
 
   /**
    * Parse a SteamNetworkingMessage_t pointer into our NetworkMessage structure
+   * 
+   * SteamNetworkingMessage_t layout (64-bit):
+   * - void* m_pData;              // offset 0, 8 bytes
+   * - int m_cbSize;               // offset 8, 4 bytes
+   * - HSteamNetConnection m_conn; // offset 12, 4 bytes
+   * - SteamNetworkingIdentity m_identityPeer; // offset 16, 136 bytes
+   * - int64 m_nConnUserData;      // offset 152, 8 bytes
+   * - SteamNetworkingMicroseconds m_usecTimeReceived; // offset 160, 8 bytes
+   * - int64 m_nMessageNumber;     // offset 168, 8 bytes
+   * - void (*m_pfnFreeData)();    // offset 176, 8 bytes
+   * - void (*m_pfnRelease)();     // offset 184, 8 bytes
+   * - int m_nChannel;             // offset 192, 4 bytes
+   * - int m_nFlags;               // offset 196, 4 bytes
+   * - int64 m_nUserData;          // offset 200, 8 bytes
+   * - uint16 m_idxLane;           // offset 208, 2 bytes
+   * - uint16 _pad1__;             // offset 210, 2 bytes
+   * Total: ~212 bytes (may vary with padding)
+   * 
+   * @param msgPtr - Native pointer to SteamNetworkingMessage_t (from koffi)
    */
-  private parseNetworkMessage(msgPtr: bigint): NetworkMessage | null {
-    if (msgPtr === BigInt(0)) return null;
+  private parseNetworkMessage(msgPtr: any): NetworkMessage | null {
+    if (!msgPtr) return null;
     
     try {
-      // SteamNetworkingMessage_t structure layout (simplified):
-      // void* m_pData;         // offset 0, 8 bytes on 64-bit
-      // int m_cbSize;          // offset 8, 4 bytes
-      // HSteamNetConnection m_conn; // offset 12, 4 bytes
-      // SteamNetworkingIdentity m_identityPeer; // offset 16, 136 bytes
-      // int64 m_nConnUserData; // offset 152, 8 bytes
-      // SteamNetworkingMicroseconds m_usecTimeReceived; // offset 160, 8 bytes
-      // int64 m_nMessageNumber; // offset 168, 8 bytes
-      // void (*m_pfnFreeData)(); // offset 176, 8 bytes
-      // void (*m_pfnRelease)(); // offset 184, 8 bytes
-      // int m_nChannel;        // offset 192, 4 bytes
-      // int m_nFlags;          // offset 196, 4 bytes (pad to 200)
-      // int64 m_nUserData;     // offset 200, 8 bytes
+      // Read the message struct header (first 212 bytes)
+      const HEADER_SIZE = 212;
+      const headerBytes = koffi.decode(msgPtr, koffi.array('uint8', HEADER_SIZE));
+      const header = Buffer.from(headerBytes);
       
-      // Read the message structure
-      // Note: This is a simplified approach - in production you'd want to
-      // properly handle the pointer and release it using m_pfnRelease
+      // Parse header fields
+      const pDataPtr = header.readBigUInt64LE(0);
+      const cbSize = header.readInt32LE(8);
+      const conn = header.readUInt32LE(12);
       
-      // For now, we'll use a workaround: read the data and release the message
-      const ptrBuffer = Buffer.alloc(8);
-      ptrBuffer.writeBigUInt64LE(msgPtr, 0);
+      // Parse identity (extract SteamID from offset 16)
+      // SteamNetworkingIdentity: m_eType at 0, m_cbSize at 4, m_steamID64 at 8
+      const identityType = header.readInt32LE(16);
+      let identityPeer = '';
+      if (identityType === ESteamNetworkingIdentityType.SteamID) {
+        identityPeer = header.readBigUInt64LE(16 + 8).toString();
+      }
       
-      // We need to decode the message pointer to read its contents
-      // This is complex with koffi - for a real implementation, you'd
-      // define the struct properly. For now, return a placeholder.
+      const connUserData = header.readBigInt64LE(152);
+      const timeReceived = header.readBigInt64LE(160);
+      const messageNumber = header.readBigInt64LE(168);
+      const channel = header.readInt32LE(192);
+      const flags = header.readInt32LE(196);
       
-      // TODO: Implement proper message parsing with koffi struct definitions
-      // This would require defining SteamNetworkingMessage_t as a koffi struct
+      // Read the actual message data using the data pointer
+      // The data pointer is at offset 0 in the header, we need to read from that address
+      let data = Buffer.alloc(0);
+      if (cbSize > 0) {
+        // Read the m_pData pointer value and decode from there
+        // First, get the raw pointer from offset 0 (8 bytes as void*)
+        const dataPtr = koffi.decode(msgPtr, 'void*');
+        if (dataPtr) {
+          const dataBytes = koffi.decode(dataPtr, koffi.array('uint8', cbSize));
+          data = Buffer.from(dataBytes);
+        }
+      }
       
-      return null; // Placeholder - will implement with proper struct handling
+      // Release the message (IMPORTANT: prevents memory leaks)
+      this.libraryLoader.SteamAPI_SteamNetworkingMessage_t_Release(msgPtr);
+      
+      return {
+        data,
+        size: cbSize,
+        connection: conn,
+        identityPeer,
+        connectionUserData: connUserData,
+        timeReceived,
+        messageNumber,
+        channel,
+        flags,
+      };
     } catch (error) {
       console.error('[Steamworks] Error parsing network message:', error);
+      // Try to release even on error
+      try {
+        this.libraryLoader.SteamAPI_SteamNetworkingMessage_t_Release(msgPtr);
+      } catch { /* ignore */ }
       return null;
     }
   }
@@ -729,7 +784,8 @@ export class SteamNetworkingSocketsManager {
   receiveMessagesOnPollGroup(pollGroup: HSteamNetPollGroup, maxMessages: number = 64): NetworkMessage[] {
     const iface = this.getInterface();
     
-    const messagePtrs = new BigUint64Array(maxMessages);
+    // Allocate array of pointers to receive message pointers
+    const messagePtrs = koffi.alloc('void*', maxMessages);
     
     const numMessages = this.libraryLoader.SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnPollGroup(
       iface,
@@ -738,12 +794,22 @@ export class SteamNetworkingSocketsManager {
       maxMessages
     );
     
+    if (numMessages <= 0) {
+      return [];
+    }
+    
+    // Decode the array of pointers
+    const ptrArray = koffi.decode(messagePtrs, koffi.array('void*', numMessages));
+    
     const messages: NetworkMessage[] = [];
     
     for (let i = 0; i < numMessages; i++) {
-      const msg = this.parseNetworkMessage(messagePtrs[i]);
-      if (msg) {
-        messages.push(msg);
+      const msgPtr = ptrArray[i];
+      if (msgPtr) {
+        const msg = this.parseNetworkMessage(msgPtr);
+        if (msg) {
+          messages.push(msg);
+        }
       }
     }
     
