@@ -128,14 +128,15 @@ export class SteamNetworkingSocketsManager {
 
     try {
       // Use the callback prototype exported from SteamLibraryLoader
-      // (must be the same proto used in the FFI declaration)
+      // koffi.register() expects a pointer to the callback type
+      const callbackPtrType = koffi.pointer(FnSteamNetConnectionStatusChanged);
       
       // Create the callback function that will be called from native code
       this.connectionStatusCallback = koffi.register(
         (infoPtr: any) => {
           this.handleConnectionStatusChanged(infoPtr);
         },
-        FnSteamNetConnectionStatusChanged
+        callbackPtrType
       );
 
       // Get the NetworkingUtils interface
