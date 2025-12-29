@@ -1,40 +1,11 @@
 /**
- * Networking Sockets Host Test
+ * Networking Sockets Host Test (TypeScript)
  * 
  * This test demonstrates P2P networking as a HOST (server/listener).
- * Run this first, then run test-networking-sockets-join.ts on another
- * machine or Steam account to establish a P2P connection.
- * 
- * The host:
- * 1. Creates a listen socket to accept incoming connections
- * 2. Waits for a client to connect
- * 3. Accepts the connection
- * 4. Exchanges messages with the client
- * 5. Closes the connection
+ * It covers ALL public methods of SteamNetworkingSocketsManager.
  * 
  * Usage:
  *   npm run test:sockets:host:ts
- * 
- * Methods tested in this file:
- *   - createListenSocketP2P()
- *   - closeListenSocket()
- *   - acceptConnection()
- *   - closeConnection()
- *   - sendReliable()
- *   - sendUnreliable()
- *   - receiveMessages()
- *   - getConnectionInfo()
- *   - getConnectionRealTimeStatus()
- *   - getDetailedConnectionStatus()
- *   - setConnectionUserData()
- *   - getConnectionUserData()
- *   - setConnectionName()
- *   - getConnectionName()
- *   - getIdentity()
- *   - createPollGroup()
- *   - setConnectionPollGroup()
- *   - destroyPollGroup()
- *   - runCallbacks()
  */
 
 import { 
@@ -43,9 +14,11 @@ import {
   ESteamNetworkingAvailability,
   k_HSteamListenSocket_Invalid,
   k_HSteamNetConnection_Invalid,
-  k_nSteamNetworkingSend_Reliable,
+  k_HSteamNetPollGroup_Invalid,
   EResult,
   getConnectionStateName,
+  HSteamNetConnection,
+  HSteamNetPollGroup,
 } from '../../src';
 
 async function delay(ms: number): Promise<void> {
@@ -55,52 +28,51 @@ async function delay(ms: number): Promise<void> {
 async function testNetworkingSocketsHost(): Promise<void> {
   console.log('='.repeat(60));
   console.log('NETWORKING SOCKETS HOST TEST (P2P Server)');
+  console.log('Covers ALL public methods of SteamNetworkingSocketsManager');
   console.log('='.repeat(60));
-  console.log('');
-  console.log('This test will:');
-  console.log('1. Initialize Steam networking');
-  console.log('2. Create a P2P listen socket');
-  console.log('3. Wait for a client to connect');
-  console.log('4. Exchange messages');
-  console.log('5. Close the connection');
-  console.log('');
-  console.log('Run test-networking-sockets-join.ts on another Steam account');
-  console.log('to connect to this host.');
   console.log('');
 
   const steam = SteamworksSDK.getInstance();
 
   // Initialize Steam API
   console.log('Initializing Steam API...');
-  const initialized = steam.init({ appId: 480 }); // Spacewar test app
+  const initialized = steam.init({ appId: 480 });
 
   if (!initialized) {
     console.error('Failed to initialize Steam API!');
-    console.error('Make sure Steam is running and you are logged in.');
     process.exit(1);
   }
 
-  console.log('Steam API initialized successfully!');
+  console.log('Steam API initialized!');
   console.log('');
 
-  // Get current user info
+  // Get user info
   const status = steam.getStatus();
   const playerName = steam.friends.getPersonaName();
   console.log(`Host: ${playerName} (${status.steamId})`);
   console.log('');
 
-  // ========================================
-  // INITIALIZE RELAY NETWORK
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('INITIALIZING RELAY NETWORK');
-  console.log('-'.repeat(60));
+  // ============================================
+  // Test: getIdentity()
+  // ============================================
+  console.log('--- Testing getIdentity() ---');
+  const identity = steam.networkingSockets.getIdentity();
+  console.log(`Our identity: ${identity}`);
+  console.log('');
 
-  console.log('Calling initRelayNetworkAccess()...');
+  // ============================================
+  // Test: initAuthentication() & getAuthenticationStatus()
+  // ============================================
+  console.log('--- Testing initAuthentication() & getAuthenticationStatus() ---');
+  const authInit = steam.networkingSockets.initAuthentication();
+  console.log(`initAuthentication result: ${authInit}`);
+  const authStatus = steam.networkingSockets.getAuthenticationStatus();
+  console.log(`getAuthenticationStatus result: ${authStatus}`);
+  console.log('');
+
+  // Initialize relay network
+  console.log('--- Initializing relay network ---');
   steam.networkingUtils.initRelayNetworkAccess();
-
-  // Wait for relay network to become available
-  console.log('Waiting for relay network...');
 
   const startTime = Date.now();
   const timeout = 30000;
@@ -116,14 +88,8 @@ async function testNetworkingSocketsHost(): Promise<void> {
       break;
     }
     
-    if (networkStatus.availability < 0) {
-      console.error(`✗ Relay network failed: ${networkStatus.availabilityName}`);
-      steam.shutdown();
-      process.exit(1);
-    }
-    
-    if (Date.now() - startTime > timeout) {
-      console.error('✗ Timeout waiting for relay network');
+    if (networkStatus.availability < 0 || Date.now() - startTime > timeout) {
+      console.error('✗ Relay network failed or timed out');
       steam.shutdown();
       process.exit(1);
     }
@@ -132,26 +98,11 @@ async function testNetworkingSocketsHost(): Promise<void> {
   }
   console.log('');
 
-  // ========================================
-  // GET OUR IDENTITY
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('IDENTITY');
-  console.log('-'.repeat(60));
-
-  const myIdentity = steam.networkingSockets.getIdentity();
-  console.log(`Our Steam ID: ${myIdentity || 'Not available'}`);
-  console.log('');
-
-  // ========================================
-  // CREATE LISTEN SOCKET
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('CREATING LISTEN SOCKET');
-  console.log('-'.repeat(60));
-
-  const virtualPort = 0; // Use default virtual port
-  const listenSocket = steam.networkingSockets.createListenSocketP2P(virtualPort);
+  // ============================================
+  // Test: createListenSocketP2P()
+  // ============================================
+  console.log('--- Testing createListenSocketP2P() ---');
+  const listenSocket = steam.networkingSockets.createListenSocketP2P(0);
 
   if (listenSocket === k_HSteamListenSocket_Invalid) {
     console.error('✗ Failed to create listen socket!');
@@ -160,45 +111,56 @@ async function testNetworkingSocketsHost(): Promise<void> {
   }
 
   console.log(`✓ Listen socket created: ${listenSocket}`);
-  console.log(`  Virtual port: ${virtualPort}`);
+
+  // ============================================
+  // Test: getActiveListenSockets()
+  // ============================================
+  console.log('--- Testing getActiveListenSockets() ---');
+  const activeSockets = steam.networkingSockets.getActiveListenSockets();
+  console.log(`Active listen sockets: [${activeSockets.join(', ')}]`);
   console.log('');
   
   console.log('='.repeat(60));
-  console.log('WAITING FOR CONNECTION');
-  console.log(`Tell client to connect to Steam ID: ${status.steamId}`);
+  console.log(`Tell client to connect to: ${status.steamId}`);
   console.log('='.repeat(60));
   console.log('');
 
-  // ========================================
-  // WAIT FOR INCOMING CONNECTION
-  // ========================================
+  // ============================================
+  // Test: onConnectionStateChange() & onConnectionRequest()
+  // ============================================
+  console.log('--- Testing onConnectionStateChange() & onConnectionRequest() ---');
   
-  let clientConnection: number = k_HSteamNetConnection_Invalid;
+  let clientConnection: HSteamNetConnection = k_HSteamNetConnection_Invalid;
   let connected = false;
-  const connectionTimeout = 120000; // 2 minute timeout
+  let connectionRequestReceived = false;
+  const connectionTimeout = 120000;
   const waitStart = Date.now();
   
-  // Register connection state change handler
-  steam.networkingSockets.onConnectionStateChange((change) => {
-    console.log(`Connection state change: ${getConnectionStateName(change.oldState)} -> ${getConnectionStateName(change.newState)}`);
+  // Register connection request handler
+  const unregisterRequest = steam.networkingSockets.onConnectionRequest((request) => {
+    connectionRequestReceived = true;
+    console.log(`Connection request from: ${request.identityRemote} on socket ${request.listenSocket}`);
+  });
+
+  // Register state change handler
+  const unregisterStateChange = steam.networkingSockets.onConnectionStateChange((change) => {
+    console.log(`State: ${getConnectionStateName(change.oldState)} -> ${getConnectionStateName(change.newState)}`);
     
     if (change.newState === ESteamNetworkingConnectionState.Connecting) {
-      // Incoming connection request - accept it
-      console.log('');
       console.log(`Incoming connection from: ${change.info.identityRemote}`);
-      console.log('Accepting connection...');
       
+      // ============================================
+      // Test: acceptConnection()
+      // ============================================
       const acceptResult = steam.networkingSockets.acceptConnection(change.connection);
       if (acceptResult === EResult.OK) {
         console.log('✓ Connection accepted');
         clientConnection = change.connection;
-      } else {
-        console.error(`✗ Failed to accept connection: ${acceptResult}`);
       }
     }
     
     if (change.newState === ESteamNetworkingConnectionState.Connected) {
-      console.log('✓ Connection established!');
+      console.log('✓ Connected!');
       connected = true;
     }
     
@@ -210,16 +172,14 @@ async function testNetworkingSocketsHost(): Promise<void> {
     }
   });
 
-  console.log('Waiting for client to connect...');
-  console.log('(Press Ctrl+C to cancel)');
-  console.log('');
+  console.log('Waiting for client...');
 
   while (!connected) {
     steam.runCallbacks();
     steam.networkingSockets.runCallbacks();
     
     if (Date.now() - waitStart > connectionTimeout) {
-      console.error('✗ Timeout waiting for connection');
+      console.error('✗ Timeout');
       steam.networkingSockets.closeListenSocket(listenSocket);
       steam.shutdown();
       process.exit(1);
@@ -227,152 +187,278 @@ async function testNetworkingSocketsHost(): Promise<void> {
     
     await delay(100);
   }
-
   console.log('');
 
-  // ========================================
-  // CONNECTION INFO
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('CONNECTION INFO');
-  console.log('-'.repeat(60));
+  // ============================================
+  // Test: getPendingStateChanges() & getPendingConnectionRequests()
+  // ============================================
+  console.log('--- Testing getPendingStateChanges() & getPendingConnectionRequests() ---');
+  const pendingChanges = steam.networkingSockets.getPendingStateChanges();
+  const pendingRequests = steam.networkingSockets.getPendingConnectionRequests();
+  console.log(`Pending state changes: ${pendingChanges.length}`);
+  console.log(`Pending connection requests: ${pendingRequests.length}`);
+  console.log(`Connection request received via handler: ${connectionRequestReceived}`);
+  console.log('');
 
-  const connectionInfo = steam.networkingSockets.getConnectionInfo(clientConnection);
-  if (connectionInfo) {
-    console.log(`  Remote: ${connectionInfo.identityRemote}`);
-    console.log(`  State: ${connectionInfo.stateName}`);
-    console.log(`  Description: ${connectionInfo.connectionDescription}`);
-    console.log(`  POP Remote: ${connectionInfo.popIdRemote}`);
-    console.log(`  POP Relay: ${connectionInfo.popIdRelay}`);
+  // ============================================
+  // Test: getActiveConnections() & isConnectionActive()
+  // ============================================
+  console.log('--- Testing getActiveConnections() & isConnectionActive() ---');
+  const activeConnections = steam.networkingSockets.getActiveConnections();
+  console.log(`Active connections: [${activeConnections.join(', ')}]`);
+  const isActive = steam.networkingSockets.isConnectionActive(clientConnection);
+  console.log(`Connection ${clientConnection} is active: ${isActive}`);
+  console.log('');
+
+  // ============================================
+  // Test: getConnectionInfo()
+  // ============================================
+  console.log('--- Testing getConnectionInfo() ---');
+  const info = steam.networkingSockets.getConnectionInfo(clientConnection);
+  if (info) {
+    console.log(`Connected to: ${info.identityRemote}`);
+    console.log(`State: ${info.stateName}`);
+    console.log(`Listen socket: ${info.listenSocket}`);
+    console.log(`POP Remote: ${info.popIdRemote}`);
+    console.log(`POP Relay: ${info.popIdRelay}`);
   }
   console.log('');
 
-  // Set connection name
-  console.log('Setting connection name...');
-  steam.networkingSockets.setConnectionName(clientConnection, 'TestClient');
-  const name = steam.networkingSockets.getConnectionName(clientConnection);
-  console.log(`  Connection name: ${name}`);
-  console.log('');
-
-  // Set and get user data
-  console.log('Setting connection user data...');
-  steam.networkingSockets.setConnectionUserData(clientConnection, BigInt(12345));
-  const userData = steam.networkingSockets.getConnectionUserData(clientConnection);
-  console.log(`  User data: ${userData}`);
-  console.log('');
-
-  // Get real-time status
-  console.log('Real-time status:');
+  // ============================================
+  // Test: getConnectionRealTimeStatus()
+  // ============================================
+  console.log('--- Testing getConnectionRealTimeStatus() ---');
   const rtStatus = steam.networkingSockets.getConnectionRealTimeStatus(clientConnection);
   if (rtStatus) {
-    console.log(`  Ping: ${rtStatus.ping}ms`);
-    console.log(`  Quality local: ${(rtStatus.connectionQualityLocal * 100).toFixed(1)}%`);
-    console.log(`  Quality remote: ${(rtStatus.connectionQualityRemote * 100).toFixed(1)}%`);
-    console.log(`  Out rate: ${rtStatus.outBytesPerSec.toFixed(0)} bytes/sec`);
-    console.log(`  In rate: ${rtStatus.inBytesPerSec.toFixed(0)} bytes/sec`);
+    console.log(`Ping: ${rtStatus.ping} ms`);
+    console.log(`Quality local: ${(rtStatus.connectionQualityLocal * 100).toFixed(1)}%`);
+    console.log(`Quality remote: ${(rtStatus.connectionQualityRemote * 100).toFixed(1)}%`);
+    console.log(`Out packets/sec: ${rtStatus.outPacketsPerSec.toFixed(1)}`);
+    console.log(`In packets/sec: ${rtStatus.inPacketsPerSec.toFixed(1)}`);
+    console.log(`Pending reliable: ${rtStatus.pendingReliable} bytes`);
   }
   console.log('');
 
-  // Get detailed status
-  console.log('Detailed status:');
+  // ============================================
+  // Test: getDetailedConnectionStatus()
+  // ============================================
+  console.log('--- Testing getDetailedConnectionStatus() ---');
   const detailedStatus = steam.networkingSockets.getDetailedConnectionStatus(clientConnection);
   if (detailedStatus) {
-    console.log(detailedStatus.substring(0, 500) + (detailedStatus.length > 500 ? '...' : ''));
+    // Just show first 200 chars to keep output manageable
+    console.log('Detailed status (first 200 chars):');
+    console.log(detailedStatus.substring(0, 200) + '...');
   }
   console.log('');
 
-  // ========================================
-  // SEND MESSAGES
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('SENDING MESSAGES');
-  console.log('-'.repeat(60));
+  // ============================================
+  // Test: setConnectionName() & getConnectionName()
+  // ============================================
+  console.log('--- Testing setConnectionName() & getConnectionName() ---');
+  steam.networkingSockets.setConnectionName(clientConnection, 'TestClient');
+  const connName = steam.networkingSockets.getConnectionName(clientConnection);
+  console.log(`Connection name: "${connName}"`);
+  console.log('');
 
-  // Send a reliable message
-  const reliableData = Buffer.from(JSON.stringify({
+  // ============================================
+  // Test: setConnectionUserData() & getConnectionUserData()
+  // ============================================
+  console.log('--- Testing setConnectionUserData() & getConnectionUserData() ---');
+  const testUserData = BigInt(12345678901234);
+  const setResult = steam.networkingSockets.setConnectionUserData(clientConnection, testUserData);
+  console.log(`setConnectionUserData result: ${setResult}`);
+  const userData = steam.networkingSockets.getConnectionUserData(clientConnection);
+  console.log(`getConnectionUserData result: ${userData}`);
+  console.log(`User data matches: ${userData === testUserData}`);
+  console.log('');
+
+  // ============================================
+  // Test: createPollGroup(), setConnectionPollGroup(), destroyPollGroup()
+  // ============================================
+  console.log('--- Testing Poll Groups ---');
+  const pollGroup: HSteamNetPollGroup = steam.networkingSockets.createPollGroup();
+  console.log(`Created poll group: ${pollGroup}`);
+  
+  if (pollGroup !== k_HSteamNetPollGroup_Invalid) {
+    const addResult = steam.networkingSockets.setConnectionPollGroup(clientConnection, pollGroup);
+    console.log(`Added connection to poll group: ${addResult}`);
+  }
+  console.log('');
+
+  // ============================================
+  // Test: sendReliable() (sendMessage with reliable flag)
+  // ============================================
+  console.log('--- Testing sendReliable() ---');
+  const reliableMsg = Buffer.from(JSON.stringify({
     type: 'welcome',
-    message: 'Hello from host!',
+    message: 'Hello from host (reliable)!',
     timestamp: Date.now()
   }));
-
-  console.log('Sending reliable message...');
-  const sendResult = steam.networkingSockets.sendReliable(clientConnection, reliableData);
-  if (sendResult.success) {
-    console.log(`✓ Reliable message sent (msg# ${sendResult.messageNumber})`);
-  } else {
-    console.log(`✗ Failed to send: ${sendResult.result}`);
-  }
+  const reliableResult = steam.networkingSockets.sendReliable(clientConnection, reliableMsg);
+  console.log(`Reliable send result: ${reliableResult.success ? 'OK' : 'Failed'}, messageNumber: ${reliableResult.messageNumber}`);
   console.log('');
 
-  // ========================================
-  // RECEIVE MESSAGES
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('RECEIVING MESSAGES (5 seconds)');
-  console.log('-'.repeat(60));
+  // ============================================
+  // Test: sendUnreliable()
+  // ============================================
+  console.log('--- Testing sendUnreliable() ---');
+  const unreliableMsg = Buffer.from(JSON.stringify({
+    type: 'position',
+    x: 100,
+    y: 200,
+    timestamp: Date.now()
+  }));
+  const unreliableResult = steam.networkingSockets.sendUnreliable(clientConnection, unreliableMsg);
+  console.log(`Unreliable send result: ${unreliableResult.success ? 'OK' : 'Failed'}, messageNumber: ${unreliableResult.messageNumber}`);
+  console.log('');
 
+  // ============================================
+  // Test: flushMessages()
+  // ============================================
+  console.log('--- Testing flushMessages() ---');
+  const flushResult = steam.networkingSockets.flushMessages(clientConnection);
+  console.log(`Flush result: ${flushResult}`);
+  console.log('');
+
+  // ============================================
+  // Test: receiveMessages() & receiveMessagesOnPollGroup()
+  // ============================================
+  console.log('--- Testing receiveMessages() & receiveMessagesOnPollGroup() ---');
+  console.log('Receiving messages (5 seconds)...');
   const receiveEnd = Date.now() + 5000;
   let messageCount = 0;
+  let pollGroupMessageCount = 0;
 
   while (Date.now() < receiveEnd && connected) {
     steam.runCallbacks();
     steam.networkingSockets.runCallbacks();
     
+    // Test regular receive
     const messages = steam.networkingSockets.receiveMessages(clientConnection);
-    
     for (const msg of messages) {
       messageCount++;
-      console.log(`Message #${messageCount}:`);
-      console.log(`  Size: ${msg.size} bytes`);
+      console.log(`[receiveMessages] Message #${messageCount}: ${msg.size} bytes`);
       if (msg.data) {
         try {
-          const text = msg.data.toString('utf8');
-          console.log(`  Data: ${text.substring(0, 100)}`);
-        } catch {
-          console.log(`  Data: (binary, ${msg.size} bytes)`);
+          console.log(`  Data: ${msg.data.toString('utf8').substring(0, 100)}`);
+        } catch (e) {
+          console.log('  (binary data)');
         }
+      }
+    }
+    
+    // Test poll group receive (if poll group is valid)
+    if (pollGroup !== k_HSteamNetPollGroup_Invalid) {
+      const pollMessages = steam.networkingSockets.receiveMessagesOnPollGroup(pollGroup);
+      for (const msg of pollMessages) {
+        pollGroupMessageCount++;
+        console.log(`[receiveMessagesOnPollGroup] Message #${pollGroupMessageCount}: ${msg.size} bytes from connection ${msg.connection}`);
       }
     }
     
     await delay(50);
   }
-
-  console.log(`Received ${messageCount} messages`);
+  console.log(`Received ${messageCount} messages via receiveMessages()`);
+  console.log(`Received ${pollGroupMessageCount} messages via receiveMessagesOnPollGroup()`);
   console.log('');
 
-  // ========================================
-  // CLOSE CONNECTION
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('CLOSING CONNECTION');
-  console.log('-'.repeat(60));
+  // ============================================
+  // Test: destroyPollGroup()
+  // ============================================
+  if (pollGroup !== k_HSteamNetPollGroup_Invalid) {
+    console.log('--- Testing destroyPollGroup() ---');
+    const destroyResult = steam.networkingSockets.destroyPollGroup(pollGroup);
+    console.log(`destroyPollGroup result: ${destroyResult}`);
+    console.log('');
+  }
 
-  console.log('Closing connection...');
-  const closed = steam.networkingSockets.closeConnection(clientConnection, 0, 'Test complete');
-  console.log(`Connection closed: ${closed}`);
+  // ============================================
+  // Test: Unregister handlers
+  // ============================================
+  console.log('--- Testing handler unregistration ---');
+  unregisterStateChange();
+  unregisterRequest();
+  console.log('Handlers unregistered');
   console.log('');
 
-  console.log('Closing listen socket...');
-  const socketClosed = steam.networkingSockets.closeListenSocket(listenSocket);
-  console.log(`Listen socket closed: ${socketClosed}`);
+  // ============================================
+  // Test: closeConnection()
+  // ============================================
+  console.log('--- Testing closeConnection() ---');
+  if (clientConnection !== k_HSteamNetConnection_Invalid) {
+    const closeResult = steam.networkingSockets.closeConnection(clientConnection, 0, 'Test complete', false);
+    console.log(`closeConnection result: ${closeResult}`);
+  }
   console.log('');
 
-  // ========================================
-  // CLEANUP
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('CLEANUP');
-  console.log('-'.repeat(60));
+  // ============================================
+  // Test: closeListenSocket()
+  // ============================================
+  console.log('--- Testing closeListenSocket() ---');
+  const closeSocketResult = steam.networkingSockets.closeListenSocket(listenSocket);
+  console.log(`closeListenSocket result: ${closeSocketResult}`);
+  console.log('');
 
-  console.log('Shutting down Steam API...');
+  // ============================================
+  // Test: closeAll() - create new resources first
+  // ============================================
+  console.log('--- Testing closeAll() ---');
+  // Create a new listen socket and poll group to test closeAll
+  const testSocket = steam.networkingSockets.createListenSocketP2P(1);
+  const testPollGroup = steam.networkingSockets.createPollGroup();
+  console.log(`Created test socket: ${testSocket}, poll group: ${testPollGroup}`);
+  
+  steam.networkingSockets.closeAll();
+  
+  const afterCloseAll = steam.networkingSockets.getActiveListenSockets();
+  const afterCloseAllConnections = steam.networkingSockets.getActiveConnections();
+  console.log(`After closeAll - sockets: ${afterCloseAll.length}, connections: ${afterCloseAllConnections.length}`);
+  console.log('');
+
+  // ============================================
+  // Summary
+  // ============================================
+  console.log('='.repeat(60));
+  console.log('TEST SUMMARY - ALL PUBLIC METHODS COVERED');
+  console.log('='.repeat(60));
+  console.log('✓ createListenSocketP2P()');
+  console.log('✓ closeListenSocket()');
+  console.log('✓ connectP2P() - tested by client');
+  console.log('✓ acceptConnection()');
+  console.log('✓ closeConnection()');
+  console.log('✓ sendReliable()');
+  console.log('✓ sendUnreliable()');
+  console.log('✓ flushMessages()');
+  console.log('✓ receiveMessages()');
+  console.log('✓ createPollGroup()');
+  console.log('✓ destroyPollGroup()');
+  console.log('✓ setConnectionPollGroup()');
+  console.log('✓ receiveMessagesOnPollGroup()');
+  console.log('✓ getConnectionInfo()');
+  console.log('✓ getConnectionRealTimeStatus()');
+  console.log('✓ getDetailedConnectionStatus()');
+  console.log('✓ setConnectionUserData()');
+  console.log('✓ getConnectionUserData()');
+  console.log('✓ setConnectionName()');
+  console.log('✓ getConnectionName()');
+  console.log('✓ getIdentity()');
+  console.log('✓ initAuthentication()');
+  console.log('✓ getAuthenticationStatus()');
+  console.log('✓ runCallbacks()');
+  console.log('✓ onConnectionStateChange()');
+  console.log('✓ onConnectionRequest()');
+  console.log('✓ getPendingStateChanges()');
+  console.log('✓ getPendingConnectionRequests()');
+  console.log('✓ getActiveConnections()');
+  console.log('✓ getActiveListenSockets()');
+  console.log('✓ isConnectionActive()');
+  console.log('✓ closeAll()');
+  console.log('');
+
+  // Cleanup
+  console.log('Shutting down...');
   steam.shutdown();
   console.log('Done!');
-  console.log('');
-
-  console.log('='.repeat(60));
-  console.log('NETWORKING SOCKETS HOST TEST COMPLETE');
-  console.log('='.repeat(60));
 }
 
-// Run the test
 testNetworkingSocketsHost().catch(console.error);

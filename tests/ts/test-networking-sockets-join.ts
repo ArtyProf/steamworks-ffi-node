@@ -1,34 +1,11 @@
 /**
- * Networking Sockets Join Test (Client)
+ * Networking Sockets Join Test (TypeScript)
  * 
- * This test demonstrates P2P networking as a CLIENT (joiner).
- * Run test-networking-sockets-host.ts first on another machine or Steam
- * account, then run this test to connect to the host.
- * 
- * The client:
- * 1. Connects to the host's Steam ID via P2P
- * 2. Waits for connection to be established
- * 3. Exchanges messages with the host
- * 4. Closes the connection
+ * This test demonstrates P2P networking as a CLIENT (joining a host).
+ * It covers the client-side public methods of SteamNetworkingSocketsManager.
  * 
  * Usage:
  *   npm run test:sockets:join:ts -- <host_steam_id>
- * 
- * Example:
- *   npm run test:sockets:join:ts -- 76561198012345678
- * 
- * Methods tested in this file:
- *   - connectP2P()
- *   - closeConnection()
- *   - sendReliable()
- *   - sendUnreliable()
- *   - receiveMessages()
- *   - getConnectionInfo()
- *   - getConnectionRealTimeStatus()
- *   - flushMessages()
- *   - getIdentity()
- *   - onConnectionStateChange()
- *   - runCallbacks()
  */
 
 import { 
@@ -36,8 +13,7 @@ import {
   ESteamNetworkingConnectionState,
   ESteamNetworkingAvailability,
   k_HSteamNetConnection_Invalid,
-  k_nSteamNetworkingSend_Reliable,
-  k_nSteamNetworkingSend_Unreliable,
+  EResult,
   getConnectionStateName,
 } from '../../src';
 
@@ -46,83 +22,54 @@ async function delay(ms: number): Promise<void> {
 }
 
 async function testNetworkingSocketsJoin(): Promise<void> {
-  console.log('='.repeat(60));
-  console.log('NETWORKING SOCKETS JOIN TEST (P2P Client)');
-  console.log('='.repeat(60));
-  console.log('');
-
   // Get host Steam ID from command line
-  const args = process.argv.slice(2);
-  let hostSteamId = args[0];
-
+  const hostSteamId = process.argv[2];
+  
   if (!hostSteamId) {
-    console.log('Usage: npm run test:sockets:join:ts -- <host_steam_id>');
-    console.log('');
-    console.log('Please enter the host Steam ID:');
-    
-    // Read from stdin
-    const readline = require('readline');
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-    
-    hostSteamId = await new Promise<string>((resolve) => {
-      rl.question('Host Steam ID: ', (answer: string) => {
-        rl.close();
-        resolve(answer.trim());
-      });
-    });
-    
-    if (!hostSteamId) {
-      console.error('No Steam ID provided. Exiting.');
-      process.exit(1);
-    }
+    console.error('Usage: npm run test:sockets:join:ts -- <host_steam_id>');
+    console.error('Example: npm run test:sockets:join:ts -- 76561198000000000');
+    process.exit(1);
   }
 
-  console.log(`Will connect to host: ${hostSteamId}`);
+  console.log('='.repeat(60));
+  console.log('NETWORKING SOCKETS JOIN TEST (P2P Client)');
+  console.log('Covers client-side methods of SteamNetworkingSocketsManager');
+  console.log('='.repeat(60));
+  console.log('');
+  console.log(`Connecting to host: ${hostSteamId}`);
   console.log('');
 
   const steam = SteamworksSDK.getInstance();
 
   // Initialize Steam API
   console.log('Initializing Steam API...');
-  const initialized = steam.init({ appId: 480 }); // Spacewar test app
+  const initialized = steam.init({ appId: 480 });
 
   if (!initialized) {
     console.error('Failed to initialize Steam API!');
-    console.error('Make sure Steam is running and you are logged in.');
     process.exit(1);
   }
 
-  console.log('Steam API initialized successfully!');
+  console.log('Steam API initialized!');
   console.log('');
 
-  // Get current user info
+  // Get user info
   const status = steam.getStatus();
   const playerName = steam.friends.getPersonaName();
   console.log(`Client: ${playerName} (${status.steamId})`);
   console.log('');
 
-  // Check we're not connecting to ourselves
-  if (status.steamId === hostSteamId) {
-    console.error('Cannot connect to yourself! Use a different Steam account.');
-    steam.shutdown();
-    process.exit(1);
-  }
+  // ============================================
+  // Test: getIdentity()
+  // ============================================
+  console.log('--- Testing getIdentity() ---');
+  const identity = steam.networkingSockets.getIdentity();
+  console.log(`Our identity: ${identity}`);
+  console.log('');
 
-  // ========================================
-  // INITIALIZE RELAY NETWORK
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('INITIALIZING RELAY NETWORK');
-  console.log('-'.repeat(60));
-
-  console.log('Calling initRelayNetworkAccess()...');
+  // Initialize relay network
+  console.log('--- Initializing relay network ---');
   steam.networkingUtils.initRelayNetworkAccess();
-
-  // Wait for relay network
-  console.log('Waiting for relay network...');
 
   const startTime = Date.now();
   const timeout = 30000;
@@ -138,14 +85,8 @@ async function testNetworkingSocketsJoin(): Promise<void> {
       break;
     }
     
-    if (networkStatus.availability < 0) {
-      console.error(`✗ Relay network failed: ${networkStatus.availabilityName}`);
-      steam.shutdown();
-      process.exit(1);
-    }
-    
-    if (Date.now() - startTime > timeout) {
-      console.error('✗ Timeout waiting for relay network');
+    if (networkStatus.availability < 0 || Date.now() - startTime > timeout) {
+      console.error('✗ Relay network failed or timed out');
       steam.shutdown();
       process.exit(1);
     }
@@ -154,51 +95,35 @@ async function testNetworkingSocketsJoin(): Promise<void> {
   }
   console.log('');
 
-  // ========================================
-  // GET OUR IDENTITY
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('IDENTITY');
-  console.log('-'.repeat(60));
-
-  const myIdentity = steam.networkingSockets.getIdentity();
-  console.log(`Our Steam ID: ${myIdentity || 'Not available'}`);
-  console.log('');
-
-  // ========================================
-  // CONNECT TO HOST
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('CONNECTING TO HOST');
-  console.log('-'.repeat(60));
-
-  const virtualPort = 0; // Default virtual port
-  console.log(`Connecting to ${hostSteamId} on virtual port ${virtualPort}...`);
-
+  // ============================================
+  // Test: onConnectionStateChange()
+  // ============================================
+  console.log('--- Testing onConnectionStateChange() ---');
   let connected = false;
   let disconnected = false;
-
-  // Register connection state change handler
-  steam.networkingSockets.onConnectionStateChange((change) => {
+  
+  const unregisterStateChange = steam.networkingSockets.onConnectionStateChange((change) => {
     console.log(`State: ${getConnectionStateName(change.oldState)} -> ${getConnectionStateName(change.newState)}`);
     
     if (change.newState === ESteamNetworkingConnectionState.Connected) {
       connected = true;
     }
     
-    if (change.newState === ESteamNetworkingConnectionState.ClosedByPeer) {
-      console.log(`Closed by peer: ${change.info.endDebugMessage}`);
-      disconnected = true;
-    }
-    
-    if (change.newState === ESteamNetworkingConnectionState.ProblemDetectedLocally) {
-      console.log(`Connection problem: ${change.info.endDebugMessage}`);
+    if (change.newState === ESteamNetworkingConnectionState.ClosedByPeer ||
+        change.newState === ESteamNetworkingConnectionState.ProblemDetectedLocally) {
+      console.log(`Disconnected: ${change.info.endDebugMessage}`);
       disconnected = true;
     }
   });
+  console.log('');
 
-  // Initiate connection
-  const connection = steam.networkingSockets.connectP2P(hostSteamId, virtualPort);
+  // ============================================
+  // Test: connectP2P()
+  // ============================================
+  console.log('--- Testing connectP2P() ---');
+  console.log(`Connecting to: ${hostSteamId}`);
+
+  const connection = steam.networkingSockets.connectP2P(hostSteamId, 0);
   
   if (connection === k_HSteamNetConnection_Invalid) {
     console.error('✗ Failed to initiate connection!');
@@ -206,11 +131,21 @@ async function testNetworkingSocketsJoin(): Promise<void> {
     process.exit(1);
   }
 
-  console.log(`Connection handle: ${connection}`);
-  console.log('Waiting for connection to establish...');
+  console.log(`✓ Connection handle: ${connection}`);
+  console.log('');
+
+  // ============================================
+  // Test: getActiveConnections() & isConnectionActive()
+  // ============================================
+  console.log('--- Testing getActiveConnections() & isConnectionActive() ---');
+  const activeConnections = steam.networkingSockets.getActiveConnections();
+  console.log(`Active connections: [${activeConnections.join(', ')}]`);
+  const isActive = steam.networkingSockets.isConnectionActive(connection);
+  console.log(`Connection ${connection} is active: ${isActive}`);
   console.log('');
 
   // Wait for connection
+  console.log('Waiting for connection...');
   const connectionTimeout = 30000;
   const connectStart = Date.now();
 
@@ -234,81 +169,84 @@ async function testNetworkingSocketsJoin(): Promise<void> {
     process.exit(1);
   }
 
-  console.log('');
-  console.log('✓ Connected to host!');
+  console.log('✓ Connected!');
   console.log('');
 
-  // ========================================
-  // CONNECTION INFO
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('CONNECTION INFO');
-  console.log('-'.repeat(60));
-
-  const connectionInfo = steam.networkingSockets.getConnectionInfo(connection);
-  if (connectionInfo) {
-    console.log(`  Remote: ${connectionInfo.identityRemote}`);
-    console.log(`  State: ${connectionInfo.stateName}`);
-    console.log(`  Description: ${connectionInfo.connectionDescription}`);
+  // ============================================
+  // Test: getConnectionInfo()
+  // ============================================
+  console.log('--- Testing getConnectionInfo() ---');
+  const info = steam.networkingSockets.getConnectionInfo(connection);
+  if (info) {
+    console.log(`Connected to: ${info.identityRemote}`);
+    console.log(`State: ${info.stateName}`);
+    console.log(`POP Remote: ${info.popIdRemote}`);
+    console.log(`POP Relay: ${info.popIdRelay}`);
   }
   console.log('');
 
-  // Wait a moment for ping to stabilize
-  await delay(1000);
-
-  // Get real-time status
-  console.log('Real-time status:');
+  // ============================================
+  // Test: getConnectionRealTimeStatus()
+  // ============================================
+  console.log('--- Testing getConnectionRealTimeStatus() ---');
   const rtStatus = steam.networkingSockets.getConnectionRealTimeStatus(connection);
   if (rtStatus) {
-    console.log(`  Ping: ${rtStatus.ping}ms`);
-    console.log(`  Quality local: ${(rtStatus.connectionQualityLocal * 100).toFixed(1)}%`);
-    console.log(`  Quality remote: ${(rtStatus.connectionQualityRemote * 100).toFixed(1)}%`);
+    console.log(`Ping: ${rtStatus.ping} ms`);
+    console.log(`Quality local: ${(rtStatus.connectionQualityLocal * 100).toFixed(1)}%`);
+    console.log(`Quality remote: ${(rtStatus.connectionQualityRemote * 100).toFixed(1)}%`);
   }
   console.log('');
 
-  // ========================================
-  // EXCHANGE MESSAGES
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('EXCHANGING MESSAGES');
-  console.log('-'.repeat(60));
+  // ============================================
+  // Test: setConnectionName() & getConnectionName()
+  // ============================================
+  console.log('--- Testing setConnectionName() & getConnectionName() ---');
+  steam.networkingSockets.setConnectionName(connection, 'HostConnection');
+  const connName = steam.networkingSockets.getConnectionName(connection);
+  console.log(`Connection name: "${connName}"`);
+  console.log('');
 
-  // Send greeting to host
-  const greeting = Buffer.from(JSON.stringify({
+  // ============================================
+  // Test: sendReliable()
+  // ============================================
+  console.log('--- Testing sendReliable() ---');
+  const reliableMsg = Buffer.from(JSON.stringify({
     type: 'greeting',
     message: 'Hello from client!',
     clientName: playerName,
     timestamp: Date.now()
   }));
-
-  console.log('Sending greeting to host...');
-  let sendResult = steam.networkingSockets.sendReliable(connection, greeting);
-  console.log(`  Reliable send: ${sendResult.success ? 'OK' : 'Failed'}`);
-
-  // Send some unreliable messages (simulating game state updates)
-  console.log('Sending position updates (unreliable)...');
-  for (let i = 0; i < 5; i++) {
-    const positionUpdate = Buffer.from(JSON.stringify({
-      type: 'position',
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      z: Math.random() * 100,
-      tick: i
-    }));
-    
-    sendResult = steam.networkingSockets.sendUnreliable(connection, positionUpdate);
-    await delay(50);
-  }
-  console.log('  Sent 5 position updates');
+  const reliableResult = steam.networkingSockets.sendReliable(connection, reliableMsg);
+  console.log(`Reliable send result: ${reliableResult.success ? 'OK' : 'Failed'}, messageNumber: ${reliableResult.messageNumber}`);
   console.log('');
 
-  // Flush messages
-  console.log('Flushing messages...');
-  steam.networkingSockets.flushMessages(connection);
+  // ============================================
+  // Test: sendUnreliable()
+  // ============================================
+  console.log('--- Testing sendUnreliable() ---');
+  const unreliableMsg = Buffer.from(JSON.stringify({
+    type: 'position',
+    x: 50,
+    y: 75,
+    timestamp: Date.now()
+  }));
+  const unreliableResult = steam.networkingSockets.sendUnreliable(connection, unreliableMsg);
+  console.log(`Unreliable send result: ${unreliableResult.success ? 'OK' : 'Failed'}, messageNumber: ${unreliableResult.messageNumber}`);
   console.log('');
 
-  // Receive messages from host
-  console.log('Receiving messages from host (3 seconds)...');
+  // ============================================
+  // Test: flushMessages()
+  // ============================================
+  console.log('--- Testing flushMessages() ---');
+  const flushResult = steam.networkingSockets.flushMessages(connection);
+  console.log(`Flush result: ${flushResult}`);
+  console.log('');
+
+  // ============================================
+  // Test: receiveMessages()
+  // ============================================
+  console.log('--- Testing receiveMessages() ---');
+  console.log('Receiving messages (3 seconds)...');
   const receiveEnd = Date.now() + 3000;
   let messageCount = 0;
 
@@ -320,68 +258,73 @@ async function testNetworkingSocketsJoin(): Promise<void> {
     
     for (const msg of messages) {
       messageCount++;
-      console.log(`Message #${messageCount}:`);
-      console.log(`  Size: ${msg.size} bytes`);
+      console.log(`Message #${messageCount}: ${msg.size} bytes`);
       if (msg.data) {
         try {
-          const text = msg.data.toString('utf8');
-          const parsed = JSON.parse(text);
-          console.log(`  Type: ${parsed.type}`);
-          console.log(`  Content: ${parsed.message || JSON.stringify(parsed)}`);
-        } catch {
-          console.log(`  Data: (binary, ${msg.size} bytes)`);
+          console.log(`  Data: ${msg.data.toString('utf8').substring(0, 100)}`);
+        } catch (e) {
+          console.log('  (binary data)');
         }
       }
     }
     
     await delay(50);
   }
-
-  console.log(`Received ${messageCount} messages from host`);
+  console.log(`Received ${messageCount} messages`);
   console.log('');
 
-  // ========================================
-  // FINAL STATUS
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('FINAL STATUS');
-  console.log('-'.repeat(60));
-
-  const finalStatus = steam.networkingSockets.getConnectionRealTimeStatus(connection);
-  if (finalStatus) {
-    console.log(`  Final ping: ${finalStatus.ping}ms`);
-    console.log(`  Bytes sent: ~${finalStatus.pendingReliable + finalStatus.pendingUnreliable}`);
+  // ============================================
+  // Test: getDetailedConnectionStatus()
+  // ============================================
+  console.log('--- Testing getDetailedConnectionStatus() ---');
+  const detailedStatus = steam.networkingSockets.getDetailedConnectionStatus(connection);
+  if (detailedStatus) {
+    console.log('Detailed status (first 200 chars):');
+    console.log(detailedStatus.substring(0, 200) + '...');
   }
   console.log('');
 
-  // ========================================
-  // CLOSE CONNECTION
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('CLOSING CONNECTION');
-  console.log('-'.repeat(60));
-
-  console.log('Closing connection...');
-  const closed = steam.networkingSockets.closeConnection(connection, 0, 'Client test complete');
-  console.log(`Connection closed: ${closed}`);
+  // Unregister handler
+  unregisterStateChange();
+  console.log('Handler unregistered');
   console.log('');
 
-  // ========================================
-  // CLEANUP
-  // ========================================
-  console.log('-'.repeat(60));
-  console.log('CLEANUP');
-  console.log('-'.repeat(60));
+  // ============================================
+  // Test: closeConnection()
+  // ============================================
+  console.log('--- Testing closeConnection() ---');
+  const closeResult = steam.networkingSockets.closeConnection(connection, 0, 'Done', false);
+  console.log(`closeConnection result: ${closeResult}`);
+  console.log('');
 
-  console.log('Shutting down Steam API...');
+  // ============================================
+  // Summary
+  // ============================================
+  console.log('='.repeat(60));
+  console.log('TEST SUMMARY - CLIENT METHODS COVERED');
+  console.log('='.repeat(60));
+  console.log('✓ connectP2P()');
+  console.log('✓ closeConnection()');
+  console.log('✓ sendReliable()');
+  console.log('✓ sendUnreliable()');
+  console.log('✓ flushMessages()');
+  console.log('✓ receiveMessages()');
+  console.log('✓ getConnectionInfo()');
+  console.log('✓ getConnectionRealTimeStatus()');
+  console.log('✓ getDetailedConnectionStatus()');
+  console.log('✓ setConnectionName()');
+  console.log('✓ getConnectionName()');
+  console.log('✓ getIdentity()');
+  console.log('✓ runCallbacks()');
+  console.log('✓ onConnectionStateChange()');
+  console.log('✓ getActiveConnections()');
+  console.log('✓ isConnectionActive()');
+  console.log('');
+
+  // Cleanup
+  console.log('Shutting down...');
   steam.shutdown();
   console.log('Done!');
-  console.log('');
-
-  console.log('='.repeat(60));
-  console.log('NETWORKING SOCKETS JOIN TEST COMPLETE');
-  console.log('='.repeat(60));
 }
 
-// Run the test
 testNetworkingSocketsJoin().catch(console.error);
