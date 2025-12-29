@@ -54,3 +54,6 @@ export * from './matchmaking';
 
 // Utils types
 export * from './utils';
+
+// Networking types
+export * from './networking';

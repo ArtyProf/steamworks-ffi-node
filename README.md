@@ -51,6 +51,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Utils API** - 29 functions for system info, Steam Deck detection, image loading, and text filtering! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/UTILS_MANAGER.md)
 
+> 🎉 **NEW: Networking Utils API** - 15 functions for ping location, relay network, and data center information! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_UTILS_MANAGER.md)
+
 ## Features
 
 - **Core API**: Essential Steam application functions
@@ -141,6 +143,12 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Image loading from Steam cache (avatars, achievement icons)
   - ✅ Gamepad text input dialogs
   - ✅ Text filtering for user-generated content
+- **Networking Utils API**: Complete Steam networking utilities (15 functions)
+  - ✅ Relay network initialization and monitoring
+  - ✅ Ping location for matchmaking (share with other players)
+  - ✅ Ping estimation between players (without sending packets)
+  - ✅ Data center (POP) information and ping times
+  - ✅ High-precision local timestamps
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Easy Setup**: Simple installation with clear SDK setup guide
@@ -499,6 +507,7 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Screenshot Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SCREENSHOT_MANAGER.md)** - Steam Screenshots integration (9 functions)
 - **[Matchmaking Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/MATCHMAKING_MANAGER.md)** - Multiplayer lobby matchmaking (30+ functions) ⚠️ _Requires two Steam accounts_
 - **[Utils Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/UTILS_MANAGER.md)** - System info, Steam Deck detection, image loading (29 functions)
+- **[Networking Utils Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_UTILS_MANAGER.md)** - Ping location, relay network, data centers (15 functions)
 
 ## Steamworks Integration
 

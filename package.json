@@ -24,6 +24,8 @@
     "test:matchmaking:host:js": "node tests/js/test-matchmaking-host.js",
     "test:matchmaking:join:js": "node tests/js/test-matchmaking-join.js",
     "test:utils:js": "node tests/js/test-utils.js",
+    "test:networking:host:js": "node tests/js/test-networking-utils-host.js",
+    "test:networking:join:js": "node tests/js/test-networking-utils-join.js",
     "test:core:ts": "ts-node tests/ts/test-core-api.ts",
     "test:achievements:ts": "ts-node tests/ts/test-complete-achievements.ts",
     "test:stats:ts": "ts-node tests/ts/test-complete-stats.ts",
@@ -40,6 +42,8 @@
     "test:matchmaking:host:ts": "ts-node tests/ts/test-matchmaking-host.ts",
     "test:matchmaking:join:ts": "ts-node tests/ts/test-matchmaking-join.ts",
     "test:utils:ts": "ts-node tests/ts/test-utils.ts",
+    "test:networking:host:ts": "ts-node tests/ts/test-networking-utils-host.ts",
+    "test:networking:join:ts": "ts-node tests/ts/test-networking-utils-join.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

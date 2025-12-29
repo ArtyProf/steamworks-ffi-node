@@ -17,6 +17,7 @@ import { SteamScreenshotManager } from './internal/SteamScreenshotManager';
 import { SteamAppsManager } from './internal/SteamAppsManager';
 import { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
 import { SteamUtilsManager } from './internal/SteamUtilsManager';
+import { SteamNetworkingUtilsManager } from './internal/SteamNetworkingUtilsManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -548,6 +549,51 @@ class SteamworksSDK {
    */
   public readonly utils!: SteamUtilsManager;
 
+  /**
+   * Steam Networking Utils Manager - Network utilities and ping estimation
+   * 
+   * Provides access to the ISteamNetworkingUtils interface for:
+   * - Initializing and monitoring Steam's relay network
+   * - Getting local ping location for matchmaking
+   * - Estimating ping times between players without sending packets
+   * - Querying data center (POP) information and ping times
+   * - High-precision local timestamps
+   * 
+   * @example
+   * ```typescript
+   * // Initialize relay network (required for ping features)
+   * steam.networkingUtils.initRelayNetworkAccess();
+   * 
+   * // Wait for network to be ready
+   * while (true) {
+   *   steam.runCallbacks();
+   *   const status = steam.networkingUtils.getRelayNetworkStatus();
+   *   if (status.availability === ESteamNetworkingAvailability.Current) break;
+   *   await new Promise(r => setTimeout(r, 100));
+   * }
+   * 
+   * // Get your ping location (share this with other players)
+   * const myLocation = steam.networkingUtils.getLocalPingLocation();
+   * console.log(`My location: ${myLocation?.locationString}`);
+   * 
+   * // Estimate ping to another player
+   * const theirLocation = "received from matchmaking...";
+   * const estimate = steam.networkingUtils.estimatePingFromString(theirLocation);
+   * if (estimate.valid) {
+   *   console.log(`Estimated ping: ${estimate.pingMs}ms`);
+   * }
+   * 
+   * // Get data center list
+   * const pops = steam.networkingUtils.getPOPList();
+   * pops.forEach(pop => {
+   *   console.log(`${pop.popCode}: ${pop.directPing}ms direct`);
+   * });
+   * ```
+   * 
+   * @see {@link SteamNetworkingUtilsManager} for complete API documentation
+   */
+  public readonly networkingUtils!: SteamNetworkingUtilsManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -567,6 +613,7 @@ class SteamworksSDK {
     this.apps = new SteamAppsManager(this.libraryLoader, this.apiCore);
     this.matchmaking = new SteamMatchmakingManager(this.libraryLoader, this.apiCore);
     this.utils = new SteamUtilsManager(this.libraryLoader, this.apiCore);
+    this.networkingUtils = new SteamNetworkingUtilsManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {

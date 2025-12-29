@@ -10,6 +10,7 @@ export { SteamOverlayManager } from './internal/SteamOverlayManager';
 export { SteamCloudManager } from './internal/SteamCloudManager';
 export { SteamWorkshopManager } from './internal/SteamWorkshopManager';
 export { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
+export { SteamNetworkingUtilsManager } from './internal/SteamNetworkingUtilsManager';
 
 // Export all types from organized structure
 export * from './types';

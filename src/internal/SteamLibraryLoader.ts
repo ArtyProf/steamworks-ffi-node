@@ -149,6 +149,37 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUtils_InitFilterText!: koffi.KoffiFunction;
 
   // ========================================
+  // ISteamNetworkingUtils API Functions
+  // ========================================
+  
+  // Interface accessor
+  public SteamAPI_SteamNetworkingUtils_SteamAPI_v004!: koffi.KoffiFunction;
+  
+  // Relay network access
+  public SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetRelayNetworkStatus!: koffi.KoffiFunction;
+  
+  // Ping location
+  public SteamAPI_ISteamNetworkingUtils_GetLocalPingLocation!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_EstimatePingTimeBetweenTwoLocations!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_EstimatePingTimeFromLocalHost!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_ConvertPingLocationToString!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_ParsePingLocationString!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_CheckPingDataUpToDate!: koffi.KoffiFunction;
+  
+  // POP (Point of Presence) functions
+  public SteamAPI_ISteamNetworkingUtils_GetPingToDataCenter!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetDirectPingToPOP!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetPOPCount!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetPOPList!: koffi.KoffiFunction;
+  
+  // Time functions
+  public SteamAPI_ISteamNetworkingUtils_GetLocalTimestamp!: koffi.KoffiFunction;
+  
+  // Debug output
+  public SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction!: koffi.KoffiFunction;
+
+  // ========================================
   // ISteamFriends API Functions
   // ========================================
   
@@ -736,6 +767,37 @@ export class SteamLibraryLoader {
     // Text filtering
     this.SteamAPI_ISteamUtils_FilterText = this.steamLib.func('SteamAPI_ISteamUtils_FilterText', 'int', ['void*', 'int', 'uint64', 'str', 'str', 'uint32']);
     this.SteamAPI_ISteamUtils_InitFilterText = this.steamLib.func('SteamAPI_ISteamUtils_InitFilterText', 'bool', ['void*', 'uint32']);
+    
+    // ========================================
+    // ISteamNetworkingUtils Functions
+    // ========================================
+    
+    // Interface accessor
+    this.SteamAPI_SteamNetworkingUtils_SteamAPI_v004 = this.steamLib.func('SteamAPI_SteamNetworkingUtils_SteamAPI_v004', 'void*', []);
+    
+    // Relay network access
+    this.SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess', 'void', ['void*']);
+    this.SteamAPI_ISteamNetworkingUtils_GetRelayNetworkStatus = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_GetRelayNetworkStatus', 'int', ['void*', 'void*']);
+    
+    // Ping location - SteamNetworkPingLocation_t is 512 bytes
+    this.SteamAPI_ISteamNetworkingUtils_GetLocalPingLocation = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_GetLocalPingLocation', 'float', ['void*', 'void*']);
+    this.SteamAPI_ISteamNetworkingUtils_EstimatePingTimeBetweenTwoLocations = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_EstimatePingTimeBetweenTwoLocations', 'int', ['void*', 'void*', 'void*']);
+    this.SteamAPI_ISteamNetworkingUtils_EstimatePingTimeFromLocalHost = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_EstimatePingTimeFromLocalHost', 'int', ['void*', 'void*']);
+    this.SteamAPI_ISteamNetworkingUtils_ConvertPingLocationToString = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_ConvertPingLocationToString', 'void', ['void*', 'void*', 'str', 'int']);
+    this.SteamAPI_ISteamNetworkingUtils_ParsePingLocationString = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_ParsePingLocationString', 'bool', ['void*', 'str', 'void*']);
+    this.SteamAPI_ISteamNetworkingUtils_CheckPingDataUpToDate = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_CheckPingDataUpToDate', 'bool', ['void*', 'float']);
+    
+    // POP (Point of Presence) functions
+    this.SteamAPI_ISteamNetworkingUtils_GetPingToDataCenter = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_GetPingToDataCenter', 'int', ['void*', 'uint32', 'uint32*']);
+    this.SteamAPI_ISteamNetworkingUtils_GetDirectPingToPOP = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_GetDirectPingToPOP', 'int', ['void*', 'uint32']);
+    this.SteamAPI_ISteamNetworkingUtils_GetPOPCount = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_GetPOPCount', 'int', ['void*']);
+    this.SteamAPI_ISteamNetworkingUtils_GetPOPList = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_GetPOPList', 'int', ['void*', 'uint32*', 'int']);
+    
+    // Time functions
+    this.SteamAPI_ISteamNetworkingUtils_GetLocalTimestamp = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_GetLocalTimestamp', 'int64', ['void*']);
+    
+    // Debug output - uses callback function pointer
+    this.SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction', 'void', ['void*', 'int', 'void*']);
     
     // ========================================
     // ISteamFriends Functions
