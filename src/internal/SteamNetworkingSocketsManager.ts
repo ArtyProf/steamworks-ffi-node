@@ -1,5 +1,7 @@
+import * as koffi from 'koffi';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import { SteamCallbackPoller } from './SteamCallbackPoller';
 import {
   HSteamListenSocket,
   HSteamNetConnection,
@@ -18,13 +20,14 @@ import {
   ConnectionStateChange,
   k_nSteamNetworkingSend_Reliable,
   k_nSteamNetworkingSend_Unreliable,
-  getConnectionStateName,
   STEAM_NETWORKING_IDENTITY_SIZE,
   STEAM_NET_CONNECTION_INFO_SIZE,
   STEAM_NET_CONNECTION_REALTIME_STATUS_SIZE,
-  k_cchSteamNetworkingMaxConnectionCloseReason,
-  k_cchSteamNetworkingMaxConnectionDescription,
 } from '../types/networking';
+
+// Global reference to the manager instance for the callback
+// This is necessary because native callbacks can't capture JS closures
+let globalCallbackManager: SteamNetworkingSocketsManager | null = null;
 
 /**
  * Callback handler for connection state changes
@@ -92,9 +95,163 @@ export class SteamNetworkingSocketsManager {
   private pendingStateChanges: ConnectionStateChange[] = [];
   private pendingConnectionRequests: P2PConnectionRequest[] = [];
 
+  // Koffi callback reference (must be kept alive)
+  private connectionStatusCallback: any = null;
+  private callbackRegistered: boolean = false;
+
   constructor(libraryLoader: SteamLibraryLoader, apiCore: SteamAPICore) {
     this.libraryLoader = libraryLoader;
     this.apiCore = apiCore;
+    
+    // Set global reference for native callback
+    globalCallbackManager = this;
+    
+    // Note: Don't register callback in constructor since Steam may not be initialized yet
+    // The callback will be registered lazily when needed
+  }
+
+  /**
+   * Ensure the global connection status callback is registered
+   * Called automatically when needed
+   */
+  private ensureCallbackRegistered(): void {
+    if (this.callbackRegistered) return;
+    this.registerGlobalCallback();
+  }
+
+  /**
+   * Register the global connection status callback with Steam
+   * This enables receiving notifications for all connection state changes
+   */
+  private registerGlobalCallback(): void {
+    if (this.callbackRegistered) return;
+
+    try {
+      // Define the callback prototype: void (*)(SteamNetConnectionStatusChangedCallback_t*)
+      const CallbackProto = koffi.proto('ConnectionStatusCallback', 'void', ['void*']);
+      
+      // Create the callback function that will be called from native code
+      this.connectionStatusCallback = koffi.register(
+        (infoPtr: any) => {
+          this.handleConnectionStatusChanged(infoPtr);
+        },
+        CallbackProto
+      );
+
+      // Get the NetworkingUtils interface
+      const utils = this.libraryLoader.SteamAPI_SteamNetworkingUtils_SteamAPI_v004();
+      if (!utils) {
+        console.warn('[Steamworks] NetworkingUtils interface not available for callback registration');
+        return;
+      }
+
+      // Register our callback with Steam
+      const success = this.libraryLoader.SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged(
+        utils,
+        this.connectionStatusCallback
+      );
+
+      if (success) {
+        this.callbackRegistered = true;
+      } else {
+        console.warn('[Steamworks] Failed to register global connection status callback');
+      }
+    } catch (error) {
+      console.error('[Steamworks] Error registering connection status callback:', error);
+    }
+  }
+
+  /**
+   * Handle connection status changed callback from Steam
+   * Called by native code when any connection state changes
+   */
+  private handleConnectionStatusChanged(infoPtr: any): void {
+    if (!infoPtr) return;
+
+    try {
+      // Use centralized parser from SteamCallbackPoller
+      const parsed = SteamCallbackPoller.parseConnectionStatusChangedCallback(infoPtr);
+      if (!parsed) return;
+
+      const connection = parsed.m_hConn as HSteamNetConnection;
+      const oldState = parsed.m_eOldState as ESteamNetworkingConnectionState;
+      
+      // Convert parsed info to ConnectionInfo type
+      const info: ConnectionInfo = {
+        identityRemote: parsed.m_info.identityRemote,
+        userData: parsed.m_info.userData,
+        listenSocket: parsed.m_info.listenSocket,
+        remoteAddress: parsed.m_info.remoteAddress,
+        popIdRemote: parsed.m_info.popIdRemote,
+        popIdRelay: parsed.m_info.popIdRelay,
+        state: parsed.m_info.state as ESteamNetworkingConnectionState,
+        stateName: parsed.m_info.stateName,
+        endReason: parsed.m_info.endReason,
+        endDebugMessage: parsed.m_info.endDebugMessage,
+        connectionDescription: parsed.m_info.connectionDescription
+      };
+      
+      // Track the connection if we don't know about it yet
+      if (!this.activeConnections.has(connection) && connection !== k_HSteamNetConnection_Invalid) {
+        this.activeConnections.set(connection, info);
+      }
+
+      // Create the state change event
+      const change: ConnectionStateChange = {
+        connection,
+        oldState,
+        newState: info.state,
+        info
+      };
+
+      // Add to pending changes
+      this.pendingStateChanges.push(change);
+
+      // If this is a new incoming connection (Connecting state with a listen socket)
+      if (oldState === ESteamNetworkingConnectionState.None && 
+          info.state === ESteamNetworkingConnectionState.Connecting &&
+          info.listenSocket !== 0) {
+        // This is an incoming connection request
+        const request: P2PConnectionRequest = {
+          connection,
+          identityRemote: info.identityRemote,
+          listenSocket: info.listenSocket
+        };
+        
+        this.pendingConnectionRequests.push(request);
+        
+        // Notify request handlers
+        for (const handler of this.connectionRequestHandlers) {
+          try {
+            handler(request);
+          } catch (err) {
+            console.error('[Steamworks] Connection request handler error:', err);
+          }
+        }
+      }
+
+      // Notify state change handlers
+      for (const handler of this.connectionStateChangeHandlers) {
+        try {
+          handler(change);
+        } catch (err) {
+          console.error('[Steamworks] Connection state change handler error:', err);
+        }
+      }
+
+      // Update or remove connection from tracking
+      if (info.state === ESteamNetworkingConnectionState.ClosedByPeer ||
+          info.state === ESteamNetworkingConnectionState.ProblemDetectedLocally ||
+          info.state === ESteamNetworkingConnectionState.Dead ||
+          info.state === ESteamNetworkingConnectionState.None) {
+        this.activeConnections.delete(connection);
+      } else {
+        this.activeConnections.set(connection, info);
+      }
+
+    } catch (error) {
+      console.error('[Steamworks] Error handling connection status callback:', error);
+    }
   }
 
   /**
@@ -131,6 +288,9 @@ export class SteamNetworkingSocketsManager {
    * ```
    */
   createListenSocketP2P(virtualPort: number = 0): HSteamListenSocket {
+    // Ensure callback is registered before creating listen sockets
+    this.ensureCallbackRegistered();
+    
     const iface = this.getInterface();
     const socket = this.libraryLoader.SteamAPI_ISteamNetworkingSockets_CreateListenSocketP2P(
       iface,
@@ -201,6 +361,9 @@ export class SteamNetworkingSocketsManager {
    * ```
    */
   connectP2P(remoteSteamId: string | bigint, virtualPort: number = 0): HSteamNetConnection {
+    // Ensure callback is registered before connecting
+    this.ensureCallbackRegistered();
+    
     const iface = this.getInterface();
     
     // Create SteamNetworkingIdentity structure for the remote peer
@@ -596,58 +759,20 @@ export class SteamNetworkingSocketsManager {
     
     if (!success) return null;
     
-    return this.parseConnectionInfo(infoBuffer);
-  }
-
-  /**
-   * Parse SteamNetConnectionInfo_t buffer into ConnectionInfo
-   */
-  private parseConnectionInfo(buffer: Buffer): ConnectionInfo {
-    // SteamNetConnectionInfo_t layout:
-    // SteamNetworkingIdentity m_identityRemote; // offset 0, 136 bytes
-    // int64 m_nUserData;                        // offset 136, 8 bytes
-    // HSteamListenSocket m_hListenSocket;       // offset 144, 4 bytes
-    // SteamNetworkingIPAddr m_addrRemote;       // offset 148, 18 bytes
-    // uint16 m__pad1;                           // offset 166, 2 bytes
-    // SteamNetworkingPOPID m_idPOPRemote;       // offset 168, 4 bytes
-    // SteamNetworkingPOPID m_idPOPRelay;        // offset 172, 4 bytes
-    // ESteamNetworkingConnectionState m_eState; // offset 176, 4 bytes
-    // int m_eEndReason;                         // offset 180, 4 bytes
-    // char m_szEndDebug[128];                   // offset 184, 128 bytes
-    // char m_szConnectionDescription[128];      // offset 312, 128 bytes
-    // int m_nFlags;                             // offset 440, 4 bytes
-    // uint32 reserved[63];                      // offset 444, 252 bytes
-    
-    // Parse identity (extract SteamID)
-    const identityType = buffer.readInt32LE(0);
-    let identityRemote = '';
-    if (identityType === ESteamNetworkingIdentityType.SteamID) {
-      identityRemote = buffer.readBigUInt64LE(4).toString();
-    }
-    
-    const userData = buffer.readBigInt64LE(136);
-    const listenSocket = buffer.readUInt32LE(144);
-    const popIdRemote = buffer.readUInt32LE(168);
-    const popIdRelay = buffer.readUInt32LE(172);
-    const state = buffer.readInt32LE(176) as ESteamNetworkingConnectionState;
-    const endReason = buffer.readInt32LE(180);
-    
-    // Read null-terminated strings
-    const endDebugMessage = this.readCString(buffer, 184, k_cchSteamNetworkingMaxConnectionCloseReason);
-    const connectionDescription = this.readCString(buffer, 312, k_cchSteamNetworkingMaxConnectionDescription);
-    
+    // Use centralized parser from SteamCallbackPoller
+    const parsed = SteamCallbackPoller.parseConnectionInfo(infoBuffer);
     return {
-      identityRemote,
-      userData,
-      listenSocket,
-      remoteAddress: '',  // Would need to parse m_addrRemote
-      popIdRemote,
-      popIdRelay,
-      state,
-      stateName: getConnectionStateName(state),
-      endReason,
-      endDebugMessage,
-      connectionDescription
+      identityRemote: parsed.identityRemote,
+      userData: parsed.userData,
+      listenSocket: parsed.listenSocket,
+      remoteAddress: parsed.remoteAddress,
+      popIdRemote: parsed.popIdRemote,
+      popIdRelay: parsed.popIdRelay,
+      state: parsed.state as ESteamNetworkingConnectionState,
+      stateName: parsed.stateName,
+      endReason: parsed.endReason,
+      endDebugMessage: parsed.endDebugMessage,
+      connectionDescription: parsed.connectionDescription
     };
   }
 
@@ -882,12 +1007,20 @@ export class SteamNetworkingSocketsManager {
    * 
    * Processes pending networking callbacks. Call this regularly (e.g., in your
    * game loop) to receive connection state changes.
+   * 
+   * Note: With the global callback registered, state changes are automatically
+   * processed. This method still needs to be called to trigger Steam's internal
+   * callback dispatch.
    */
   runCallbacks(): void {
+    // Ensure callback is registered
+    this.ensureCallbackRegistered();
+    
     const iface = this.getInterface();
     this.libraryLoader.SteamAPI_ISteamNetworkingSockets_RunCallbacks(iface);
     
-    // Also poll all active connections for state changes
+    // Also poll all active connections for state changes as fallback
+    // This catches any changes that might be missed by the global callback
     this.pollConnectionStates();
   }
 
@@ -1025,5 +1158,35 @@ export class SteamNetworkingSocketsManager {
     for (const group of this.activePollGroups) {
       this.destroyPollGroup(group);
     }
+    
+    // Unregister the global callback
+    if (this.callbackRegistered) {
+      try {
+        const utils = this.libraryLoader.SteamAPI_SteamNetworkingUtils_SteamAPI_v004();
+        if (utils) {
+          this.libraryLoader.SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged(utils, null);
+        }
+        this.callbackRegistered = false;
+        this.connectionStatusCallback = null;
+      } catch (error) {
+        console.error('[Steamworks] Error unregistering connection status callback:', error);
+      }
+    }
+    
+    // Clear global reference
+    if (globalCallbackManager === this) {
+      globalCallbackManager = null;
+    }
+  }
+
+  /**
+   * Get pending connection requests (for polling approach)
+   * 
+   * @returns Array of connection requests since last call
+   */
+  getPendingConnectionRequests(): P2PConnectionRequest[] {
+    const requests = [...this.pendingConnectionRequests];
+    this.pendingConnectionRequests = [];
+    return requests;
   }
 }

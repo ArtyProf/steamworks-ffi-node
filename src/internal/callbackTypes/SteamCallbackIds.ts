@@ -55,3 +55,10 @@ export const K_I_LOBBY_MATCH_LIST = 510;
 
 /** Callback for LobbyCreated_t */
 export const K_I_LOBBY_CREATED = 513;
+
+// ========================================
+// Steam Networking Sockets Callback IDs
+// ========================================
+
+/** Callback for SteamNetConnectionStatusChangedCallback_t */
+export const K_I_STEAM_NET_CONNECTION_STATUS_CHANGED = 1221;

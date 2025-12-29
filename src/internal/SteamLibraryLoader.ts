@@ -178,6 +178,9 @@ export class SteamLibraryLoader {
   
   // Debug output
   public SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction!: koffi.KoffiFunction;
+  
+  // Global callbacks
+  public SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged!: koffi.KoffiFunction;
 
   // ========================================
   // ISteamNetworkingSockets API Functions
@@ -847,6 +850,11 @@ export class SteamLibraryLoader {
     
     // Debug output - uses callback function pointer
     this.SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction', 'void', ['void*', 'int', 'void*']);
+    
+    // Global connection status callback
+    // SetGlobalCallback_SteamNetConnectionStatusChanged(fnCallback) -> bool
+    // fnCallback is FnSteamNetConnectionStatusChanged: void (*)(SteamNetConnectionStatusChangedCallback_t *)
+    this.SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged = this.steamLib.func('SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged', 'bool', ['void*', 'void*']);
     
     // ========================================
     // ISteamNetworkingSockets Functions

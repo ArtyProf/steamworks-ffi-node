@@ -567,6 +567,8 @@ export interface P2PConnectionRequest {
   connection: HSteamNetConnection;
   /** Identity of the remote peer */
   identityRemote: string;
+  /** The listen socket that received this connection request */
+  listenSocket: HSteamListenSocket;
 }
 
 /**
