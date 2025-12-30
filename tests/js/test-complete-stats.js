@@ -279,7 +279,7 @@ async function testStatsAPI() {
   console.log('   - getGlobalStatHistoryDouble() ✓');
   
   console.log('\n✅ Friend/User Stats:');
-  console.log('   - requestUserStatsForStats() ✓');
+  console.log('   - requestUserStats() ✓');
   console.log('   - getUserStatInt() ✓');
   console.log('   - getUserStatFloat() ✓');
   
