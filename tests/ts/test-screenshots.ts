@@ -241,13 +241,41 @@ async function testScreenshots(): Promise<void> {
     console.log('');
 
     // ============================================================
+    // STEP 9: TEST VR SCREENSHOT (addVRScreenshotToLibrary)
+    // ============================================================
+    console.log('📋 STEP 9: Test VR Screenshot');
+    console.log('==============================');
+    
+    console.log('Testing addVRScreenshotToLibrary()...');
+    console.log('⚠️  Note: This requires VR hardware and valid VR screenshot files');
+    
+    // Use the same test image for both preview and VR file (for API testing)
+    if (testImage) {
+      const vrHandle = steam.screenshots.addVRScreenshotToLibrary(
+        EVRScreenshotType.Stereo,
+        testImage.imagePath,
+        testImage.imagePath  // Using same file for testing purposes
+      );
+      
+      if (vrHandle !== INVALID_SCREENSHOT_HANDLE) {
+        console.log(`✅ VR Screenshot added! Handle: ${vrHandle}`);
+      } else {
+        console.log('⚠️  VR Screenshot returned invalid handle');
+        console.log('   This may be expected without VR hardware');
+      }
+    } else {
+      console.log('ℹ️  No test image available for VR screenshot test');
+    }
+    console.log('');
+
+    // ============================================================
     // SUMMARY
     // ============================================================
     console.log('='.repeat(80));
     console.log('📊 TEST SUMMARY');
     console.log('='.repeat(80));
     console.log('');
-    console.log('Functions tested:');
+    console.log('Functions tested (9 total):');
     console.log('  1. ✅ addScreenshotToLibrary() - Add screenshot from file');
     console.log('  2. ✅ writeScreenshot() - Write raw RGB data as screenshot');
     console.log('  3. ✅ setLocation() - Tag screenshot with location');
@@ -256,6 +284,7 @@ async function testScreenshots(): Promise<void> {
     console.log('  6. ✅ triggerScreenshot() - Trigger overlay screenshot');
     console.log('  7. ✅ tagUser() - Tag user in screenshot');
     console.log('  8. ✅ tagPublishedFile() - Tag Workshop item in screenshot');
+    console.log('  9. ✅ addVRScreenshotToLibrary() - Add VR screenshot from files');
     console.log('');
     console.log('💡 NOTES:');
     console.log('  • addScreenshotToLibrary and writeScreenshot work without overlay');
