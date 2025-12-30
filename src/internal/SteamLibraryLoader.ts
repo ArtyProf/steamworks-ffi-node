@@ -633,7 +633,16 @@ export class SteamLibraryLoader {
       } else if (platform === 'darwin') {
         platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/osx/libsteam_api.dylib');
       } else if (platform === 'linux') {
-        platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/linux64/libsteam_api.so');
+        if (arch === 'arm64') {
+          platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/linuxarm64/libsteam_api.so');
+        } else if (arch === 'ia32') {
+          platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/linux32/libsteam_api.so');
+        } else {
+          platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/linux64/libsteam_api.so');
+        }
+      } else if (platform === 'android') {
+        // Android ARM64 support (for Electron-based Android apps or similar)
+        platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/androidarm64/libsteam_api.so');
       } else {
         throw new Error(`Unsupported platform: ${platform}`);
       }
@@ -668,7 +677,10 @@ export class SteamLibraryLoader {
       `            ├── win64/steam_api64.dll (Windows 64-bit)\n` +
       `            ├── steam_api.dll (Windows 32-bit)\n` +
       `            ├── osx/libsteam_api.dylib (macOS)\n` +
-      `            └── linux64/libsteam_api.so (Linux)\n\n` +
+      `            ├── linux64/libsteam_api.so (Linux x64)\n` +
+      `            ├── linux32/libsteam_api.so (Linux x86)\n` +
+      `            ├── linuxarm64/libsteam_api.so (Linux ARM64)\n` +
+      `            └── androidarm64/libsteam_api.so (Android ARM64)\n\n` +
       `   Note: Due to Valve's licensing terms, the Steamworks SDK redistributables\n` +
       `   cannot be bundled with this package and must be downloaded separately.\n\n` +
       `   Quick verification: Run 'npm run verify-sdk' to check your setup\n\n` +

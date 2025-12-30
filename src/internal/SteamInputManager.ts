@@ -14,6 +14,7 @@ import {
   SteamControllerPad,
   ControllerHapticLocation,
   STEAM_INPUT,
+  EInputActionOrigin,
 } from '../types';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 
@@ -901,13 +902,21 @@ export class SteamInputManager {
    * 
    * Useful for showing button prompts in your UI.
    * 
-   * @param origin - Action origin (button)
+   * @param origin - Action origin (button) - can use EInputActionOrigin enum or number
    * @param size - Glyph size (small, medium, large)
    * @param flags - Glyph style flags
    * @returns Path to PNG file, or empty string if not available
    * 
    * @example
    * ```typescript
+   * // Using enum for known origins
+   * const glyphPath = inputManager.getGlyphPNGForActionOrigin(
+   *   EInputActionOrigin.LenovoLegionGo_A,
+   *   SteamInputGlyphSize.Medium,
+   *   SteamInputGlyphStyle.Dark
+   * );
+   * 
+   * // Using origins returned from detection
    * const origins = inputManager.getDigitalActionOrigins(handle, actionSet, jumpHandle);
    * if (origins.length > 0) {
    *   const glyphPath = inputManager.getGlyphPNGForActionOrigin(
@@ -919,7 +928,7 @@ export class SteamInputManager {
    * }
    * ```
    */
-  getGlyphPNGForActionOrigin(origin: number, size: SteamInputGlyphSize, flags: number): string {
+  getGlyphPNGForActionOrigin(origin: EInputActionOrigin | number, size: SteamInputGlyphSize, flags: number): string {
     const iface = this.getSteamInputInterface();
     if (!iface) return '';
 
@@ -934,11 +943,19 @@ export class SteamInputManager {
   /**
    * Get the path to an SVG glyph for an action origin
    * 
-   * @param origin - Action origin (button)
+   * @param origin - Action origin (button) - can use EInputActionOrigin enum or number
    * @param flags - Glyph style flags
    * @returns Path to SVG file, or empty string if not available
+   * 
+   * @example
+   * ```typescript
+   * const glyphPath = inputManager.getGlyphSVGForActionOrigin(
+   *   EInputActionOrigin.PS5_X,
+   *   SteamInputGlyphStyle.Light
+   * );
+   * ```
    */
-  getGlyphSVGForActionOrigin(origin: number, flags: number): string {
+  getGlyphSVGForActionOrigin(origin: EInputActionOrigin | number, flags: number): string {
     const iface = this.getSteamInputInterface();
     if (!iface) return '';
 
@@ -953,10 +970,16 @@ export class SteamInputManager {
   /**
    * Get localized string for an action origin
    * 
-   * @param origin - Action origin (button)
+   * @param origin - Action origin (button) - can use EInputActionOrigin enum or number
    * @returns Localized button name (e.g., "A Button", "Cross")
+   * 
+   * @example
+   * ```typescript
+   * const name = inputManager.getStringForActionOrigin(EInputActionOrigin.XBoxOne_A);
+   * // Returns "A" or localized equivalent
+   * ```
    */
-  getStringForActionOrigin(origin: number): string {
+  getStringForActionOrigin(origin: EInputActionOrigin | number): string {
     const iface = this.getSteamInputInterface();
     if (!iface) return '';
 

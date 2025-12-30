@@ -15,7 +15,7 @@ This guide explains how to properly set up the Steamworks SDK redistributables f
 3. Download the latest Steamworks SDK
 4. Extract the downloaded archive
 
-> **Note**: This package was built and tested with Steamworks SDK v1.62. While newer versions should be compatible, v1.62 or later is recommended for optimal compatibility.
+> **Note**: This package was built and tested with Steamworks SDK v1.63. While newer versions should be compatible, v1.63 or later is recommended for optimal compatibility.
 
 ### 2. Install SDK Redistributables
 
@@ -30,7 +30,13 @@ your-project/
 │       ├── steam_api.dll
 │       ├── osx/
 │       │   └── libsteam_api.dylib
-│       └── linux64/
+│       ├── linux64/
+│       │   └── libsteam_api.so
+│       ├── linux32/
+│       │   └── libsteam_api.so
+│       ├── linuxarm64/
+│       │   └── libsteam_api.so
+│       └── androidarm64/
 │           └── libsteam_api.so
 ├── package.json
 └── your-app-files...
@@ -91,7 +97,12 @@ If you're contributing to an open source project that uses steamworks-ffi-node:
 - **Universal**: `steamworks_sdk/redistributable_bin/osx/libsteam_api.dylib`
 
 ### Linux
-- **64-bit**: `steamworks_sdk/redistributable_bin/linux64/libsteam_api.so`
+- **x64**: `steamworks_sdk/redistributable_bin/linux64/libsteam_api.so`
+- **x86**: `steamworks_sdk/redistributable_bin/linux32/libsteam_api.so`
+- **ARM64**: `steamworks_sdk/redistributable_bin/linuxarm64/libsteam_api.so`
+
+### Android
+- **ARM64**: `steamworks_sdk/redistributable_bin/androidarm64/libsteam_api.so`
 
 ## Project Structure Examples
 
@@ -103,7 +114,10 @@ my-steam-game/
 │       ├── win64/steam_api64.dll
 │       ├── steam_api.dll
 │       ├── osx/libsteam_api.dylib
-│       └── linux64/libsteam_api.so
+│       ├── linux64/libsteam_api.so
+│       ├── linux32/libsteam_api.so
+│       ├── linuxarm64/libsteam_api.so
+│       └── androidarm64/libsteam_api.so
 ├── package.json
 ├── steam_appid.txt
 └── src/

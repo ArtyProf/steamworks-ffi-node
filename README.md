@@ -3,7 +3,7 @@
 
 # Steamworks FFI - Steamworks SDK Integration for Node.js applications
 
-A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed for Node.js and Electron applications with **Steamworks SDK v1.62 integration**.
+A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed for Node.js and Electron applications with **Steamworks SDK v1.63 integration**.
 
 ---
 
@@ -23,7 +23,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
 
-> ⚡ **Latest Steamworks SDK**: Built with Steamworks SDK v1.62 - includes all latest Steam features and improvements!
+> ⚡ **Latest Steamworks SDK**: Built with Steamworks SDK v1.63 - includes Linux ARM64, Android ARM64, and Lenovo Legion Go controller support!
 
 > 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)
 
@@ -587,9 +587,12 @@ The library searches for the SDK in standard locations within your Electron app 
 
 - ✅ **Windows**: steam_api64.dll / steam_api.dll
 - ✅ **macOS**: libsteam_api.dylib
-- ✅ **Linux**: libsteam_api.so
+- ✅ **Linux x64**: libsteam_api.so
+- ✅ **Linux x86**: libsteam_api.so
+- ✅ **Linux ARM64**: libsteam_api.so (SDK 1.63+)
+- ✅ **Android ARM64**: libsteam_api.so (SDK 1.63+)
 
-**Steamworks SDK Version**: v1.62 (Latest)
+**Steamworks SDK Version**: v1.63 (Latest)
 
 _Note: You must download and install the SDK redistributables separately as described in the Setup section above._
 

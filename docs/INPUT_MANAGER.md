@@ -36,7 +36,10 @@ The `SteamInputManager` provides **100% coverage** of the Steamworks Input API w
 | Switch Joy-Cons | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Steam Controller | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Steam Deck | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Lenovo Legion Go | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Generic Gamepad | ✅ | ✅ | ✅ | ❌ | ⚠️ | ❌ |
+
+> **Note:** Lenovo Legion Go controller support was added in Steamworks SDK 1.63. The original Legion Go model has touchpads while newer models may not.
 
 ---
 

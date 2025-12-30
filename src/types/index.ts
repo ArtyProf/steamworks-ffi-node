@@ -43,6 +43,9 @@ export * from './workshop';
 // Input types
 export * from './input';
 
+// Input Action Origins (SDK 1.63+)
+export * from './inputActionOrigins';
+
 // Screenshots types
 export * from './screenshots';
 
