@@ -12,12 +12,12 @@ The `SteamWorkshopManager` provides comprehensive access to the Steam Workshop A
 |----------|-----------|-------------|
 | [Subscription Management](#subscription-management) | 4 | Subscribe, unsubscribe, and list Workshop items |
 | [Item State & Information](#item-state--information) | 4 | Get item state, installation info, and download progress |
-| [Query Operations](#query-operations) | 8 | Search and browse Workshop content |
+| [Query Operations](#query-operations) | 11 | Search and browse Workshop content |
 | [Item Creation & Update](#item-creation--update) | 9 | Create and update your own Workshop items |
 | [Voting & Favorites](#voting--favorites) | 4 | Vote on items and manage favorites |
 | [Item Deletion](#item-deletion) | 1 | Delete Workshop items you created |
 
-**Total: 30 Functions**
+**Total: 33 Functions**
 
 ---
 
@@ -772,6 +772,55 @@ if (result) {
 - Returns 0 if index is out of range
 - Tags are also available in the `tags` array of WorkshopItem
 - Useful for validation before processing tags
+
+---
+
+### `getQueryUGCTag(queryHandle, index, tagIndex)`
+
+Get a specific tag by index for a query result.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_GetQueryUGCTag()` - Get tag by index
+
+**Parameters:**
+- `queryHandle: UGCQueryHandle` - Query handle from completed query
+- `index: number` - Index of result (0-based)
+- `tagIndex: number` - Index of tag (0-based)
+
+**Returns:** `string | null` - Tag string, or null if failed
+
+**Example:**
+```typescript
+const query = steam.workshop.createQueryAllUGCRequest(
+  EUGCQuery.RankedByVote,
+  EUGCMatchingUGCType.Items,
+  480, 480, 1
+);
+
+const result = await steam.workshop.sendQueryUGCRequest(query);
+
+if (result) {
+  for (let i = 0; i < result.numResults; i++) {
+    const item = steam.workshop.getQueryUGCResult(query, i);
+    const numTags = steam.workshop.getQueryUGCNumTags(query, i);
+    
+    if (item) {
+      console.log(`${item.title} tags:`);
+      for (let t = 0; t < numTags; t++) {
+        const tag = steam.workshop.getQueryUGCTag(query, i, t);
+        console.log(`  - ${tag}`);
+      }
+    }
+  }
+  
+  steam.workshop.releaseQueryUGCRequest(query);
+}
+```
+
+**Notes:**
+- Use `getQueryUGCNumTags()` first to get the tag count
+- Returns null if tagIndex is out of range
+- Tags are also available in the `tags` array of WorkshopItem
 
 ---
 
