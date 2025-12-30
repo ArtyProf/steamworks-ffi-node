@@ -97,6 +97,11 @@ if (progress) {
   console.log('  No DLC currently downloading');
 }
 
+// Test setDlcContext (safe to call - just sets tracking context)
+console.log('\n--- DLC Context ---');
+const contextResult = steam.apps.setDlcContext(0); // Clear context
+console.log(`setDlcContext(0): ${contextResult}`);
+
 // ========================================
 // Test Timed Trial
 // ========================================
@@ -153,6 +158,10 @@ if (depots.length > 0) {
   console.log('No depots found');
 }
 
+console.log('\n--- App Build ID ---');
+const buildId = steam.apps.getAppBuildId();
+console.log(`Build ID: ${buildId}`);
+
 // ========================================
 // Test Beta Branches
 // ========================================
@@ -206,8 +215,24 @@ console.log('\n' + '='.repeat(60));
 console.log('TEST SUMMARY');
 console.log('='.repeat(60));
 
-const functionsTestedCount = 25;
+const functionsTestedCount = 28;
 console.log(`\n✓ Tested ${functionsTestedCount} Apps Manager functions`);
+
+console.log('\nFunctions tested:');
+console.log('  Ownership: isSubscribed, isSubscribedApp, isAppInstalled,');
+console.log('             isLowViolence, isCybercafe, isVACBanned,');
+console.log('             isSubscribedFromFreeWeekend, isSubscribedFromFamilySharing,');
+console.log('             getOwnershipInfo');
+console.log('  DLC: isDlcInstalled, getDLCCount, getDLCDataByIndex, getAllDLC,');
+console.log('       getDlcDownloadProgress, setDlcContext');
+console.log('  Trial: getTimedTrialStatus');
+console.log('  Info: getCurrentGameLanguage, getAvailableGameLanguages,');
+console.log('        getEarliestPurchaseUnixTime, getAppInstallDir, getAppOwner,');
+console.log('        getAppBuildId, getInstalledDepots, getBuildInfo');
+console.log('  Beta: getCurrentBetaName, getNumBetas, getBetaInfo, getAllBetas');
+console.log('  Launch: getLaunchQueryParam, getLaunchCommandLine');
+console.log('\nFunctions NOT tested (unsafe or require restart):');
+console.log('  installDLC, uninstallDLC, setActiveBeta, markContentCorrupt');
 
 // Cleanup
 console.log('\n');
