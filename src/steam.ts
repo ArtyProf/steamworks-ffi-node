@@ -17,6 +17,8 @@ import { SteamScreenshotManager } from './internal/SteamScreenshotManager';
 import { SteamAppsManager } from './internal/SteamAppsManager';
 import { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
 import { SteamUtilsManager } from './internal/SteamUtilsManager';
+import { SteamNetworkingUtilsManager } from './internal/SteamNetworkingUtilsManager';
+import { SteamNetworkingSocketsManager } from './internal/SteamNetworkingSocketsManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -548,6 +550,95 @@ class SteamworksSDK {
    */
   public readonly utils!: SteamUtilsManager;
 
+  /**
+   * Steam Networking Utils Manager - Network utilities and ping estimation
+   * 
+   * Provides access to the ISteamNetworkingUtils interface for:
+   * - Initializing and monitoring Steam's relay network
+   * - Getting local ping location for matchmaking
+   * - Estimating ping times between players without sending packets
+   * - Querying data center (POP) information and ping times
+   * - High-precision local timestamps
+   * 
+   * @example
+   * ```typescript
+   * // Initialize relay network (required for ping features)
+   * steam.networkingUtils.initRelayNetworkAccess();
+   * 
+   * // Wait for network to be ready
+   * while (true) {
+   *   steam.runCallbacks();
+   *   const status = steam.networkingUtils.getRelayNetworkStatus();
+   *   if (status.availability === ESteamNetworkingAvailability.Current) break;
+   *   await new Promise(r => setTimeout(r, 100));
+   * }
+   * 
+   * // Get your ping location (share this with other players)
+   * const myLocation = steam.networkingUtils.getLocalPingLocation();
+   * console.log(`My location: ${myLocation?.locationString}`);
+   * 
+   * // Estimate ping to another player
+   * const theirLocation = "received from matchmaking...";
+   * const estimate = steam.networkingUtils.estimatePingFromString(theirLocation);
+   * if (estimate.valid) {
+   *   console.log(`Estimated ping: ${estimate.pingMs}ms`);
+   * }
+   * 
+   * // Get data center list
+   * const pops = steam.networkingUtils.getPOPList();
+   * pops.forEach(pop => {
+   *   console.log(`${pop.popCode}: ${pop.directPing}ms direct`);
+   * });
+   * ```
+   * 
+   * @see {@link SteamNetworkingUtilsManager} for complete API documentation
+   */
+  public readonly networkingUtils!: SteamNetworkingUtilsManager;
+
+  /**
+   * Steam Networking Sockets Manager - P2P networking for multiplayer games
+   * 
+   * Provides access to the ISteamNetworkingSockets interface for:
+   * - Creating P2P connections between Steam users
+   * - Hosting listen sockets to accept incoming connections
+   * - Sending reliable and unreliable messages
+   * - Managing connection state and lifecycle
+   * - Poll groups for efficient message receiving from multiple connections
+   * 
+   * @example
+   * ```typescript
+   * // HOST: Create a listen socket
+   * const listenSocket = steam.networkingSockets.createListenSocketP2P(0);
+   * 
+   * // CLIENT: Connect to host
+   * const connection = steam.networkingSockets.connectP2P(hostSteamId, 0);
+   * 
+   * // Wait for connection
+   * steam.networkingSockets.onConnectionStateChange((change) => {
+   *   if (change.newState === ESteamNetworkingConnectionState.Connected) {
+   *     console.log('Connected!');
+   *   }
+   * });
+   * 
+   * // Send messages
+   * steam.networkingSockets.sendReliable(connection, Buffer.from('Hello!'));
+   * steam.networkingSockets.sendUnreliable(connection, positionData);
+   * 
+   * // Receive messages
+   * const messages = steam.networkingSockets.receiveMessages(connection);
+   * messages.forEach(msg => {
+   *   console.log('Received:', msg.data.toString());
+   * });
+   * 
+   * // Close when done
+   * steam.networkingSockets.closeConnection(connection);
+   * steam.networkingSockets.closeListenSocket(listenSocket);
+   * ```
+   * 
+   * @see {@link SteamNetworkingSocketsManager} for complete API documentation
+   */
+  public readonly networkingSockets!: SteamNetworkingSocketsManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -567,6 +658,8 @@ class SteamworksSDK {
     this.apps = new SteamAppsManager(this.libraryLoader, this.apiCore);
     this.matchmaking = new SteamMatchmakingManager(this.libraryLoader, this.apiCore);
     this.utils = new SteamUtilsManager(this.libraryLoader, this.apiCore);
+    this.networkingUtils = new SteamNetworkingUtilsManager(this.libraryLoader, this.apiCore);
+    this.networkingSockets = new SteamNetworkingSocketsManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {

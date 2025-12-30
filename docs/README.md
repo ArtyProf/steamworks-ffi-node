@@ -13,19 +13,21 @@ const steam = SteamworksSDK.getInstance();
 steam.init({ appId: 480 });
 
 // Access features through specialized managers
-steam.achievements.*   // Achievement operations
-steam.stats.*          // Statistics operations
-steam.leaderboards.*   // Leaderboard operations
-steam.friends.*        // Friends and social operations
-steam.richPresence.*   // Rich Presence operations
-steam.overlay.*        // Overlay control operations
-steam.cloud.*          // Cloud storage operations
-steam.workshop.*       // Workshop/UGC operations
-steam.input.*          // Controller input operations
-steam.screenshots.*    // Screenshots operations
-steam.apps.*           // DLC and app ownership operations
-steam.matchmaking.*    // Multiplayer lobby operations
-steam.utils.*          // System utilities and device detection
+steam.achievements.*      // Achievement operations
+steam.stats.*             // Statistics operations
+steam.leaderboards.*      // Leaderboard operations
+steam.friends.*           // Friends and social operations
+steam.richPresence.*      // Rich Presence operations
+steam.overlay.*           // Overlay control operations
+steam.cloud.*             // Cloud storage operations
+steam.workshop.*          // Workshop/UGC operations
+steam.input.*             // Controller input operations
+steam.screenshots.*       // Screenshots operations
+steam.apps.*              // DLC and app ownership operations
+steam.matchmaking.*       // Multiplayer lobby operations
+steam.utils.*             // System utilities and device detection
+steam.networkingUtils.*   // Ping location and relay network
+steam.networkingSockets.* // P2P connections and messaging
 ```
 
 This design:
@@ -189,6 +191,27 @@ This design:
   - Text filtering (profanity filter for user-generated content)
   - Performance monitoring (IPC call count)
 
+### Networking Utils System
+
+- **[Networking Utils Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_UTILS_MANAGER.md)**
+  - **15 Functions** - Complete Steam Networking Utils support
+  - Relay network initialization and status monitoring
+  - Ping location (share with players for matchmaking)
+  - Ping estimation between players (without sending packets)
+  - Data center (POP) information and ping times
+  - High-precision local timestamps
+
+### Networking Sockets System
+
+- **[Networking Sockets Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_SOCKETS_MANAGER.md)**
+  - **34 Functions** - Complete P2P networking support
+  - P2P connections (connect to players via Steam ID)
+  - Listen sockets (accept incoming connections)
+  - Message sending (reliable and unreliable modes)
+  - Poll groups (efficiently handle multiple connections)
+  - Connection status (state, ping, quality metrics)
+  - ⚠️ **Requires two Steam accounts for full testing** - P2P API
+
 ## 🚀 Quick Links
 
 ### Getting Started
@@ -214,6 +237,10 @@ This design:
 - Run Matchmaking Host: `npm run test:matchmaking:host:js` - Creates lobby, waits for players
 - Run Matchmaking Join: `npm run test:matchmaking:join:js` - Searches and joins lobbies
 - Run Utils Tests: `npm run test:utils:js` - Tests all utils functions
+- Run Networking Utils Host: `npm run test:networking:host:js` - Gets ping location, shows POPs
+- Run Networking Utils Join: `npm run test:networking:join:js` - Estimates ping to remote location
+- Run Networking Sockets Host: `npm run test:sockets:host:js` - Creates P2P listen socket
+- Run Networking Sockets Join: `npm run test:sockets:join:js` - Connects to host via Steam ID
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
 
@@ -230,8 +257,12 @@ This design:
 - Run Matchmaking Host: `npm run test:matchmaking:host:ts` - Creates lobby, waits for players ✨
 - Run Matchmaking Join: `npm run test:matchmaking:join:ts` - Searches and joins lobbies ✨
 - Run Utils Tests: `npm run test:utils:ts` - With type safety ✨
+- Run Networking Utils Host: `npm run test:networking:host:ts` - Gets ping location, shows POPs ✨
+- Run Networking Utils Join: `npm run test:networking:join:ts` - Estimates ping to remote location ✨
+- Run Networking Sockets Host: `npm run test:sockets:host:ts` - Creates P2P listen socket ✨
+- Run Networking Sockets Join: `npm run test:sockets:join:ts` - Connects to host via Steam ID ✨
 
-⚠️ **Note:** Matchmaking tests require two separate Steam accounts to fully test multiplayer functionality. Run the host test on one machine, then the join test on another machine with a different Steam account.
+⚠️ **Note:** Matchmaking and Networking Sockets tests require two separate Steam accounts to fully test multiplayer functionality. Run the host test on one machine, then the join test on another machine with a different Steam account.
 
 📁 All tests are in `tests/` folder with separate `js/` and `ts/` subfolders.
 

@@ -143,3 +143,45 @@ export interface LobbyEnterType {
 export interface LobbyMatchListType {
   m_nLobbiesMatching: number;
 }
+
+// ========================================
+// Networking Sockets Callback Types
+// ========================================
+
+/**
+ * SteamNetConnectionStatusChangedCallback_t structure
+ * 
+ * Pushed callback when any connection state changes.
+ * Used with SetGlobalCallback_SteamNetConnectionStatusChanged.
+ */
+export interface SteamNetConnectionStatusChangedCallbackType {
+  /** Connection handle */
+  m_hConn: number;
+  /** Full connection info */
+  m_info: {
+    /** Remote peer identity (Steam ID as string) */
+    identityRemote: string;
+    /** User data associated with connection */
+    userData: bigint;
+    /** Listen socket this came from (0 if outgoing) */
+    listenSocket: number;
+    /** Remote address (if applicable) */
+    remoteAddress: string;
+    /** Remote POP ID */
+    popIdRemote: number;
+    /** Relay POP ID */
+    popIdRelay: number;
+    /** Current connection state */
+    state: number;
+    /** State name for debugging */
+    stateName: string;
+    /** End reason code */
+    endReason: number;
+    /** End debug message */
+    endDebugMessage: string;
+    /** Connection description */
+    connectionDescription: string;
+  };
+  /** Previous connection state */
+  m_eOldState: number;
+}

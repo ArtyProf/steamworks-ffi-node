@@ -19,8 +19,16 @@ import {
   GetUserItemVoteResultType,
   LobbyCreatedType,
   LobbyEnterType,
-  LobbyMatchListType
+  LobbyMatchListType,
+  SteamNetConnectionStatusChangedCallbackType
 } from './callbackTypes';
+import {
+  ESteamNetworkingIdentityType,
+  STEAM_NET_CONNECTION_INFO_SIZE,
+  k_cchSteamNetworkingMaxConnectionCloseReason,
+  k_cchSteamNetworkingMaxConnectionDescription,
+  getConnectionStateName
+} from '../types/networking';
 
 /**
  * SteamCallbackPoller
@@ -404,5 +412,134 @@ export class SteamCallbackPoller {
     return {
       m_nLobbiesMatching: buffer.readUInt32LE(0)
     };
+  }
+
+  // ========================================
+  // Static Parsing Methods for Push Callbacks
+  // ========================================
+
+  /**
+   * Size of SteamNetConnectionStatusChangedCallback_t struct
+   */
+  static readonly STEAM_NET_CONNECTION_STATUS_CHANGED_CALLBACK_SIZE = 4 + STEAM_NET_CONNECTION_INFO_SIZE + 4;
+
+  /**
+   * Parse SteamNetConnectionStatusChangedCallback_t from a native pointer
+   * 
+   * This is used for push-based callbacks from SetGlobalCallback_SteamNetConnectionStatusChanged.
+   * Unlike poll-based callbacks, these are invoked directly by Steam.
+   * 
+   * Layout:
+   * - HSteamNetConnection m_hConn (4 bytes)
+   * - SteamNetConnectionInfo_t m_info (~696 bytes)
+   * - ESteamNetworkingConnectionState m_eOldState (4 bytes)
+   * 
+   * @param infoPtr - Native pointer to the callback struct
+   * @returns Parsed callback data, or null if parsing failed
+   */
+  static parseConnectionStatusChangedCallback(infoPtr: any): SteamNetConnectionStatusChangedCallbackType | null {
+    if (!infoPtr) return null;
+
+    try {
+      // On Windows 64-bit with pack(8), the struct layout is:
+      // - HSteamNetConnection m_hConn (4 bytes) @ offset 0
+      // - 4 bytes padding @ offset 4 (for 8-byte alignment of m_info)
+      // - SteamNetConnectionInfo_t m_info @ offset 8
+      // - ESteamNetworkingConnectionState m_eOldState @ offset 8 + INFO_SIZE
+      
+      // Determine layout based on platform
+      // Windows 64-bit: connection at 0, info at 8 (with padding)
+      // Other platforms may have info at 4 (no padding)
+      const IS_WIN64 = process.platform === 'win32' && process.arch === 'x64';
+      const INFO_START = IS_WIN64 ? 8 : 4;
+      const TOTAL_SIZE = INFO_START + STEAM_NET_CONNECTION_INFO_SIZE + 4;
+      
+      const rawBytes = koffi.decode(infoPtr, koffi.array('uint8', TOTAL_SIZE));
+      const buffer = Buffer.from(rawBytes);
+      
+      const connection = buffer.readUInt32LE(0);
+      const infoBuffer = buffer.subarray(INFO_START, INFO_START + STEAM_NET_CONNECTION_INFO_SIZE);
+      const info = SteamCallbackPoller.parseConnectionInfo(infoBuffer);
+      const oldState = buffer.readInt32LE(INFO_START + STEAM_NET_CONNECTION_INFO_SIZE);
+      
+      return {
+        m_hConn: connection,
+        m_info: info,
+        m_eOldState: oldState
+      };
+    } catch (error) {
+      console.error('[Steamworks] Error parsing connection status callback:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Parse SteamNetConnectionInfo_t from a buffer
+   * 
+   * Layout:
+   * - SteamNetworkingIdentity m_identityRemote (136 bytes)
+   * - int64 m_nUserData (8 bytes) @ offset 136
+   * - HSteamListenSocket m_hListenSocket (4 bytes) @ offset 144
+   * - SteamNetworkingIPAddr m_addrRemote (18 bytes) @ offset 148
+   * - uint16 m__pad1 (2 bytes) @ offset 166
+   * - SteamNetworkingPOPID m_idPOPRemote (4 bytes) @ offset 168
+   * - SteamNetworkingPOPID m_idPOPRelay (4 bytes) @ offset 172
+   * - ESteamNetworkingConnectionState m_eState (4 bytes) @ offset 176
+   * - int m_eEndReason (4 bytes) @ offset 180
+   * - char m_szEndDebug[128] @ offset 184
+   * - char m_szConnectionDescription[128] @ offset 312
+   * - int m_nFlags (4 bytes) @ offset 440
+   * - uint32 reserved[63] (252 bytes) @ offset 444
+   * 
+   * @param buffer - Buffer containing the connection info struct
+   * @returns Parsed connection info
+   */
+  static parseConnectionInfo(buffer: Buffer): SteamNetConnectionStatusChangedCallbackType['m_info'] {
+    // Parse identity (extract SteamID)
+    // SteamNetworkingIdentity struct layout (136 bytes total):
+    //   offset 0: m_eType (ESteamNetworkingIdentityType, 4 bytes)
+    //   offset 4: m_cbSize (int, 4 bytes) - size of data in union
+    //   offset 8: union (128 bytes) - m_steamID64 at start for SteamID type
+    const identityType = buffer.readInt32LE(0);
+    let identityRemote = '';
+    if (identityType === ESteamNetworkingIdentityType.SteamID) {
+      identityRemote = buffer.readBigUInt64LE(8).toString();
+    }
+    
+    const userData = buffer.readBigInt64LE(136);
+    const listenSocket = buffer.readUInt32LE(144);
+    const popIdRemote = buffer.readUInt32LE(168);
+    const popIdRelay = buffer.readUInt32LE(172);
+    const state = buffer.readInt32LE(176);
+    const endReason = buffer.readInt32LE(180);
+    
+    // Read null-terminated strings
+    const endDebugMessage = SteamCallbackPoller.readCString(buffer, 184, k_cchSteamNetworkingMaxConnectionCloseReason);
+    const connectionDescription = SteamCallbackPoller.readCString(buffer, 312, k_cchSteamNetworkingMaxConnectionDescription);
+    
+    return {
+      identityRemote,
+      userData,
+      listenSocket,
+      remoteAddress: '',  // Would need to parse m_addrRemote
+      popIdRemote,
+      popIdRelay,
+      state,
+      stateName: getConnectionStateName(state),
+      endReason,
+      endDebugMessage,
+      connectionDescription
+    };
+  }
+
+  /**
+   * Read a null-terminated C string from a buffer
+   */
+  private static readCString(buffer: Buffer, offset: number, maxLength: number): string {
+    let end = offset;
+    while (end < offset + maxLength && buffer[end] !== 0) {
+      end++;
+    }
+    return buffer.toString('utf8', offset, end);
   }
 }
