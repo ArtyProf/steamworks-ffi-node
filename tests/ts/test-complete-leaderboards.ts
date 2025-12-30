@@ -1,5 +1,5 @@
 /**
- * Comprehensive test covering all 6 Steam Leaderboards API functions (TypeScript)
+ * Comprehensive test covering all 7 Steam Leaderboards API functions (TypeScript)
  * Tests leaderboard operations including find/create, upload scores, and download entries
  * 
  * Uses ISteamUtils polling to retrieve callback results synchronously after async operations.
@@ -375,11 +375,11 @@ async function testAllLeaderboardFunctions(): Promise<void> {
     console.log('         - Friend entries');
     console.log('      6. downloadLeaderboardEntriesForUsers()');
     console.log('');
-    console.log('   ✓ Bonus Features:');
+    console.log('   ✓ UGC Integration (1 function):');
     console.log('      7. attachLeaderboardUGC()');
     console.log('');
-    console.log('🎉 All 6 Leaderboards API functions tested successfully!');
-    console.log('📊 Total Coverage: 6/6 functions (100%)');
+    console.log('🎉 All 7 Leaderboards API functions tested successfully!');
+    console.log('📊 Total Coverage: 7/7 functions (100%)');
     console.log('');
     console.log('✨ Implementation Details:');
     console.log('   - Uses ISteamUtils polling for callback results');

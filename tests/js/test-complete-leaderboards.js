@@ -379,12 +379,17 @@ async function testLeaderboardsAPI() {
   console.log('TEST SUMMARY');
   console.log('=' .repeat(60) + '\n');
   
-  console.log('📋 Tests Executed:');
-  console.log('   ✅ Leaderboard Discovery (find/create)');
-  console.log('   ✅ Get Leaderboard Info (metadata retrieval)');
-  console.log('   ✅ Score Upload (simple and with details)');
-  console.log('   ✅ Entry Download (global, around user, friends, specific users)');
-  console.log('   ✅ UGC Attachment\n');
+  console.log('📋 Functions Tested (7 total):');
+  console.log('   ✅ 1. findOrCreateLeaderboard()');
+  console.log('   ✅ 2. findLeaderboard()');
+  console.log('   ✅ 3. getLeaderboardInfo()');
+  console.log('   ✅ 4. uploadScore()');
+  console.log('   ✅ 5. downloadLeaderboardEntries()');
+  console.log('   ✅ 6. downloadLeaderboardEntriesForUsers()');
+  console.log('   ✅ 7. attachLeaderboardUGC()');
+  console.log('');
+  console.log('🎉 All 7 Leaderboards API functions tested!');
+  console.log('📊 Coverage: 7/7 functions (100%)\n');
   
   console.log('✨ Implementation:');
   console.log('   - Uses ISteamUtils polling to retrieve callback results');
