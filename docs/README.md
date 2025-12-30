@@ -204,7 +204,7 @@ This design:
 ### Networking Sockets System
 
 - **[Networking Sockets Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_SOCKETS_MANAGER.md)**
-  - **19 Functions** - Complete P2P networking support
+  - **34 Functions** - Complete P2P networking support
   - P2P connections (connect to players via Steam ID)
   - Listen sockets (accept incoming connections)
   - Message sending (reliable and unreliable modes)
