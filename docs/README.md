@@ -259,8 +259,10 @@ This design:
 - Run Utils Tests: `npm run test:utils:ts` - With type safety ✨
 - Run Networking Utils Host: `npm run test:networking:host:ts` - Gets ping location, shows POPs ✨
 - Run Networking Utils Join: `npm run test:networking:join:ts` - Estimates ping to remote location ✨
+- Run Networking Sockets Host: `npm run test:sockets:host:ts` - Creates P2P listen socket ✨
+- Run Networking Sockets Join: `npm run test:sockets:join:ts` - Connects to host via Steam ID ✨
 
-⚠️ **Note:** Matchmaking tests require two separate Steam accounts to fully test multiplayer functionality. Run the host test on one machine, then the join test on another machine with a different Steam account.
+⚠️ **Note:** Matchmaking and Networking Sockets tests require two separate Steam accounts to fully test multiplayer functionality. Run the host test on one machine, then the join test on another machine with a different Steam account.
 
 📁 All tests are in `tests/` folder with separate `js/` and `ts/` subfolders.
 
