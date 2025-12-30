@@ -61,8 +61,7 @@ async function testFriendsAPI() {
     console.log(`✅ Retrieved ${friends.length} friends:\n`);
     
     // Show limited number of friends with details
-    const MAX_DISPLAY = 10;
-    const displayCount = Math.min(MAX_DISPLAY, friends.length);
+    const displayCount = Math.min(MAX_FRIENDS_TO_DISPLAY, friends.length);
     console.log(`Showing first ${displayCount} friends:\n`);
     
     for (let i = 0; i < displayCount; i++) {
@@ -86,8 +85,8 @@ async function testFriendsAPI() {
       console.log('');
     }
     
-    if (friends.length > MAX_DISPLAY) {
-      console.log(`   ... and ${friends.length - MAX_DISPLAY} more friends\n`);
+    if (friends.length > MAX_FRIENDS_TO_DISPLAY) {
+      console.log(`   ... and ${friends.length - MAX_FRIENDS_TO_DISPLAY} more friends\n`);
     }
     
     // ===== FRIEND STATUS SUMMARY =====
