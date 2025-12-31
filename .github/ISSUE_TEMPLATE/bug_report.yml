@@ -1,0 +1,167 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        Please provide as much detail as possible to help us investigate.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe what happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Initialize Steam with `steam.init({ appId: 480 })`
+        2. Call `steam.achievements.unlock('...')`
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: Describe what you expected...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: Describe what actually happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Sample
+      description: If applicable, provide a minimal code sample that reproduces the issue
+      render: typescript
+      placeholder: |
+        import SteamworksSDK from 'steamworks-ffi-node';
+        
+        const steam = SteamworksSDK.getInstance();
+        steam.init({ appId: 480 });
+        
+        // Code that causes the issue
+    validations:
+      required: false
+
+  - type: dropdown
+    id: api
+    attributes:
+      label: Affected API
+      description: Which Steam API is affected?
+      options:
+        - Core API
+        - Achievement API
+        - Stats API
+        - Leaderboard API
+        - Friends API
+        - Rich Presence API
+        - Overlay API
+        - Cloud Storage API
+        - Workshop/UGC API
+        - Input API
+        - Screenshots API
+        - Apps/DLC API
+        - Matchmaking API
+        - Utils API
+        - Networking Utils API
+        - Networking Sockets API
+        - Other / Multiple
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Package Version
+      description: What version of steamworks-ffi-node are you using?
+      placeholder: "0.8.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Linux (x64)
+        - Linux (ARM64)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node.js Version
+      description: Run `node --version` to get this
+      placeholder: "v20.10.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: How are you using the package?
+      options:
+        - Node.js (vanilla)
+        - Electron
+        - NW.js
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: Include any error messages or stack traces
+      render: shell
+      placeholder: Paste error output here...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this bug hasn't been reported
+          required: true
+        - label: Steam client is running and I'm logged in
+          required: true
+        - label: I have run `npm run verify-sdk` and it passes
+          required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+    validations:
+      required: false

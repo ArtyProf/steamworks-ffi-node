@@ -1,0 +1,131 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! 
+        Please fill out the form below to help us understand your request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Description
+      description: Is your feature request related to a problem? Describe it.
+      placeholder: I'm always frustrated when...
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like
+      placeholder: I would like to be able to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-design
+    attributes:
+      label: Proposed API Design
+      description: If applicable, show how you'd like the API to look
+      render: typescript
+      placeholder: |
+        // Example API usage
+        const result = steam.newFeature.doSomething({
+          option1: 'value',
+          option2: true
+        });
+    validations:
+      required: false
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What area does this feature relate to?
+      options:
+        - New Steam API coverage
+        - Enhancement to existing API
+        - TypeScript types improvement
+        - Documentation
+        - Testing utilities
+        - Developer experience
+        - Performance
+        - Platform support
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: steam-api
+    attributes:
+      label: Related Steam API
+      description: If this relates to a specific Steam API, which one?
+      options:
+        - ISteamUser
+        - ISteamFriends
+        - ISteamUserStats (Achievements/Stats)
+        - ISteamApps
+        - ISteamRemoteStorage (Cloud)
+        - ISteamUGC (Workshop)
+        - ISteamInput
+        - ISteamScreenshots
+        - ISteamMatchmaking
+        - ISteamUtils
+        - ISteamNetworkingUtils
+        - ISteamNetworkingSockets
+        - ISteamMusicRemote
+        - ISteamVideo
+        - ISteamParties
+        - ISteamTimeline
+        - Other / New API
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or workarounds you've considered
+      placeholder: I've tried using... but it doesn't work because...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Nice to have
+        - Would significantly improve my workflow
+        - Blocking my use case
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to help implement this feature?
+      options:
+        - label: I'm willing to submit a PR for this feature
+        - label: I can help test the implementation
+        - label: I can help write documentation
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or references
+      placeholder: |
+        - Link to Steam documentation: ...
+        - Related issues: #...
+        - Screenshots: ...
+    validations:
+      required: false

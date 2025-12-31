@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord Community
+    url: https://discord.gg/Ruzx4Z7cKr
+    about: Join our Discord for questions, discussions, and community support
+  - name: Documentation
+    url: https://github.com/ArtyProf/steamworks-ffi-node/tree/main/docs
+    about: Check the documentation before opening an issue
+  - name: Steamworks SDK Documentation
+    url: https://partner.steamgames.com/doc/sdk
+    about: Official Valve Steamworks SDK documentation
