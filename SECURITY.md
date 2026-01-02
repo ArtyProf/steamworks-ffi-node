@@ -16,7 +16,7 @@ Instead, please report security vulnerabilities by:
 
 1. **GitHub Security Advisories** (Preferred)
    - Go to the [Security tab](https://github.com/ArtyProf/steamworks-ffi-node/security/advisories) of this repository
-   - Click "Report a vulnerability"
+   - Click "New draft security advisory"
    - Fill out the form with details
 
 2. **Private Email**
