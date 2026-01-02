@@ -70,7 +70,7 @@ This project uses native C++ bindings to interface with the Steamworks SDK. Key 
 
 ## Security Best Practices for Users
 
-### When Using steamworks-napi-main
+### When Using steamworks-ffi-node
 
 1. **Keep Updated**: Always use the latest version of this library
 2. **Input Validation**: Validate all user input before passing to Steam API functions
