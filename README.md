@@ -632,7 +632,9 @@ Here are some projects and applications built with `steamworks-ffi-node`:
 **[Steam Store Page](https://store.steampowered.com/app/4087020/Bulletail/)**
 
 <p align="center">
-  <img src="assets/4087020.jpg" alt="Bulletail Game" width="600">
+  <a href="https://store.steampowered.com/app/4087020/Bulletail/">
+    <img src="assets/4087020.jpg" alt="Bulletail Game" width="600">
+  </a>
 </p>
 
 Snake-meets-bullet-hell roguelike where your tail is your ammo. Eat bullets to grow, spend length to shoot, and survive escalating waves, enemies, and bosses.
