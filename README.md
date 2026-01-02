@@ -16,6 +16,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 - [Electron Integration](#electron-integration)
 - [Requirements](#requirements)
 - [Troubleshooting](#troubleshooting)
+- [Projects Using This Library](#projects-using-this-library)
 - [How to Support This Project](#how-to-support-this-project)
 - [License](#license)
 
@@ -620,6 +621,33 @@ _Note: You must download and install the SDK redistributables separately as desc
 - ❌ Not cleaning up → **Solution**: Call `shutdown()` in `before-quit` event
 - ❌ "Steamworks SDK library not found" in packaged app → **Solution**: Include SDK redistributables in your build (see Electron Packaging section above)
 - ❌ Native module errors in packaged app → **Solution**: Ensure Steamworks SDK files are properly included in your app bundle
+
+---
+
+## Projects Using This Library
+
+Here are some projects and applications built with `steamworks-ffi-node`:
+
+### Bulletail
+**[Steam Store Page](https://store.steampowered.com/app/4087020/Bulletail/)**
+
+Snake-meets-bullet-hell roguelike where your tail is your ammo. Eat bullets to grow, spend length to shoot, and survive escalating waves, enemies, and bosses.
+
+---
+
+### Add Your Project
+
+Using `steamworks-ffi-node` in your project? We'd love to showcase it here!
+
+**To add your project:**
+1. Create an issue
+2. Add there your project details to share in this section:
+   - Project name and brief description
+   - Links (Steam page, GitHub, website)
+
+Your project helps demonstrate the library's capabilities and inspires other developers!
+
+---
 
 ## How to Support This Project
 
