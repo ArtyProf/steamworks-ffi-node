@@ -11,6 +11,9 @@ test.js
 # Documentation (keep README.md, exclude detailed docs)
 docs/
 
+# Assets (images for README, not needed in package)
+assets/
+
 # Development files
 .github/
 .git/

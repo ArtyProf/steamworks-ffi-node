@@ -631,6 +631,10 @@ Here are some projects and applications built with `steamworks-ffi-node`:
 ### Bulletail
 **[Steam Store Page](https://store.steampowered.com/app/4087020/Bulletail/)**
 
+<p align="center">
+  <img src="assets/4087020.jpg" alt="Bulletail Game" width="600">
+</p>
+
 Snake-meets-bullet-hell roguelike where your tail is your ammo. Eat bullets to grow, spend length to shoot, and survive escalating waves, enemies, and bosses.
 
 ---
@@ -652,6 +656,12 @@ Your project helps demonstrate the library's capabilities and inspires other dev
 ## How to Support This Project
 
 You can support the development of this library by wishlisting, subscribing, and purchasing the app **AFK Companion** on Steam:
+
+<p align="center">
+  <a href="https://store.steampowered.com/app/2609100/AFK_Companion/">
+    <img src="assets/2609100.jpg" alt="AFK Companion on Steam" width="600">
+  </a>
+</p>
 
 👉 [AFK Companion on Steam](https://store.steampowered.com/app/2609100/AFK_Companion/)
 
