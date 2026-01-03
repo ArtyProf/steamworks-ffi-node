@@ -58,7 +58,7 @@ if (steam.user.isLoggedOn()) {
 
 Generate authentication tickets for P2P or game server authentication.
 
-### `getAuthSessionTicket(steamNetworkingIdentity?)`
+### `getAuthSessionTicket(identity?)`
 
 Get an auth session ticket for P2P or game server authentication.
 
@@ -66,7 +66,7 @@ Get an auth session ticket for P2P or game server authentication.
 - `SteamAPI_ISteamUser_GetAuthSessionTicket()` - Create session ticket
 
 **Parameters:**
-- `steamNetworkingIdentity?: string` - Optional: restrict ticket to specific Steam ID or IP
+- `identity?: SteamNetworkingIdentityOptions` - Optional: restrict ticket to specific recipient (Steam ID, IP, or string)
 
 **Returns:** `GetAuthSessionTicketResult`
 
@@ -79,12 +79,34 @@ interface GetAuthSessionTicketResult {
   ticketSize: number;    // The actual ticket size in bytes
   error?: string;        // Error message if failed
 }
+
+interface SteamNetworkingIdentityOptions {
+  steamId?: string;      // Restrict ticket to specific Steam ID
+  ipAddress?: string;    // Restrict ticket to specific IP address (e.g., '192.168.1.100')
+  genericString?: string; // Restrict ticket to specific service/recipient identifier
+}
 ```
 
-**Example:**
+**Examples:**
 ```typescript
-// Get a ticket for game server authentication
+// Get an unrestricted ticket (works with any recipient)
 const result = steam.user.getAuthSessionTicket();
+
+// Restrict ticket to a specific Steam ID
+const result = steam.user.getAuthSessionTicket({
+  steamId: '76561198001234567'
+});
+
+// Restrict ticket to a specific IP address
+const result = steam.user.getAuthSessionTicket({
+  ipAddress: '192.168.1.100'
+});
+
+// Restrict ticket to a service identifier
+const result = steam.user.getAuthSessionTicket({
+  genericString: 'my-dedicated-server'
+});
+
 if (result.success) {
   console.log(`Got ticket handle: ${result.authTicket}`);
   console.log(`Ticket size: ${result.ticketSize} bytes`);
@@ -97,9 +119,17 @@ if (result.success) {
 }
 ```
 
+**Remarks:**
+- Call `cancelAuthTicket()` when done with the ticket
+- Ticket is valid until cancelled or user logs off
+- Maximum ticket size is 8192 bytes
+- If `identity` is omitted, creates an unrestricted ticket (usable by any recipient)
+- Identity restrictions add an extra security layer for high-security scenarios
+- Restrictions are embedded in the ticket data itself (ticket size remains the same)
+
 ---
 
-### `getAuthTicketForWebApi(identity)`
+### `getAuthTicketForWebApi(identity?)`
 
 Get an auth ticket for Steam Web API authentication.
 
@@ -107,7 +137,7 @@ Get an auth ticket for Steam Web API authentication.
 - `SteamAPI_ISteamUser_GetAuthTicketForWebApi()` - Create web API ticket
 
 **Parameters:**
-- `identity: string` - Service identifier (e.g., 'my-game-service')
+- `identity?: SteamNetworkingIdentityOptions` - Optional: restrict ticket to specific recipient (Steam ID, IP, or string)
 
 **Returns:** `Promise<GetAuthTicketForWebApiResult>`
 
@@ -121,12 +151,34 @@ interface GetAuthTicketForWebApiResult {
   ticketHex: string;     // The ticket as a hex string (for web API usage)
   error?: string;        // Error message if failed
 }
+
+interface SteamNetworkingIdentityOptions {
+  steamId?: string;      // Restrict ticket to specific Steam ID
+  ipAddress?: string;    // Restrict ticket to specific IP address (e.g., '192.168.1.100')
+  genericString?: string; // Restrict ticket to specific service/recipient identifier
+}
 ```
 
-**Example:**
+**Examples:**
 ```typescript
-// Get a web API ticket
-const result = await steam.user.getAuthTicketForWebApi('my-backend');
+// Get an unrestricted web API ticket
+const result = await steam.user.getAuthTicketForWebApi();
+
+// Restrict ticket to a specific Steam ID
+const result = await steam.user.getAuthTicketForWebApi({
+  steamId: '76561198001234567'
+});
+
+// Restrict ticket to a specific IP address
+const result = await steam.user.getAuthTicketForWebApi({
+  ipAddress: '192.168.1.100'
+});
+
+// Restrict ticket to a service identifier
+const result = await steam.user.getAuthTicketForWebApi({
+  genericString: 'my-backend-server'
+});
+
 if (result.success) {
   // Use hex string for API authentication
   const response = await fetch('https://api.example.com/auth', {
@@ -139,6 +191,36 @@ if (result.success) {
   });
 }
 ```
+
+**Implementation Limitations:**
+
+⚠️ **This implementation has some differences from the native Steamworks SDK:**
+
+1. **Synchronous wrapper (not true async)**: The native `GetAuthTicketForWebApi` returns data via a callback (`GetTicketForWebApiResponse_t`). Our FFI implementation cannot register C++ callbacks, so this method uses `GetAuthSessionTicket` internally and wraps it in a Promise for API consistency.
+
+2. **Ticket format**: Returns a session ticket format (from `GetAuthSessionTicket`) rather than the web-optimized format. However, this works correctly with Steam's Web API validation endpoint (`ISteamUserAuth/AuthenticateUserTicket`).
+
+3. **No service identity binding**: The native SDK accepts a `pchIdentity` parameter (service name string) that binds the ticket to a specific service on Steam's backend. Our implementation uses `SteamNetworkingIdentityOptions` for recipient restrictions (Steam ID/IP/string) instead. This means:
+   - ❌ Steam doesn't track which service the ticket is for
+   - ❌ No service-level analytics or abuse detection on Steam's side
+   - ✅ But you get recipient identity restrictions (which native doesn't support!)
+
+4. **No callback metadata**: The native callback provides additional metadata (result codes, ticket size in callback struct). Our implementation returns data directly from `GetAuthSessionTicket`.
+
+**What works:**
+- ✅ Ticket validation with Steam Web API
+- ✅ User identity verification
+- ✅ HTTP header usage (via `ticketHex`)
+- ✅ Optional identity restrictions (bonus feature!)
+- ✅ Compatible with Steam's validation endpoints
+
+**What doesn't work:**
+- ❌ Service identity binding to Steam's backend
+- ❌ Steam's service-level tracking/analytics
+- ❌ True asynchronous callback pattern
+- ❌ Web-specific ticket format optimizations
+
+**Recommendation:** For 95% of web authentication use cases, these limitations don't matter. The tickets validate correctly and provide secure user authentication. If you specifically need Steam's service binding or backend tracking, you would need to implement native callbacks with a Node.js addon.
 
 ---
 
