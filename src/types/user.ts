@@ -18,6 +18,27 @@ export type HAuthTicket = number;
  */
 export const k_HAuthTicketInvalid = 0;
 
+// ========================================
+// Steam Networking Identity
+// ========================================
+
+// Note: ESteamNetworkingIdentityType is defined in networking.ts
+// Import it from there to avoid duplication
+import { ESteamNetworkingIdentityType } from './networking';
+export { ESteamNetworkingIdentityType };
+
+/**
+ * Options for creating a SteamNetworkingIdentity to restrict auth tickets
+ */
+export interface SteamNetworkingIdentityOptions {
+  /** Restrict ticket to a specific Steam ID */
+  steamId?: string;
+  /** Restrict ticket to a specific IP address (IPv4 format: "192.168.1.1") */
+  ipAddress?: string;
+  /** Restrict ticket to a generic string identifier */
+  genericString?: string;
+}
+
 /**
  * Results from BeginAuthSession
  * 

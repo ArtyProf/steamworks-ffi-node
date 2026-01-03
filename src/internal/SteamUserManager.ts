@@ -24,6 +24,8 @@ import {
   EUserHasLicenseForAppResult,
   EDurationControlOnlineState,
   EVoiceResult,
+  ESteamNetworkingIdentityType,
+  SteamNetworkingIdentityOptions,
   GetAuthSessionTicketResult,
   GetAuthTicketForWebApiResult,
   BeginAuthSessionResult,
@@ -144,6 +146,69 @@ export class SteamUserManager {
   }
 
   // ========================================
+  // Helper Functions
+  // ========================================
+
+  /**
+   * Create a SteamNetworkingIdentity buffer (136 bytes)
+   * 
+   * @param options - Identity options (steamId, ipAddress, or genericString)
+   * @returns Buffer containing the SteamNetworkingIdentity struct, or null for no restriction
+   */
+  private createNetworkingIdentity(options?: SteamNetworkingIdentityOptions): Buffer | null {
+    if (!options) {
+      return null;
+    }
+
+    // SteamNetworkingIdentity structure (136 bytes):
+    // offset 0: m_eType (ESteamNetworkingIdentityType, 4 bytes)
+    // offset 4: m_cbSize (int32, 4 bytes)
+    // offset 8: union of identity data (128 bytes)
+    //   - m_steamID64 (uint64 at offset 8)
+    //   - m_ip (IPv6 format, 16 bytes at offset 8)
+    //   - m_szGenericString (char[128] at offset 8)
+    //   - m_genericBytes (uint8[128] at offset 8)
+
+    const identityBuffer = Buffer.alloc(136);
+
+    if (options.steamId) {
+      // Type: SteamID
+      identityBuffer.writeInt32LE(ESteamNetworkingIdentityType.SteamID, 0);
+      identityBuffer.writeInt32LE(8, 4); // Size of uint64
+      identityBuffer.writeBigUInt64LE(BigInt(options.steamId), 8);
+    } else if (options.ipAddress) {
+      // Type: IPAddress (IPv4 mapped to IPv6 format)
+      identityBuffer.writeInt32LE(ESteamNetworkingIdentityType.IPAddress, 0);
+      identityBuffer.writeInt32LE(16, 4); // Size of IPv6 address
+
+      // Parse IPv4 address and map to IPv6 format (::ffff:192.168.1.1)
+      const parts = options.ipAddress.split('.').map(Number);
+      if (parts.length === 4 && parts.every(p => p >= 0 && p <= 255)) {
+        // IPv4-mapped IPv6: first 10 bytes are 0, next 2 bytes are 0xFF, last 4 bytes are IPv4
+        identityBuffer.fill(0, 8, 18); // Clear first 10 bytes
+        identityBuffer.writeUInt8(0xFF, 18); // Byte 10 = 0xFF
+        identityBuffer.writeUInt8(0xFF, 19); // Byte 11 = 0xFF
+        identityBuffer.writeUInt8(parts[0], 20); // Byte 12 = first octet
+        identityBuffer.writeUInt8(parts[1], 21); // Byte 13 = second octet
+        identityBuffer.writeUInt8(parts[2], 22); // Byte 14 = third octet
+        identityBuffer.writeUInt8(parts[3], 23); // Byte 15 = fourth octet
+      }
+    } else if (options.genericString) {
+      // Type: GenericString
+      identityBuffer.writeInt32LE(ESteamNetworkingIdentityType.GenericString, 0);
+      const strLen = Math.min(options.genericString.length, 127); // Max 127 chars + null terminator
+      identityBuffer.writeInt32LE(strLen + 1, 4);
+      identityBuffer.write(options.genericString, 8, strLen, 'utf8');
+      identityBuffer.writeUInt8(0, 8 + strLen); // Null terminator
+    } else {
+      // Invalid - return null for no restriction
+      return null;
+    }
+
+    return identityBuffer;
+  }
+
+  // ========================================
   // Login State
   // ========================================
 
@@ -188,12 +253,29 @@ export class SteamUserManager {
    * for authentication. The receiving party should call beginAuthSession()
    * to validate the ticket.
    * 
+   * @param identity - Optional: restrict ticket to specific recipient (Steam ID, IP, or string)
    * @returns Result containing the ticket data and handle
    * 
    * @example
    * ```typescript
-   * // Get a ticket for game server authentication
+   * // Get an unrestricted ticket (works with any recipient)
    * const result = steam.user.getAuthSessionTicket();
+   * 
+   * // Restrict ticket to a specific Steam ID
+   * const result = steam.user.getAuthSessionTicket({
+   *   steamId: '76561198001234567'
+   * });
+   * 
+   * // Restrict ticket to a specific IP address
+   * const result = steam.user.getAuthSessionTicket({
+   *   ipAddress: '192.168.1.100'
+   * });
+   * 
+   * // Restrict ticket to a service identifier
+   * const result = steam.user.getAuthSessionTicket({
+   *   genericString: 'my-dedicated-server'
+   * });
+   * 
    * if (result.success) {
    *   console.log(`Got ticket handle: ${result.authTicket}`);
    *   console.log(`Ticket size: ${result.ticketSize} bytes`);
@@ -210,13 +292,13 @@ export class SteamUserManager {
    * - Call cancelAuthTicket() when done with the ticket
    * - Ticket is valid until cancelled or user logs off
    * - Maximum ticket size is 8192 bytes
-   * - This implementation creates an unrestricted ticket (usable by any recipient)
-   * - The native SteamNetworkingIdentity parameter is not currently supported in FFI
+   * - If identity is omitted, creates an unrestricted ticket (usable by any recipient)
+   * - Identity restriction adds an extra security layer for high-security scenarios
    * 
    * @see cancelAuthTicket
    * @see beginAuthSession
    */
-  getAuthSessionTicket(): GetAuthSessionTicketResult {
+  getAuthSessionTicket(identity?: SteamNetworkingIdentityOptions): GetAuthSessionTicketResult {
     try {
       const userInterface = this.apiCore.getUserInterface();
       if (!userInterface) {
@@ -233,13 +315,15 @@ export class SteamUserManager {
       const ticketBuffer = Buffer.alloc(maxTicketSize);
       const ticketSizeBuffer = Buffer.alloc(4);
 
-      // Pass null for identity to allow any recipient
+      // Create identity buffer if provided, otherwise null for unrestricted
+      const identityBuffer = this.createNetworkingIdentity(identity);
+
       const authTicket = this.libraryLoader.SteamAPI_ISteamUser_GetAuthSessionTicket(
         userInterface,
         ticketBuffer,
         maxTicketSize,
         ticketSizeBuffer,
-        null // SteamNetworkingIdentity - null means no restriction
+        identityBuffer // SteamNetworkingIdentity - null means no restriction
       );
 
       if (authTicket === k_HAuthTicketInvalid) {
@@ -282,13 +366,29 @@ export class SteamUserManager {
    * Creates a ticket that can be used with Steam Web API authentication.
    * The ticket can be validated using ISteamUserAuth/AuthenticateUserTicket.
    * 
-   * @param identity - Service identifier (currently unused - see remarks)
+   * @param identity - Optional: restrict ticket to specific recipient (Steam ID, IP, or string)
    * @returns Promise resolving to result with ticket data and hex string
    * 
    * @example
    * ```typescript
-   * // Get a web API ticket
-   * const result = await steam.user.getAuthTicketForWebApi('my-backend');
+   * // Get an unrestricted web API ticket
+   * const result = await steam.user.getAuthTicketForWebApi();
+   * 
+   * // Restrict ticket to a specific Steam ID
+   * const result = await steam.user.getAuthTicketForWebApi({
+   *   steamId: '76561198001234567'
+   * });
+   * 
+   * // Restrict ticket to a specific IP address
+   * const result = await steam.user.getAuthTicketForWebApi({
+   *   ipAddress: '192.168.1.100'
+   * });
+   * 
+   * // Restrict ticket to a service identifier
+   * const result = await steam.user.getAuthTicketForWebApi({
+   *   genericString: 'my-web-service'
+   * });
+   * 
    * if (result.success) {
    *   // Use hex string for API authentication
    *   const response = await fetch('https://api.example.com/auth', {
@@ -311,9 +411,8 @@ export class SteamUserManager {
    * endpoint (ISteamUserAuth/AuthenticateUserTicket) and provides the same
    * user identity verification.
    * 
-   * **Limitations:**
-   * - The `identity` parameter is not used (service binding not available)
-   * - Ticket format is from GetAuthSessionTicket, not the web-optimized version
+   * **Identity Restrictions:** Supports optional identity restrictions (Steam ID,
+   * IP address, or generic string) to limit ticket usage to specific recipients.
    * 
    * For most web authentication use cases, this works identically to the native
    * GetAuthTicketForWebApi function.
@@ -321,7 +420,7 @@ export class SteamUserManager {
    * @see cancelAuthTicket
    * @see getAuthSessionTicket
    */
-  async getAuthTicketForWebApi(identity: string): Promise<GetAuthTicketForWebApiResult> {
+  async getAuthTicketForWebApi(identity?: SteamNetworkingIdentityOptions): Promise<GetAuthTicketForWebApiResult> {
     try {
       const userInterface = this.apiCore.getUserInterface();
       if (!userInterface) {
@@ -340,7 +439,7 @@ export class SteamUserManager {
       // which returns data synchronously and can be used for web API authentication.
       // The ticket format is compatible - web APIs expect the hex-encoded ticket data.
       
-      const sessionTicket = this.getAuthSessionTicket();
+      const sessionTicket = this.getAuthSessionTicket(identity);
       
       if (!sessionTicket.success) {
         return {

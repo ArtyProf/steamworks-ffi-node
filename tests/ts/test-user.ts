@@ -117,7 +117,8 @@ async function testUserAPI() {
 
   console.log('🌐 Getting auth ticket for Web API...');
   try {
-    const webTicket = await steam.user.getAuthTicketForWebApi('test-service');
+    // Get unrestricted web API ticket (no identity restriction)
+    const webTicket = await steam.user.getAuthTicketForWebApi();
     
     if (webTicket.success) {
       console.log(`✅ Web API Ticket obtained:`);
