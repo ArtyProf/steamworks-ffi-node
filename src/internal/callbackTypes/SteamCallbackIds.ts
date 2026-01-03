@@ -62,3 +62,31 @@ export const K_I_LOBBY_CREATED = 513;
 
 /** Callback for SteamNetConnectionStatusChangedCallback_t */
 export const K_I_STEAM_NET_CONNECTION_STATUS_CHANGED = 1221;
+
+// ========================================
+// Steam User (Authentication) Callback IDs
+// ========================================
+
+/** Base callback ID for ISteamUser callbacks (k_iSteamUserCallbacks) */
+export const K_I_STEAM_USER_CALLBACKS = 100;
+
+/** Callback for ValidateAuthTicketResponse_t */
+export const K_I_VALIDATE_AUTH_TICKET_RESPONSE = 143; // k_iSteamUserCallbacks + 43
+
+/** Callback for EncryptedAppTicketResponse_t */
+export const K_I_ENCRYPTED_APP_TICKET_RESPONSE = 154; // k_iSteamUserCallbacks + 54
+
+/** Callback for GetAuthSessionTicketResponse_t */
+export const K_I_GET_AUTH_SESSION_TICKET_RESPONSE = 163; // k_iSteamUserCallbacks + 63
+
+/** Callback for StoreAuthURLResponse_t */
+export const K_I_STORE_AUTH_URL_RESPONSE = 165; // k_iSteamUserCallbacks + 65
+
+/** Callback for MarketEligibilityResponse_t */
+export const K_I_MARKET_ELIGIBILITY_RESPONSE = 166; // k_iSteamUserCallbacks + 66
+
+/** Callback for DurationControl_t */
+export const K_I_DURATION_CONTROL = 167; // k_iSteamUserCallbacks + 67
+
+/** Callback for GetTicketForWebApiResponse_t */
+export const K_I_GET_TICKET_FOR_WEB_API_RESPONSE = 168; // k_iSteamUserCallbacks + 68

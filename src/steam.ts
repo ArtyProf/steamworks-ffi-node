@@ -19,6 +19,7 @@ import { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
 import { SteamUtilsManager } from './internal/SteamUtilsManager';
 import { SteamNetworkingUtilsManager } from './internal/SteamNetworkingUtilsManager';
 import { SteamNetworkingSocketsManager } from './internal/SteamNetworkingSocketsManager';
+import { SteamUserManager } from './internal/SteamUserManager';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -639,6 +640,55 @@ class SteamworksSDK {
    */
   public readonly networkingSockets!: SteamNetworkingSocketsManager;
 
+  /**
+   * Steam Auth Manager - Handle authentication, session tickets, and user verification
+   * 
+   * Provides access to the ISteamUser authentication interface for:
+   * - Generating session tickets for P2P/game server authentication
+   * - Generating web API tickets for backend service authentication
+   * - Validating incoming auth tickets from other players
+   * - Checking app/DLC license ownership for authenticated users
+   * - Requesting encrypted app tickets for secure backend verification
+   * - Querying user security settings (2FA, phone verification)
+   * - Duration control compliance (anti-indulgence regulations)
+   * 
+   * @example
+   * ```typescript
+   * // Get a session ticket for game server authentication
+   * const ticket = steam.user.getAuthSessionTicket();
+   * if (ticket.success) {
+   *   // Send ticket data to game server
+   *   sendToServer(ticket.ticketData, steam.getStatus().steamId);
+   * }
+   * 
+   * // Get a web API ticket (like steamworks.js getSessionTicketWithSteamId)
+   * const webTicket = await steam.user.getAuthTicketForWebApi('my-service');
+   * if (webTicket.success) {
+   *   // Use ticketHex for HTTP authentication
+   *   fetch('/api/auth', {
+   *     headers: { 'X-Steam-Ticket': webTicket.ticketHex }
+   *   });
+   * }
+   * 
+   * // Server-side: Validate incoming ticket
+   * const validation = steam.user.beginAuthSession(ticketData, clientSteamId);
+   * if (validation.success) {
+   *   // Check DLC ownership
+   *   const license = steam.user.userHasLicenseForApp(clientSteamId, DLC_APP_ID);
+   *   if (license === EUserHasLicenseForAppResult.HasLicense) {
+   *     grantDLCContent();
+   *   }
+   * }
+   * 
+   * // Clean up when player disconnects
+   * steam.user.endAuthSession(clientSteamId);
+   * steam.user.cancelAuthTicket(ticket.authTicket);
+   * ```
+   * 
+   * @see {@link SteamUserManager} for complete API documentation
+   */
+  public readonly user!: SteamUserManager;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
@@ -660,6 +710,7 @@ class SteamworksSDK {
     this.utils = new SteamUtilsManager(this.libraryLoader, this.apiCore);
     this.networkingUtils = new SteamNetworkingUtilsManager(this.libraryLoader, this.apiCore);
     this.networkingSockets = new SteamNetworkingSocketsManager(this.libraryLoader, this.apiCore);
+    this.user = new SteamUserManager(this.libraryLoader, this.apiCore);
   }
 
   static getInstance(): SteamworksSDK {

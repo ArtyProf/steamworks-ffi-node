@@ -185,3 +185,88 @@ export interface SteamNetConnectionStatusChangedCallbackType {
   /** Previous connection state */
   m_eOldState: number;
 }
+
+// ========================================
+// Authentication Callback Types
+// ========================================
+
+/**
+ * GetAuthSessionTicketResponse_t callback structure
+ * 
+ * Result of ISteamUser::GetAuthSessionTicket call
+ */
+export interface GetAuthSessionTicketResponseType {
+  m_hAuthTicket: number;
+  m_eResult: number;
+}
+
+/**
+ * ValidateAuthTicketResponse_t callback structure
+ * 
+ * Result of ISteamUser::BeginAuthSession validation
+ * This is a pushed callback when the auth session status changes.
+ */
+export interface ValidateAuthTicketResponseType {
+  m_SteamID: bigint;
+  m_eAuthSessionResponse: number;
+  m_OwnerSteamID: bigint;
+}
+
+/**
+ * GetTicketForWebApiResponse_t callback structure
+ * 
+ * Result of ISteamUser::GetAuthTicketForWebApi call
+ */
+export interface GetTicketForWebApiResponseType {
+  m_hAuthTicket: number;
+  m_eResult: number;
+  m_cubTicket: number;
+  m_rgubTicket: Buffer;
+}
+
+/**
+ * EncryptedAppTicketResponse_t callback structure
+ * 
+ * Result of ISteamUser::RequestEncryptedAppTicket call
+ */
+export interface EncryptedAppTicketResponseType {
+  m_eResult: number;
+}
+
+/**
+ * MarketEligibilityResponse_t callback structure
+ * 
+ * Result of ISteamUser::GetMarketEligibility call
+ */
+export interface MarketEligibilityResponseType {
+  m_bAllowed: boolean;
+  m_eNotAllowedReason: number;
+  m_rtAllowedAtTime: number;
+  m_cdaySteamGuardRequiredDays: number;
+  m_cdayNewDeviceCooldown: number;
+}
+
+/**
+ * StoreAuthURLResponse_t callback structure
+ * 
+ * Result of ISteamUser::RequestStoreAuthURL call
+ */
+export interface StoreAuthURLResponseType {
+  m_szURL: string;
+}
+
+/**
+ * DurationControl_t callback structure
+ * 
+ * Result of ISteamUser::GetDurationControl call
+ */
+export interface DurationControlType {
+  m_eResult: number;
+  m_appid: number;
+  m_bApplicable: boolean;
+  m_csecsLast5h: number;
+  m_progress: number;
+  m_notification: number;
+  m_csecsToday: number;
+  m_csecsRemaining: number;
+}
