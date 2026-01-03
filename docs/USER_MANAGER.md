@@ -192,35 +192,21 @@ if (result.success) {
 }
 ```
 
-**Implementation Limitations:**
+**Remarks:**
 
-⚠️ **This implementation has some differences from the native Steamworks SDK:**
+**Implementation:** This method uses the native `GetAuthTicketForWebApi()` function with proper callback handling via Koffi's registered callbacks. The callback system is automatically registered on first use and cleaned up during shutdown.
 
-1. **Synchronous wrapper (not true async)**: The native `GetAuthTicketForWebApi` returns data via a callback (`GetTicketForWebApiResponse_t`). Our FFI implementation cannot register C++ callbacks, so this method uses `GetAuthSessionTicket` internally and wraps it in a Promise for API consistency.
+**Validation:** Tickets should be validated using Steam's Web API:
+`https://api.steampowered.com/ISteamUserAuth/AuthenticateUserTicket/v1/`
 
-2. **Ticket format**: Returns a session ticket format (from `GetAuthSessionTicket`) rather than the web-optimized format. However, this works correctly with Steam's Web API validation endpoint (`ISteamUserAuth/AuthenticateUserTicket`).
+**Identity Parameter:** The `identity` parameter accepts options for restricting the ticket to a specific recipient:
+- `steamId` - Restrict to specific Steam user (format: `"steamid:76561198001234567"`)
+- `ipAddress` - Restrict to specific IP address (format: `"ip:192.168.1.100"`)
+- `genericString` - Generic service identifier (format: `"my-service"`)
 
-3. **No service identity binding**: The native SDK accepts a `pchIdentity` parameter (service name string) that binds the ticket to a specific service on Steam's backend. Our implementation uses `SteamNetworkingIdentityOptions` for recipient restrictions (Steam ID/IP/string) instead. This means:
-   - ❌ Steam doesn't track which service the ticket is for
-   - ❌ No service-level analytics or abuse detection on Steam's side
-   - ✅ But you get recipient identity restrictions (which native doesn't support!)
+**Ticket Format:** Returns tickets in the proper Web API format (234 bytes) that validate correctly with Steam's authentication endpoints.
 
-4. **No callback metadata**: The native callback provides additional metadata (result codes, ticket size in callback struct). Our implementation returns data directly from `GetAuthSessionTicket`.
-
-**What works:**
-- ✅ Ticket validation with Steam Web API
-- ✅ User identity verification
-- ✅ HTTP header usage (via `ticketHex`)
-- ✅ Optional identity restrictions (bonus feature!)
-- ✅ Compatible with Steam's validation endpoints
-
-**What doesn't work:**
-- ❌ Service identity binding to Steam's backend
-- ❌ Steam's service-level tracking/analytics
-- ❌ True asynchronous callback pattern
-- ❌ Web-specific ticket format optimizations
-
-**Recommendation:** For 95% of web authentication use cases, these limitations don't matter. The tickets validate correctly and provide secure user authentication. If you specifically need Steam's service binding or backend tracking, you would need to implement native callbacks with a Node.js addon.
+**Async Operation:** This is a true async operation that waits for Steam's callback. The method polls `RunCallbacks()` internally with a 5-second timeout.
 
 ---
 
