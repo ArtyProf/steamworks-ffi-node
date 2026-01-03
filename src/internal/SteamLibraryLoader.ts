@@ -597,6 +597,56 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamMatchmaking_SetLobbyOwner!: koffi.KoffiFunction;
   public SteamAPI_ISteamMatchmaking_SetLinkedLobby!: koffi.KoffiFunction;
 
+  // ========================================
+  // ISteamUser Authentication Functions
+  // ========================================
+  
+  // Login state
+  public SteamAPI_ISteamUser_BLoggedOn!: koffi.KoffiFunction;
+  
+  // Auth session tickets
+  public SteamAPI_ISteamUser_GetAuthSessionTicket!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetAuthTicketForWebApi!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_BeginAuthSession!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_EndAuthSession!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_CancelAuthTicket!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_UserHasLicenseForApp!: koffi.KoffiFunction;
+  
+  // Encrypted app tickets
+  public SteamAPI_ISteamUser_RequestEncryptedAppTicket!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetEncryptedAppTicket!: koffi.KoffiFunction;
+  
+  // Security and account info
+  public SteamAPI_ISteamUser_BIsPhoneVerified!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_BIsTwoFactorEnabled!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_BIsPhoneIdentifying!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_BIsPhoneRequiringVerification!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_BIsBehindNAT!: koffi.KoffiFunction;
+  
+  // User info
+  public SteamAPI_ISteamUser_GetPlayerSteamLevel!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetGameBadgeLevel!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetUserDataFolder!: koffi.KoffiFunction;
+  
+  // Market and duration control
+  public SteamAPI_ISteamUser_GetMarketEligibility!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetDurationControl!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_BSetDurationControlOnlineState!: koffi.KoffiFunction;
+  
+  // Store auth URL
+  public SteamAPI_ISteamUser_RequestStoreAuthURL!: koffi.KoffiFunction;
+  
+  // Advertising game
+  public SteamAPI_ISteamUser_AdvertiseGame!: koffi.KoffiFunction;
+  
+  // Voice recording
+  public SteamAPI_ISteamUser_StartVoiceRecording!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_StopVoiceRecording!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetAvailableVoice!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetVoice!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_DecompressVoice!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetVoiceOptimalSampleRate!: koffi.KoffiFunction;
+
   /**
    * Get platform-specific Steam library path
    * Users must download and install Steamworks SDK redistributables separately
@@ -1293,6 +1343,64 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamMatchmaking_GetLobbyOwner = this.steamLib.func('SteamAPI_ISteamMatchmaking_GetLobbyOwner', 'uint64', ['void*', 'uint64']);
     this.SteamAPI_ISteamMatchmaking_SetLobbyOwner = this.steamLib.func('SteamAPI_ISteamMatchmaking_SetLobbyOwner', 'bool', ['void*', 'uint64', 'uint64']);
     this.SteamAPI_ISteamMatchmaking_SetLinkedLobby = this.steamLib.func('SteamAPI_ISteamMatchmaking_SetLinkedLobby', 'bool', ['void*', 'uint64', 'uint64']);
+    
+    // ========================================
+    // ISteamUser Authentication Functions
+    // ========================================
+    
+    // Login state
+    this.SteamAPI_ISteamUser_BLoggedOn = this.steamLib.func('SteamAPI_ISteamUser_BLoggedOn', 'bool', ['void*']);
+    
+    // Auth session tickets
+    // GetAuthSessionTicket(pTicket, cbMaxTicket, pcbTicket, pSteamNetworkingIdentity) -> HAuthTicket
+    this.SteamAPI_ISteamUser_GetAuthSessionTicket = this.steamLib.func('SteamAPI_ISteamUser_GetAuthSessionTicket', 'uint32', ['void*', 'void*', 'int', 'uint32*', 'void*']);
+    // GetAuthTicketForWebApi(pchIdentity) -> HAuthTicket
+    this.SteamAPI_ISteamUser_GetAuthTicketForWebApi = this.steamLib.func('SteamAPI_ISteamUser_GetAuthTicketForWebApi', 'uint32', ['void*', 'str']);
+    // BeginAuthSession(pAuthTicket, cbAuthTicket, steamID) -> EBeginAuthSessionResult
+    this.SteamAPI_ISteamUser_BeginAuthSession = this.steamLib.func('SteamAPI_ISteamUser_BeginAuthSession', 'int', ['void*', 'void*', 'int', 'uint64']);
+    // EndAuthSession(steamID) -> void
+    this.SteamAPI_ISteamUser_EndAuthSession = this.steamLib.func('SteamAPI_ISteamUser_EndAuthSession', 'void', ['void*', 'uint64']);
+    // CancelAuthTicket(hAuthTicket) -> void
+    this.SteamAPI_ISteamUser_CancelAuthTicket = this.steamLib.func('SteamAPI_ISteamUser_CancelAuthTicket', 'void', ['void*', 'uint32']);
+    // UserHasLicenseForApp(steamID, appID) -> EUserHasLicenseForAppResult
+    this.SteamAPI_ISteamUser_UserHasLicenseForApp = this.steamLib.func('SteamAPI_ISteamUser_UserHasLicenseForApp', 'int', ['void*', 'uint64', 'uint32']);
+    
+    // Encrypted app tickets
+    // RequestEncryptedAppTicket(pDataToInclude, cbDataToInclude) -> SteamAPICall_t
+    this.SteamAPI_ISteamUser_RequestEncryptedAppTicket = this.steamLib.func('SteamAPI_ISteamUser_RequestEncryptedAppTicket', 'uint64', ['void*', 'void*', 'int']);
+    // GetEncryptedAppTicket(pTicket, cbMaxTicket, pcbTicket) -> bool
+    this.SteamAPI_ISteamUser_GetEncryptedAppTicket = this.steamLib.func('SteamAPI_ISteamUser_GetEncryptedAppTicket', 'bool', ['void*', 'void*', 'int', 'uint32*']);
+    
+    // Security and account info
+    this.SteamAPI_ISteamUser_BIsPhoneVerified = this.steamLib.func('SteamAPI_ISteamUser_BIsPhoneVerified', 'bool', ['void*']);
+    this.SteamAPI_ISteamUser_BIsTwoFactorEnabled = this.steamLib.func('SteamAPI_ISteamUser_BIsTwoFactorEnabled', 'bool', ['void*']);
+    this.SteamAPI_ISteamUser_BIsPhoneIdentifying = this.steamLib.func('SteamAPI_ISteamUser_BIsPhoneIdentifying', 'bool', ['void*']);
+    this.SteamAPI_ISteamUser_BIsPhoneRequiringVerification = this.steamLib.func('SteamAPI_ISteamUser_BIsPhoneRequiringVerification', 'bool', ['void*']);
+    this.SteamAPI_ISteamUser_BIsBehindNAT = this.steamLib.func('SteamAPI_ISteamUser_BIsBehindNAT', 'bool', ['void*']);
+    
+    // User info
+    this.SteamAPI_ISteamUser_GetPlayerSteamLevel = this.steamLib.func('SteamAPI_ISteamUser_GetPlayerSteamLevel', 'int', ['void*']);
+    this.SteamAPI_ISteamUser_GetGameBadgeLevel = this.steamLib.func('SteamAPI_ISteamUser_GetGameBadgeLevel', 'int', ['void*', 'int', 'bool']);
+    this.SteamAPI_ISteamUser_GetUserDataFolder = this.steamLib.func('SteamAPI_ISteamUser_GetUserDataFolder', 'bool', ['void*', 'char*', 'int']);
+    
+    // Market and duration control
+    this.SteamAPI_ISteamUser_GetMarketEligibility = this.steamLib.func('SteamAPI_ISteamUser_GetMarketEligibility', 'uint64', ['void*']);
+    this.SteamAPI_ISteamUser_GetDurationControl = this.steamLib.func('SteamAPI_ISteamUser_GetDurationControl', 'uint64', ['void*']);
+    this.SteamAPI_ISteamUser_BSetDurationControlOnlineState = this.steamLib.func('SteamAPI_ISteamUser_BSetDurationControlOnlineState', 'bool', ['void*', 'int']);
+    
+    // Advertising game
+    this.SteamAPI_ISteamUser_AdvertiseGame = this.steamLib.func('SteamAPI_ISteamUser_AdvertiseGame', 'void', ['void*', 'uint64', 'uint32', 'uint16']);
+    
+    // Store auth URL
+    this.SteamAPI_ISteamUser_RequestStoreAuthURL = this.steamLib.func('SteamAPI_ISteamUser_RequestStoreAuthURL', 'uint64', ['void*', 'str']);
+    
+    // Voice recording
+    this.SteamAPI_ISteamUser_StartVoiceRecording = this.steamLib.func('SteamAPI_ISteamUser_StartVoiceRecording', 'void', ['void*']);
+    this.SteamAPI_ISteamUser_StopVoiceRecording = this.steamLib.func('SteamAPI_ISteamUser_StopVoiceRecording', 'void', ['void*']);
+    this.SteamAPI_ISteamUser_GetAvailableVoice = this.steamLib.func('SteamAPI_ISteamUser_GetAvailableVoice', 'int', ['void*', 'uint32*', 'uint32*', 'uint32']);
+    this.SteamAPI_ISteamUser_GetVoice = this.steamLib.func('SteamAPI_ISteamUser_GetVoice', 'int', ['void*', 'bool', 'void*', 'uint32', 'uint32*', 'bool', 'void*', 'uint32', 'uint32*', 'uint32']);
+    this.SteamAPI_ISteamUser_DecompressVoice = this.steamLib.func('SteamAPI_ISteamUser_DecompressVoice', 'int', ['void*', 'void*', 'uint32', 'void*', 'uint32', 'uint32*', 'uint32']);
+    this.SteamAPI_ISteamUser_GetVoiceOptimalSampleRate = this.steamLib.func('SteamAPI_ISteamUser_GetVoiceOptimalSampleRate', 'uint32', ['void*']);
   }
 
   /**

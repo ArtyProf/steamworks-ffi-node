@@ -28,6 +28,7 @@ steam.matchmaking.*       // Multiplayer lobby operations
 steam.utils.*             // System utilities and device detection
 steam.networkingUtils.*   // Ping location and relay network
 steam.networkingSockets.* // P2P connections and messaging
+steam.user.*              // User authentication, security, and voice
 ```
 
 This design:
@@ -212,6 +213,21 @@ This design:
   - Connection status (state, ping, quality metrics)
   - ⚠️ **Requires two Steam accounts for full testing** - P2P API
 
+### User Authentication & Security System
+
+- **[User Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/USER_MANAGER.md)**
+  - **28 Functions** - Complete ISteamUser support
+  - Session tickets (P2P and game server authentication)
+  - Web API tickets (backend service authentication)
+  - Auth session validation (server-side ticket verification)
+  - License verification (check app/DLC ownership for authenticated users)
+  - Encrypted app tickets (secure backend verification)
+  - Security info (2FA, phone verification status)
+  - Duration control (anti-indulgence for China compliance)
+  - User info (Steam level, game badges, user data folder)
+  - Voice recording and playback (microphone capture, compress/decompress)
+  - Market eligibility and store authentication
+
 ## 🚀 Quick Links
 
 ### Getting Started
@@ -241,6 +257,7 @@ This design:
 - Run Networking Utils Join: `npm run test:networking:join:js` - Estimates ping to remote location
 - Run Networking Sockets Host: `npm run test:sockets:host:js` - Creates P2P listen socket
 - Run Networking Sockets Join: `npm run test:sockets:join:js` - Connects to host via Steam ID
+- Run User Tests: `npm run test:user:js` - Tests all 28 user authentication and info functions
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
 
@@ -261,6 +278,7 @@ This design:
 - Run Networking Utils Join: `npm run test:networking:join:ts` - Estimates ping to remote location ✨
 - Run Networking Sockets Host: `npm run test:sockets:host:ts` - Creates P2P listen socket ✨
 - Run Networking Sockets Join: `npm run test:sockets:join:ts` - Connects to host via Steam ID ✨
+- Run User Tests: `npm run test:user:ts` - With type safety ✨
 
 ⚠️ **Note:** Matchmaking and Networking Sockets tests require two separate Steam accounts to fully test multiplayer functionality. Run the host test on one machine, then the join test on another machine with a different Steam account.
 

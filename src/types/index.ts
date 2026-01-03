@@ -11,6 +11,7 @@
  * - overlay.ts - Overlay-related types
  * - cloud.ts - Steam Cloud/Remote Storage types
  * - workshop.ts - Steam Workshop/UGC types
+ * - user.ts - User/Authentication types (ISteamUser)
  */
 
 // Core types
@@ -60,3 +61,6 @@ export * from './utils';
 
 // Networking types
 export * from './networking';
+
+// User types (ISteamUser)
+export * from './user';

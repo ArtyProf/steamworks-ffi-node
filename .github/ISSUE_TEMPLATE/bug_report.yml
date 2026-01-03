@@ -84,6 +84,7 @@ body:
         - Apps/DLC API
         - Matchmaking API
         - Utils API
+        - User API
         - Networking Utils API
         - Networking Sockets API
         - Other / Multiple

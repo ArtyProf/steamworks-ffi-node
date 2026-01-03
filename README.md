@@ -56,6 +56,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: Networking Sockets API** - 34 functions for P2P connections, reliable messaging, and multi-player networking! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_SOCKETS_MANAGER.md) ⚠️ Requires two Steam accounts for testing
 
+> 🎉 **NEW: User API** - 28 functions for auth tickets, user info, voice chat, and security! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/USER_MANAGER.md)
+
 ## Features
 
 - **Core API**: Essential Steam application functions
@@ -158,6 +160,16 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Poll groups (efficiently handle multiple connections)
   - ✅ Connection status (state, ping, quality metrics)
   - ✅ High-precision local timestamps
+- **User API**: Complete user authentication and info (28 functions)
+  - ✅ Session tickets (P2P/game server authentication)
+  - ✅ Web API tickets (backend authentication)
+  - ✅ Auth session validation (server-side ticket verification)
+  - ✅ Encrypted app tickets (secure backend verification)
+  - ✅ License verification (check DLC/app ownership for authenticated users)
+  - ✅ User security info (2FA, phone verification status)
+  - ✅ Duration control (playtime limits for China compliance)
+  - ✅ Voice recording (compress, decompress, transmit voice chat)
+  - ✅ User info (Steam level, badge levels, data folder)
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Easy Setup**: Simple installation with clear SDK setup guide
@@ -518,6 +530,7 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Utils Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/UTILS_MANAGER.md)** - System info, Steam Deck detection, image loading (29 functions)
 - **[Networking Utils Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_UTILS_MANAGER.md)** - Ping location, relay network, data centers (15 functions)
 - **[Networking Sockets Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_SOCKETS_MANAGER.md)** - P2P connections, reliable messaging (34 functions) ⚠️ _Requires two Steam accounts_
+- **[User Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/USER_MANAGER.md)** - User authentication, security, voice chat (28 functions)
 
 ## Steamworks Integration
 

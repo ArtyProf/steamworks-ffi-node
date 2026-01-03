@@ -50,6 +50,7 @@ If yes, specify which Steam API modules are affected:
 - [ ] Overlay
 - [ ] Rich Presence
 - [ ] Stats
+- [ ] User
 - [ ] Workshop
 - [ ] Other: ___________
 
