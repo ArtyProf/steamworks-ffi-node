@@ -188,7 +188,6 @@ export class SteamUserManager {
    * for authentication. The receiving party should call beginAuthSession()
    * to validate the ticket.
    * 
-   * @param steamNetworkingIdentity - Optional: restrict ticket to specific Steam ID or IP
    * @returns Result containing the ticket data and handle
    * 
    * @example
@@ -211,11 +210,13 @@ export class SteamUserManager {
    * - Call cancelAuthTicket() when done with the ticket
    * - Ticket is valid until cancelled or user logs off
    * - Maximum ticket size is 8192 bytes
+   * - This implementation creates an unrestricted ticket (usable by any recipient)
+   * - The native SteamNetworkingIdentity parameter is not currently supported in FFI
    * 
    * @see cancelAuthTicket
    * @see beginAuthSession
    */
-  getAuthSessionTicket(steamNetworkingIdentity?: string): GetAuthSessionTicketResult {
+  getAuthSessionTicket(): GetAuthSessionTicketResult {
     try {
       const userInterface = this.apiCore.getUserInterface();
       if (!userInterface) {
@@ -278,10 +279,10 @@ export class SteamUserManager {
   /**
    * Get an auth ticket for Steam Web API authentication
    * 
-   * Creates a ticket specifically for use with Steam Web API authentication.
-   * Unlike getAuthSessionTicket(), this is designed for HTTP/REST API calls.
+   * Creates a ticket that can be used with Steam Web API authentication.
+   * The ticket can be validated using ISteamUserAuth/AuthenticateUserTicket.
    * 
-   * @param identity - Service identifier (e.g., 'my-game-service')
+   * @param identity - Service identifier (currently unused - see remarks)
    * @returns Promise resolving to result with ticket data and hex string
    * 
    * @example
@@ -302,11 +303,23 @@ export class SteamUserManager {
    * ```
    * 
    * @remarks
-   * - Returns ticket via callback, this method polls for completion
-   * - Call cancelAuthTicket() when done with the ticket
-   * - ticketHex is the recommended format for web APIs
+   * **Implementation Note:** This method uses `getAuthSessionTicket()` internally
+   * because the native `GetAuthTicketForWebApi` requires callback registration
+   * which is not supported in FFI without native addons.
+   * 
+   * **Compatibility:** The returned ticket works with Steam's web API validation
+   * endpoint (ISteamUserAuth/AuthenticateUserTicket) and provides the same
+   * user identity verification.
+   * 
+   * **Limitations:**
+   * - The `identity` parameter is not used (service binding not available)
+   * - Ticket format is from GetAuthSessionTicket, not the web-optimized version
+   * 
+   * For most web authentication use cases, this works identically to the native
+   * GetAuthTicketForWebApi function.
    * 
    * @see cancelAuthTicket
+   * @see getAuthSessionTicket
    */
   async getAuthTicketForWebApi(identity: string): Promise<GetAuthTicketForWebApiResult> {
     try {
@@ -322,59 +335,36 @@ export class SteamUserManager {
         };
       }
 
-      const authTicket = this.libraryLoader.SteamAPI_ISteamUser_GetAuthTicketForWebApi(
-        userInterface,
-        identity || ''
-      );
-
-      if (authTicket === k_HAuthTicketInvalid) {
+      // Note: GetAuthTicketForWebApi returns data via callback (GetTicketForWebApiResponse_t)
+      // which requires native callback registration. As a workaround, we use GetAuthSessionTicket
+      // which returns data synchronously and can be used for web API authentication.
+      // The ticket format is compatible - web APIs expect the hex-encoded ticket data.
+      
+      const sessionTicket = this.getAuthSessionTicket();
+      
+      if (!sessionTicket.success) {
         return {
           success: false,
           authTicket: k_HAuthTicketInvalid,
           ticketData: Buffer.alloc(0),
           ticketSize: 0,
           ticketHex: '',
-          error: 'Failed to request web API ticket',
+          error: sessionTicket.error || 'Failed to get auth ticket',
         };
       }
 
-      // Poll for the callback result
-      const result = await this.callbackPoller.poll<GetTicketForWebApiResponseType>(
-        authTicket,
-        GetTicketForWebApiResponse_t,
-        K_I_GET_TICKET_FOR_WEB_API_RESPONSE,
-        100, // maxRetries
-        100  // delayMs
-      );
-
-      if (!result || result.m_eResult !== 1) { // k_EResultOK = 1
-        return {
-          success: false,
-          authTicket: k_HAuthTicketInvalid,
-          ticketData: Buffer.alloc(0),
-          ticketSize: 0,
-          ticketHex: '',
-          error: `Failed to get web API ticket: result ${result?.m_eResult}`,
-        };
-      }
-
-      // Extract the ticket data
-      const ticketSize = result.m_cubTicket;
-      const ticketData = Buffer.from(result.m_rgubTicket.slice(0, ticketSize));
-      const ticketHex = ticketData.toString('hex').toUpperCase();
-
-      // Track the ticket
-      this.activeTickets.set(result.m_hAuthTicket, true);
+      // Convert ticket to hex format for web API usage
+      const ticketHex = sessionTicket.ticketData.toString('hex').toUpperCase();
 
       return {
         success: true,
-        authTicket: result.m_hAuthTicket,
-        ticketData,
-        ticketSize,
+        authTicket: sessionTicket.authTicket,
+        ticketData: sessionTicket.ticketData,
+        ticketSize: sessionTicket.ticketSize,
         ticketHex,
       };
     } catch (error) {
-      console.error('[SteamAuthManager] Error getting web API ticket:', error);
+      console.error('[SteamUserManager] Error getting web API ticket:', error);
       return {
         success: false,
         authTicket: k_HAuthTicketInvalid,
@@ -710,13 +700,13 @@ export class SteamUserManager {
 
       const maxTicketSize = 1024;
       const ticketBuffer = Buffer.alloc(maxTicketSize);
-      const ticketSizeOut = [0];
+      const ticketSizeBuffer = Buffer.alloc(4);
 
       const success = this.libraryLoader.SteamAPI_ISteamUser_GetEncryptedAppTicket(
         userInterface,
         ticketBuffer,
         maxTicketSize,
-        ticketSizeOut
+        ticketSizeBuffer
       );
 
       if (!success) {
@@ -729,7 +719,7 @@ export class SteamUserManager {
         };
       }
 
-      const actualSize = ticketSizeOut[0];
+      const actualSize = ticketSizeBuffer.readUInt32LE(0);
       const ticketData = Buffer.from(ticketBuffer.subarray(0, actualSize));
       const ticketHex = ticketData.toString('hex').toUpperCase();
 
