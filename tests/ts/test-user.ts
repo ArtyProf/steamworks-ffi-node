@@ -126,6 +126,45 @@ async function testUserAPI() {
       console.log(`   - Ticket Size: ${webTicket.ticketSize} bytes`);
       console.log(`   - Ticket Hex (first 64 chars): ${webTicket.ticketHex?.substring(0, 64)}...`);
       
+      // Optional: Validate with Steam Web API
+      const apiKey = process.env.STEAM_WEB_API_KEY || process.argv[2];
+      
+      if (apiKey && apiKey !== 'YOUR_API_KEY_HERE') {
+        console.log('\n🔍 Validating ticket with Steam Web API...');
+        console.log(`   🔑 Using API key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}\n`);
+        
+        const params = new URLSearchParams({
+          key: apiKey,
+          appid: TEST_APP_ID.toString(),
+          ticket: webTicket.ticketHex
+        });
+
+        const response = await fetch(
+          'https://api.steampowered.com/ISteamUserAuth/AuthenticateUserTicket/v1/?' +
+          params.toString()
+        );
+
+        if (response.ok) {
+          const json: any = await response.json();
+          
+          if (json.response?.params?.result === 'OK') {
+            console.log('   ✅ Ticket validation SUCCEEDED!');
+            console.log(`   👤 Steam ID: ${json.response.params.steamid}`);
+            console.log(`   🔒 VAC Banned: ${json.response.params.vacbanned}`);
+          } else {
+            console.log('   ❌ Ticket validation FAILED!');
+            console.log(`   Error: ${JSON.stringify(json.response?.error || json)}`);
+          }
+        } else {
+          console.log(`   ⚠️  HTTP Error: ${response.status} ${response.statusText}`);
+        }
+      } else {
+        console.log('\n💡 To validate tickets with Steam Web API:');
+        console.log('   - Set STEAM_WEB_API_KEY environment variable');
+        console.log('   - Or pass API key as argument: npx ts-node test-user.ts YOUR_KEY');
+        console.log('   - Get your key from: https://steamcommunity.com/dev/apikey');
+      }
+      
       // Cancel the ticket after getting it
       console.log('\n🗑️ Canceling web API ticket...');
       steam.user.cancelAuthTicket(webTicket.authTicket);
