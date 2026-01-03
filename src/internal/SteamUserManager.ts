@@ -1,15 +1,13 @@
 import * as koffi from 'koffi';
-import { SteamLibraryLoader } from './SteamLibraryLoader';
+import { SteamLibraryLoader, CCallbackBase, FnCallbackRunPtr } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamCallbackPoller } from './SteamCallbackPoller';
 import {
-  K_I_GET_AUTH_SESSION_TICKET_RESPONSE,
   K_I_GET_TICKET_FOR_WEB_API_RESPONSE,
   K_I_ENCRYPTED_APP_TICKET_RESPONSE,
   K_I_MARKET_ELIGIBILITY_RESPONSE,
   K_I_DURATION_CONTROL,
   K_I_STORE_AUTH_URL_RESPONSE,
-  GetAuthSessionTicketResponseType,
   GetTicketForWebApiResponseType,
   EncryptedAppTicketResponseType,
   MarketEligibilityResponseType,
@@ -138,6 +136,18 @@ export class SteamUserManager {
   
   // Track active auth tickets for cleanup
   private activeTickets: Map<HAuthTicket, boolean> = new Map();
+  
+  // Track pending Web API ticket callbacks
+  private pendingWebApiTickets: Map<HAuthTicket, {
+    resolve: (result: GetAuthTicketForWebApiResult) => void;
+    ticketData: Buffer | null;
+    ticketSize: number;
+  }> = new Map();
+  
+  // Registered callback for GetTicketForWebApiResponse
+  private webApiTicketCallback: any = null;
+  private webApiCallbackObject: any = null;
+  private webApiCallbackRegistered: boolean = false;
 
   constructor(libraryLoader: SteamLibraryLoader, apiCore: SteamAPICore) {
     this.libraryLoader = libraryLoader;
@@ -148,6 +158,112 @@ export class SteamUserManager {
   // ========================================
   // Helper Functions
   // ========================================
+
+  /**
+   * Register a callback handler for GetTicketForWebApiResponse_t
+   * This allows us to receive ticket data from GetAuthTicketForWebApi
+   */
+  private registerWebApiTicketCallback(): void {
+    if (this.webApiCallbackRegistered) return;
+
+    try {
+      // Create the callback Run() function that Steam will call
+      const runCallback = (selfPtr: any, pvParam: any) => {
+        try {
+          // Decode the callback parameter as GetTicketForWebApiResponse_t
+          const response = koffi.decode(pvParam, GetTicketForWebApiResponse_t);
+          this.handleWebApiTicketResponse(response);
+        } catch (error) {
+          console.error('[SteamUserManager] Error in Web API ticket callback:', error);
+        }
+      };
+
+      // Register the callback function with Koffi
+      this.webApiTicketCallback = koffi.register(runCallback, FnCallbackRunPtr);
+
+      // Create a virtual function table (vtable) with our Run() function
+      const vtable = koffi.alloc('void*', 1);
+      koffi.encode(vtable, 'void*', this.webApiTicketCallback);
+
+      // Create the CCallbackBase structure
+      this.webApiCallbackObject = koffi.alloc(CCallbackBase, 1);
+      const callbackData: any = {
+        vfptr: vtable,
+        m_nCallbackFlags: 0,
+        m_iCallback: K_I_GET_TICKET_FOR_WEB_API_RESPONSE
+      };
+      koffi.encode(this.webApiCallbackObject, CCallbackBase, callbackData);
+
+      // Register with Steam
+      this.libraryLoader.SteamAPI_RegisterCallback(
+        this.webApiCallbackObject,
+        K_I_GET_TICKET_FOR_WEB_API_RESPONSE
+      );
+
+      this.webApiCallbackRegistered = true;
+    } catch (error) {
+      console.error('[SteamUserManager] Failed to register Web API ticket callback:', error);
+    }
+  }
+
+  /**
+   * Handle GetTicketForWebApiResponse_t callback from Steam
+   */
+  private handleWebApiTicketResponse(response: GetTicketForWebApiResponseType): void {
+    const pending = this.pendingWebApiTickets.get(response.m_hAuthTicket);
+    if (!pending) {
+      console.warn('[SteamUserManager] Received callback for unknown auth ticket:', response.m_hAuthTicket);
+      return;
+    }
+
+    // Remove from pending map
+    this.pendingWebApiTickets.delete(response.m_hAuthTicket);
+
+    // Check result (k_EResultOK = 1)
+    if (response.m_eResult !== 1) {
+      pending.resolve({
+        success: false,
+        authTicket: k_HAuthTicketInvalid,
+        ticketData: Buffer.alloc(0),
+        ticketSize: 0,
+        ticketHex: '',
+        error: `Failed to get Web API ticket: EResult ${response.m_eResult}`,
+      });
+      return;
+    }
+
+    // Extract ticket data from the response
+    const ticketData = Buffer.from(response.m_rgubTicket.subarray(0, response.m_cubTicket));
+    const ticketHex = ticketData.toString('hex').toUpperCase();
+
+    // Track the ticket for cleanup
+    this.activeTickets.set(response.m_hAuthTicket, true);
+
+    // Resolve the promise
+    pending.resolve({
+      success: true,
+      authTicket: response.m_hAuthTicket,
+      ticketData,
+      ticketSize: response.m_cubTicket,
+      ticketHex,
+    });
+  }
+
+  /**
+   * Cleanup when shutting down
+   */
+  public cleanup(): void {
+    // Unregister the callback
+    if (this.webApiCallbackObject) {
+      this.libraryLoader.SteamAPI_UnregisterCallback(this.webApiCallbackObject);
+      koffi.unregister(this.webApiTicketCallback);
+    }
+
+    // Cancel all active tickets
+    for (const ticket of this.activeTickets.keys()) {
+      this.cancelAuthTicket(ticket);
+    }
+  }
 
   /**
    * Create a SteamNetworkingIdentity buffer (136 bytes)
@@ -403,25 +519,26 @@ export class SteamUserManager {
    * ```
    * 
    * @remarks
-   * **Implementation Note:** This method uses `getAuthSessionTicket()` internally
-   * because the native `GetAuthTicketForWebApi` requires callback registration
-   * which is not supported in FFI without native addons.
+   * **Implementation:** This method uses the native `GetAuthTicketForWebApi()` function
+   * with proper callback handling via Koffi's registered callbacks.
    * 
-   * **Compatibility:** The returned ticket works with Steam's web API validation
-   * endpoint (ISteamUserAuth/AuthenticateUserTicket) and provides the same
-   * user identity verification.
+   * **Validation:** Tickets should be validated using Steam's Web API:
+   * `https://api.steampowered.com/ISteamUserAuth/AuthenticateUserTicket/v1/`
    * 
-   * **Identity Restrictions:** Supports optional identity restrictions (Steam ID,
-   * IP address, or generic string) to limit ticket usage to specific recipients.
-   * 
-   * For most web authentication use cases, this works identically to the native
-   * GetAuthTicketForWebApi function.
+   * **Identity:** The identity parameter accepts a string identifier for the service.
+   * Common formats:
+   * - `"steamid:76561198001234567"` - Restrict to specific Steam user
+   * - `"ip:192.168.1.100"` - Restrict to specific IP address
+   * - `"my-service"` - Generic service identifier
    * 
    * @see cancelAuthTicket
    * @see getAuthSessionTicket
    */
   async getAuthTicketForWebApi(identity?: SteamNetworkingIdentityOptions): Promise<GetAuthTicketForWebApiResult> {
     try {
+      // Register callback handler on first use
+      this.registerWebApiTicketCallback();
+
       const userInterface = this.apiCore.getUserInterface();
       if (!userInterface) {
         return {
@@ -434,36 +551,85 @@ export class SteamUserManager {
         };
       }
 
-      // Note: GetAuthTicketForWebApi returns data via callback (GetTicketForWebApiResponse_t)
-      // which requires native callback registration. As a workaround, we use GetAuthSessionTicket
-      // which returns data synchronously and can be used for web API authentication.
-      // The ticket format is compatible - web APIs expect the hex-encoded ticket data.
-      
-      const sessionTicket = this.getAuthSessionTicket(identity);
-      
-      if (!sessionTicket.success) {
+      // Convert identity options to string format for the native API
+      let identityString: string | null = null;
+      if (identity?.steamId) {
+        identityString = `steamid:${identity.steamId}`;
+      } else if (identity?.ipAddress) {
+        identityString = `ip:${identity.ipAddress}`;
+      } else if (identity?.genericString) {
+        identityString = identity.genericString;
+      }
+
+      // Call the native GetAuthTicketForWebApi function
+      // This triggers a callback when the ticket is ready
+      const authTicket = this.libraryLoader.SteamAPI_ISteamUser_GetAuthTicketForWebApi(
+        userInterface,
+        identityString
+      );
+
+      if (authTicket === k_HAuthTicketInvalid) {
         return {
           success: false,
           authTicket: k_HAuthTicketInvalid,
           ticketData: Buffer.alloc(0),
           ticketSize: 0,
           ticketHex: '',
-          error: sessionTicket.error || 'Failed to get auth ticket',
+          error: 'Failed to request Web API auth ticket',
         };
       }
 
-      // Convert ticket to hex format for web API usage
-      const ticketHex = sessionTicket.ticketData.toString('hex').toUpperCase();
+      // Wait for the callback with a timeout
+      return await new Promise<GetAuthTicketForWebApiResult>((resolve) => {
+        // Store the pending request
+        this.pendingWebApiTickets.set(authTicket, {
+          resolve,
+          ticketData: null,
+          ticketSize: 0,
+        });
 
-      return {
-        success: true,
-        authTicket: sessionTicket.authTicket,
-        ticketData: sessionTicket.ticketData,
-        ticketSize: sessionTicket.ticketSize,
-        ticketHex,
-      };
+        // Set a timeout of 5 seconds
+        const timeout = setTimeout(() => {
+          // Clean up pending request
+          this.pendingWebApiTickets.delete(authTicket);
+          this.cancelAuthTicket(authTicket);
+          
+          resolve({
+            success: false,
+            authTicket: k_HAuthTicketInvalid,
+            ticketData: Buffer.alloc(0),
+            ticketSize: 0,
+            ticketHex: '',
+            error: 'Timeout waiting for Web API ticket callback',
+          });
+        }, 5000);
+
+        // Modify the resolve function to clear the timeout
+        const originalResolve = this.pendingWebApiTickets.get(authTicket)!.resolve;
+        this.pendingWebApiTickets.get(authTicket)!.resolve = (result) => {
+          clearTimeout(timeout);
+          originalResolve(result);
+        };
+
+        // Run callbacks to trigger the callback
+        // The callback will be invoked by Steam during RunCallbacks
+        const pollInterval = setInterval(() => {
+          if (!this.pendingWebApiTickets.has(authTicket)) {
+            clearInterval(pollInterval);
+            return;
+          }
+          this.apiCore.runCallbacks();
+        }, 50);
+
+        // Clear interval when done
+        const finalResolve = this.pendingWebApiTickets.get(authTicket)!.resolve;
+        this.pendingWebApiTickets.get(authTicket)!.resolve = (result) => {
+          clearInterval(pollInterval);
+          finalResolve(result);
+        };
+      });
     } catch (error) {
-      console.error('[SteamUserManager] Error getting web API ticket:', error);
+      console.error('[SteamUserManager] Error getting Web API ticket:', error);
       return {
         success: false,
         authTicket: k_HAuthTicketInvalid,

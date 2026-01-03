@@ -735,6 +735,9 @@ class SteamworksSDK {
    * Shutdown Steam API
    */
   shutdown(): void {
+    // Cleanup managers before shutdown
+    this.user.cleanup();
+    
     this.apiCore.shutdown();
   }
 

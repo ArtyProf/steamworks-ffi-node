@@ -13,6 +13,20 @@ export const FnSteamNetConnectionStatusChanged = koffi.proto(
 // Pointer type for the callback - needed for FFI declarations
 export const FnSteamNetConnectionStatusChangedPtr = koffi.pointer(FnSteamNetConnectionStatusChanged);
 
+// CCallbackBase structure for Steam callback registration
+// This mimics the C++ CCallbackBase class layout for FFI
+// See steam_api_internal.h for the C++ implementation
+export const CCallbackBase = koffi.struct('CCallbackBase', {
+  vfptr: 'void*',           // Virtual function table pointer
+  m_nCallbackFlags: 'uint8',
+  m_iCallback: 'int'
+});
+
+// Callback prototype for the virtual Run() function
+// This is called by Steam when a callback is dispatched
+export const FnCallbackRun = koffi.proto('void FnCallbackRun(void *self, void *pvParam)');
+export const FnCallbackRunPtr = koffi.pointer(FnCallbackRun);
+
 /**
  * Handles loading the Steamworks native library and FFI function declarations
  */
@@ -24,6 +38,10 @@ export class SteamLibraryLoader {
   public SteamAPI_Shutdown!: koffi.KoffiFunction;
   public SteamAPI_RunCallbacks!: koffi.KoffiFunction;
   public SteamAPI_IsSteamRunning!: koffi.KoffiFunction;
+  
+  // Callback registration functions
+  public SteamAPI_RegisterCallback!: koffi.KoffiFunction;
+  public SteamAPI_UnregisterCallback!: koffi.KoffiFunction;
   
   public SteamAPI_SteamUserStats_v013!: koffi.KoffiFunction;
   public SteamAPI_SteamUser_v023!: koffi.KoffiFunction;
@@ -760,6 +778,12 @@ export class SteamLibraryLoader {
     this.SteamAPI_Shutdown = this.steamLib.func('SteamAPI_Shutdown', 'void', []);
     this.SteamAPI_RunCallbacks = this.steamLib.func('SteamAPI_RunCallbacks', 'void', []);
     this.SteamAPI_IsSteamRunning = this.steamLib.func('SteamAPI_IsSteamRunning', 'bool', []);
+    
+    // Callback registration functions for manual callback handling
+    // RegisterCallback(pCallback, iCallback) -> void
+    this.SteamAPI_RegisterCallback = this.steamLib.func('SteamAPI_RegisterCallback', 'void', ['void*', 'int']);
+    // UnregisterCallback(pCallback) -> void
+    this.SteamAPI_UnregisterCallback = this.steamLib.func('SteamAPI_UnregisterCallback', 'void', ['void*']);
     
     this.SteamAPI_SteamUserStats_v013 = this.steamLib.func('SteamAPI_SteamUserStats_v013', 'void*', []);
     this.SteamAPI_SteamUser_v023 = this.steamLib.func('SteamAPI_SteamUser_v023', 'void*', []);
