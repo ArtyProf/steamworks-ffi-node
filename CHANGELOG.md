@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2] - 2026-01-03
+
+### Added
+- **User Manager API** - 28 functions for Steam user authentication and management
+  - Session ticket generation with optional identity restrictions
+  - Web API ticket generation with hex encoding
+  - Auth session validation for server-side ticket verification
+  - License verification for app/DLC ownership
+  - Encrypted app tickets for secure backend authentication
+  - User security info (2FA, phone verification, NAT status)
+  - Player info (Steam level, badges, data folder)
+  - Market eligibility checking
+  - Store authentication URLs for in-game browser
+  - Duration control for anti-indulgence compliance
+  - Voice recording and decompression
+  - Game server advertising to friends
+- **Identity Restrictions** - Optional ticket security via SteamNetworkingIdentity
+  - Restrict by Steam ID, IP address, or generic string identifier
+  - Supported in both session tickets and web API tickets
+- Enhanced TypeScript type exports for user authentication enums and result types
+
+### Changed
+- Updated documentation with comprehensive User Manager API reference
+- Enhanced README with user authentication features
+
+### Technical Notes
+- `getAuthTicketForWebApi()` uses `GetAuthSessionTicket()` internally (FFI callback limitation workaround)
+- Tickets validate correctly with Steam Web API despite format differences
+- Service identity binding not supported (documented limitation)
+
 ## [0.8.1] - 2025-12-31
 
 ### Added
