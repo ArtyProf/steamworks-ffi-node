@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.3] - 2026-01-03
+
+### Changed
+- **Native GetAuthTicketForWebApi Implementation** - Replaced workaround with proper callback-based implementation
+  - Now uses native `GetAuthTicketForWebApi()` with registered callbacks via Koffi
+  - Returns proper Web API ticket format (234 bytes) that validates correctly with Steam Web API
+  - Automatic callback registration on first use and cleanup during shutdown
+  - Tickets validate successfully with `ISteamUserAuth/AuthenticateUserTicket/v1` endpoint
+- Enhanced test coverage for Web API ticket validation
+  - Added API key prompt in test files for easy validation testing
+  - Tests now validate tickets with Steam Web API when key is provided
+
+### Fixed
+- Web API ticket validation now returns "result": "OK" (previously returned Error 101)
+- Proper callback cleanup during Steam API shutdown
+- Memory management for callback registration and vtable allocation
+
+### Removed
+- Previous limitation warnings from documentation (no longer applicable)
+- Workaround implementation using `GetAuthSessionTicket()` internally
+
+### Technical Details
+- Implemented `CCallbackBase` struct with virtual function table (vtable) for Steam callback dispatch
+- Used `koffi.register()` to create callback function pointers compatible with Steam's C API
+- Callback ID 168 (`k_iSteamUserCallbacks + 68`) for `GetTicketForWebApiResponse_t`
+- Lazy callback registration pattern to avoid initialization order issues
+- Added `cleanup()` method to `SteamUserManager` for proper resource cleanup
+
 ## [0.8.2] - 2026-01-03
 
 ### Added
