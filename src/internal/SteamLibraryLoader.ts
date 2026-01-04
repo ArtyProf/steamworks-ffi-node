@@ -15,17 +15,26 @@ export const FnSteamNetConnectionStatusChangedPtr = koffi.pointer(FnSteamNetConn
 
 // CCallbackBase structure for Steam callback registration
 // This mimics the C++ CCallbackBase class layout for FFI
-// See steam_api_internal.h for the C++ implementation
+// See steam_api_common.h for the C++ implementation
+//
+// On Windows x64: vfptr (8) + m_nCallbackFlags (1) + padding (3) + m_iCallback (4) = 16 bytes
+// On other platforms: similar layout but may differ
 export const CCallbackBase = koffi.struct('CCallbackBase', {
-  vfptr: 'void*',           // Virtual function table pointer
-  m_nCallbackFlags: 'uint8',
-  m_iCallback: 'int'
+  vfptr: 'void*',           // Virtual function table pointer (8 bytes on x64)
+  m_nCallbackFlags: 'uint8', // 1 byte
+  _pad: koffi.array('uint8', 3), // 3 bytes padding for alignment
+  m_iCallback: 'int32'      // 4 bytes
 });
 
-// Callback prototype for the virtual Run() function
-// This is called by Steam when a callback is dispatched
+// Callback prototypes for CCallbackBase virtual functions
 export const FnCallbackRun = koffi.proto('void FnCallbackRun(void *self, void *pvParam)');
 export const FnCallbackRunPtr = koffi.pointer(FnCallbackRun);
+
+export const FnCallbackRunResult = koffi.proto('void FnCallbackRunResult(void *self, void *pvParam, bool bIOFailure, uint64 hSteamAPICall)');
+export const FnCallbackRunResultPtr = koffi.pointer(FnCallbackRunResult);
+
+export const FnGetCallbackSizeBytes = koffi.proto('int FnGetCallbackSizeBytes(void *self)');
+export const FnGetCallbackSizeBytesPtr = koffi.pointer(FnGetCallbackSizeBytes);
 
 /**
  * Handles loading the Steamworks native library and FFI function declarations

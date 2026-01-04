@@ -1,5 +1,5 @@
 import * as koffi from 'koffi';
-import { SteamLibraryLoader, CCallbackBase, FnCallbackRunPtr } from './SteamLibraryLoader';
+import { SteamLibraryLoader, CCallbackBase, FnCallbackRunPtr, FnCallbackRunResultPtr, FnGetCallbackSizeBytesPtr } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamCallbackPoller } from './SteamCallbackPoller';
 import {
@@ -148,6 +148,8 @@ export class SteamUserManager {
   private webApiTicketCallback: any = null;
   private webApiCallbackObject: any = null;
   private webApiCallbackRegistered: boolean = false;
+  private webApiVTable: any = null; // Keep vtable alive
+  private webApiCallbackFunctions: any[] = []; // Keep registered functions alive
 
   constructor(libraryLoader: SteamLibraryLoader, apiCore: SteamAPICore) {
     this.libraryLoader = libraryLoader;
@@ -167,10 +169,10 @@ export class SteamUserManager {
     if (this.webApiCallbackRegistered) return;
 
     try {
-      // Create the callback Run() function that Steam will call
+      // Create the callback Run(void* pvParam) function
+      // This is used on macOS/Linux
       const runCallback = (selfPtr: any, pvParam: any) => {
         try {
-          // Decode the callback parameter as GetTicketForWebApiResponse_t
           const response = koffi.decode(pvParam, GetTicketForWebApiResponse_t);
           this.handleWebApiTicketResponse(response);
         } catch (error) {
@@ -178,21 +180,41 @@ export class SteamUserManager {
         }
       };
 
-      // Register the callback function with Koffi
-      this.webApiTicketCallback = koffi.register(runCallback, FnCallbackRunPtr);
-
-      // Create a virtual function table (vtable) with our Run() function
-      const vtable = koffi.alloc('void*', 1);
-      koffi.encode(vtable, 'void*', this.webApiTicketCallback);
-
-      // Create the CCallbackBase structure
-      this.webApiCallbackObject = koffi.alloc(CCallbackBase, 1);
-      const callbackData: any = {
-        vfptr: vtable,
-        m_nCallbackFlags: 0,
-        m_iCallback: K_I_GET_TICKET_FOR_WEB_API_RESPONSE
+      // Create Run(void* pvParam, bool bIOFailure, uint64 hSteamAPICall) function
+      // On Windows, Steam dispatches GetTicketForWebApiResponse_t via this function instead of Run()
+      const runCallbackResult = (selfPtr: any, pvParam: any, bIOFailure: boolean, hSteamAPICall: bigint) => {
+        try {
+          const response = koffi.decode(pvParam, GetTicketForWebApiResponse_t);
+          this.handleWebApiTicketResponse(response);
+        } catch (error) {
+          console.error('[SteamUserManager] Error in Web API ticket callback (RunResult):', error);
+        }
       };
-      koffi.encode(this.webApiCallbackObject, CCallbackBase, callbackData);
+      
+      const getCallbackSizeBytes = (selfPtr: any): number => {
+        return 2572; // sizeof(GetTicketForWebApiResponse_t)
+      };
+
+      // Register all callback functions with Koffi and keep them alive
+      this.webApiTicketCallback = koffi.register(runCallback, FnCallbackRunPtr);
+      const runResultCb = koffi.register(runCallbackResult, FnCallbackRunResultPtr);
+      const getSizeCb = koffi.register(getCallbackSizeBytes, FnGetCallbackSizeBytesPtr);
+      
+      // Store references to prevent garbage collection
+      this.webApiCallbackFunctions = [this.webApiTicketCallback, runResultCb, getSizeCb];
+
+      // Create vtable with all 3 virtual functions and keep it alive
+      this.webApiVTable = koffi.alloc('void*', 3);
+      koffi.encode(this.webApiVTable, koffi.array('void*', 3), this.webApiCallbackFunctions);
+
+      // Create the CCallbackBase structure with proper padding
+      this.webApiCallbackObject = koffi.alloc(CCallbackBase, 1);
+      koffi.encode(this.webApiCallbackObject, CCallbackBase, {
+        vfptr: this.webApiVTable,
+        m_nCallbackFlags: 0,
+        _pad: [0, 0, 0],
+        m_iCallback: K_I_GET_TICKET_FOR_WEB_API_RESPONSE
+      });
 
       // Register with Steam
       this.libraryLoader.SteamAPI_RegisterCallback(
@@ -256,7 +278,13 @@ export class SteamUserManager {
     // Unregister the callback
     if (this.webApiCallbackObject) {
       this.libraryLoader.SteamAPI_UnregisterCallback(this.webApiCallbackObject);
-      koffi.unregister(this.webApiTicketCallback);
+      
+      // Unregister all registered callback functions
+      for (const func of this.webApiCallbackFunctions) {
+        if (func) {
+          koffi.unregister(func);
+        }
+      }
     }
 
     // Cancel all active tickets
