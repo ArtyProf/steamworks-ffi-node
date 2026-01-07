@@ -1,6 +1,6 @@
 {
   "name": "steamworks-ffi-node",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "Steamworks SDK wrapper using FFI for Node.js/Electron - Full Steam Integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
