@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.5] - 2026-01-07
+
+### Added
+- **restartAppIfNecessary() Function** - Ensure applications are launched through Steam
+  - New `SteamAPI_RestartAppIfNecessary()` binding for production deployment
+  - Returns `true` if app needs to restart through Steam client
+  - Returns `false` if app is already launched correctly (or in dev mode)
+  - Call before `init()` to ensure proper Steam authentication and overlay
+  - Comprehensive documentation with Node.js, TypeScript, and Electron examples
+  - Test files: `test-restart-app.ts` and `test-restart-app.js`
+  - npm scripts: `npm run test:restart:js` and `npm run test:restart:ts`
+- **No steam_appid.txt File Required** - Environment variable approach now default
+  - Removed automatic `steam_appid.txt` file creation
+  - Library now only sets `process.env.SteamAppId` environment variable
+  - Cleaner for production apps (Electron, Docker, portable apps)
+  - No filesystem writes required
+  - Backward compatible - existing code continues to work
+
+### Changed
+- Simplified initialization - no file system modifications
+- Updated documentation to reflect environment variable approach
+- Enhanced Core API documentation with `restartAppIfNecessary()` details
+
+### Removed
+- Automatic `steam_appid.txt` file creation (environment variable sufficient)
+
+### Documentation
+- Added comprehensive `restartAppIfNecessary()` documentation to SteamAPICore
+
 ## [0.8.4] - 2026-01-04
 
 ### Changed
@@ -235,6 +264,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.8.5 | 2026-01-07 | restartAppIfNecessary(), No steam_appid.txt file required |
 | 0.8.4 | 2026-01-04 | Fix issue with `GetAuthTicketForWebApi()` callback on Windows |
 | 0.8.3 | 2026-01-03 | Native GetAuthTicketForWebApi with callbacks |
 | 0.8.2 | 2026-01-03 | User Manager API (28 functions) |
@@ -249,6 +279,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.8.5]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.5
 [0.8.4]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.4
 [0.8.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.3
 [0.8.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.2
