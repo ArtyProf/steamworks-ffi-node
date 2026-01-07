@@ -174,6 +174,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 - **Steamworks Integration**: Direct FFI calls to Steamworks C++ SDK
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Easy Setup**: Simple installation with clear SDK setup guide
+  - 🎉 **No steam_appid.txt file required** - Uses environment variables automatically
+  - Just pass your App ID to `init()` and you're ready!
 - **Electron Ready**: Perfect for Electron applications
 - **TypeScript Support**: Complete TypeScript definitions included
 - **No C++ Compilation**: Uses Koffi FFI for seamless installation
@@ -196,13 +198,30 @@ npm install steamworks-ffi-node
    - Extract and copy `redistributable_bin` folder to your project
    - See [STEAMWORKS_SDK_SETUP.md](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAMWORKS_SDK_SETUP.md) for detailed instructions
 
-2. **Create `steam_appid.txt` (optional)** in your project root:
+2. **Set your Steam App ID** - No file creation needed!
 
+   The library automatically sets the `SteamAppId` environment variable when you call `init()`.
+   
+   **For Development:**
+   ```typescript
+   // Just pass your App ID to init() - that's it!
+   steam.init({ appId: 480 }); // Uses environment variable internally
+   ```
+
+   **Optional: Create `steam_appid.txt` manually** (if needed for other tools):
    ```bash
    echo "480" > steam_appid.txt  # Use 480 for testing, or your Steam App ID
    ```
-
-   _Note: You can skip this file and pass the App ID directly to `steam.init(appId)` instead_
+   
+   **For Production:**
+   ```typescript
+   // Check if launched through Steam, restart if necessary
+   if (steam.restartAppIfNecessary(480)) {
+     process.exit(0); // Steam will relaunch your app
+   }
+   
+   steam.init({ appId: 480 });
+   ```
 
 3. **Make sure Steam is running** and you're logged in
 
@@ -595,8 +614,9 @@ The library searches for the SDK in standard locations within your Electron app 
 
 - **Node.js**: 18+
 - **Steam Client**: Must be running and logged in
-- **Steam App ID**: Get yours at [Steamworks Partner](https://partner.steamgames.com/)
-- **steam_appid.txt**: Optional - create in your project root OR pass to `steam.init(appId)`
+- **Steam App ID**: Get yours at [Steamworks Partner](https://partner.steamgames.com/) and pass to `steam.init({ appId: YOUR_APP_ID })`
+- No file creation required - library uses environment variables automatically
+- Optional: You can manually create `steam_appid.txt` if needed for other Steam tools
 
 ### Platform Support
 
@@ -616,8 +636,9 @@ _Note: You must download and install the SDK redistributables separately as desc
 ### "SteamAPI_Init failed"
 
 - ❌ Steam client not running → **Solution**: Start Steam and log in
-- ❌ No App ID specified → **Solution**: Create `steam_appid.txt` in project root OR pass App ID to `steam.init(appId)`
-- ❌ Invalid App ID → **Solution**: Use 480 for testing, or your registered App ID
+- ❌ No App ID specified → **Solution**: Pass App ID to `steam.init({ appId: 480 })` (library sets environment variable automatically)
+- ❌ Invalid App ID → **Solution**: Use 480 for testing, or your registered App ID from Steamworks Partner
+- ℹ️ **Note**: The library automatically handles App ID via environment variables - no file creation needed!
 
 ### "Cannot find module 'steamworks-ffi-node'"
 
