@@ -6,6 +6,7 @@
  * Options for initializing the Steam API
  */
 export interface SteamInitOptions {
+  /** Steam App ID */
   appId: number;
 }
 

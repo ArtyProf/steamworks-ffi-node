@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import { SteamInitOptions, SteamStatus } from '../types';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
@@ -112,12 +111,9 @@ export class SteamAPICore {
     try {
       this.appId = options.appId;
 
-      // Set Steam App ID in environment
+      // Set Steam App ID in environment variable
+      // This is sufficient for Steam SDK - no file needed
       process.env.SteamAppId = this.appId.toString();
-      
-      // Also create steam_appid.txt file (Steam requirement)
-      const appIdFilePath = path.join(process.cwd(), 'steam_appid.txt');
-      fs.writeFileSync(appIdFilePath, this.appId.toString());
 
       console.log(`[Steamworks] Loading Steamworks SDK for App ID: ${this.appId}`);
       
@@ -353,6 +349,64 @@ export class SteamAPICore {
       }
     }
     return false;
+  }
+
+  /**
+   * Restart the app if it was not launched through Steam
+   * 
+   * This function should be called as early as possible in your application's lifecycle,
+   * ideally before initializing Steam. It checks if your executable was launched through
+   * the Steam client.
+   * 
+   * **Important:** If this function returns `true`, you should terminate your application
+   * immediately. Steam is now re-launching your application through the Steam client.
+   * 
+   * Returns `false` if no action needs to be taken, meaning:
+   * - Your executable was started through the Steam client, OR
+   * - A `steam_appid.txt` file is present in your game's directory (for development), OR
+   * - The `SteamAppId` environment variable is set
+   * 
+   * Your current process should continue normally if `false` is returned.
+   * 
+   * @param appId - Your Steam App ID
+   * @returns true if the app should terminate (Steam is restarting it), false if it should continue
+   * 
+   * @example
+   * ```typescript
+   * import SteamworksSDK from 'steamworks-ffi-node';
+   * 
+   * const steam = SteamworksSDK.getInstance();
+   * 
+   * // Check before initializing
+   * if (steam.restartAppIfNecessary(480)) {
+   *   console.log('Restarting through Steam...');
+   *   process.exit(0);
+   * }
+   * 
+   * // Continue with normal initialization
+   * steam.init({ appId: 480 });
+   * ```
+   * 
+   * @remarks
+   * - Call this **before** `init()` for best results
+   * - Not needed if you use Steam DRM wrapper on your executable
+   * - Useful for ensuring proper Steam overlay and authentication
+   * - Safe to call even if Steam is not installed (returns false)
+   * 
+   * **Steam SDK Reference:**
+   * - `SteamAPI_RestartAppIfNecessary()` - Ensures app was launched through Steam
+   */
+  restartAppIfNecessary(appId: number): boolean {
+    if (!this.libraryLoader.isLoaded()) {
+      this.libraryLoader.load();
+    }
+    
+    try {
+      return this.libraryLoader.SteamAPI_RestartAppIfNecessary(appId);
+    } catch (error) {
+      console.warn('[Steamworks] Warning: Error checking restart requirement:', (error as Error).message);
+      return false;
+    }
   }
 
   /**

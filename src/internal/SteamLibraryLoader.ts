@@ -47,6 +47,7 @@ export class SteamLibraryLoader {
   public SteamAPI_Shutdown!: koffi.KoffiFunction;
   public SteamAPI_RunCallbacks!: koffi.KoffiFunction;
   public SteamAPI_IsSteamRunning!: koffi.KoffiFunction;
+  public SteamAPI_RestartAppIfNecessary!: koffi.KoffiFunction;
   
   // Callback registration functions
   public SteamAPI_RegisterCallback!: koffi.KoffiFunction;
@@ -787,6 +788,7 @@ export class SteamLibraryLoader {
     this.SteamAPI_Shutdown = this.steamLib.func('SteamAPI_Shutdown', 'void', []);
     this.SteamAPI_RunCallbacks = this.steamLib.func('SteamAPI_RunCallbacks', 'void', []);
     this.SteamAPI_IsSteamRunning = this.steamLib.func('SteamAPI_IsSteamRunning', 'bool', []);
+    this.SteamAPI_RestartAppIfNecessary = this.steamLib.func('SteamAPI_RestartAppIfNecessary', 'bool', ['uint32']);
     
     // Callback registration functions for manual callback handling
     // RegisterCallback(pCallback, iCallback) -> void

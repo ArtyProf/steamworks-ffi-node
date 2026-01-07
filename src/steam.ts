@@ -763,6 +763,76 @@ class SteamworksSDK {
   }
 
   /**
+   * Restart the app if it was not launched through Steam
+   * 
+   * This function should be called as early as possible in your application's lifecycle,
+   * **before** calling `init()`. It checks if your executable was launched through the
+   * Steam client.
+   * 
+   * **IMPORTANT:** If this function returns `true`, you MUST terminate your application
+   * immediately. Steam is now re-launching your application through the Steam client.
+   * 
+   * Returns `false` if no action needs to be taken, meaning your app should continue normally.
+   * 
+   * @param appId - Your Steam App ID
+   * @returns true if the app should terminate (Steam is restarting it), false if it should continue
+   * 
+   * @example
+   * ```typescript
+   * import SteamworksSDK from 'steamworks-ffi-node';
+   * 
+   * const steam = SteamworksSDK.getInstance();
+   * 
+   * // Check BEFORE initializing
+   * if (steam.restartAppIfNecessary(480)) {
+   *   console.log('App was not launched through Steam. Restarting...');
+   *   process.exit(0);
+   * }
+   * 
+   * // If we get here, continue with normal initialization
+   * steam.init({ appId: 480 });
+   * ```
+   * 
+   * @example
+   * ```typescript
+   * // Electron main process example
+   * import { app } from 'electron';
+   * import SteamworksSDK from 'steamworks-ffi-node';
+   * 
+   * const steam = SteamworksSDK.getInstance();
+   * 
+   * // Check on app ready
+   * app.whenReady().then(() => {
+   *   if (steam.restartAppIfNecessary(480)) {
+   *     app.quit();
+   *     return;
+   *   }
+   *   
+   *   steam.init({ appId: 480 });
+   *   // ... rest of app initialization
+   * });
+   * ```
+   * 
+   * @remarks
+   * **When to Use:**
+   * - Your app is released on Steam
+   * - You want to ensure proper Steam overlay and authentication
+   * - You're not using Steam DRM wrapper
+   * 
+   * **Not Needed When:**
+   * - Using Steam DRM wrapper on your executable
+   * - Running in development with `steam_appid.txt` or `SteamAppId` env var
+   * - Steam is not installed (function returns false safely)
+   * 
+   * **Best Practice:**
+   * Always call this before `init()` to ensure your app restarts through Steam
+   * if it was launched directly by the user instead of through the Steam client.
+   */
+  restartAppIfNecessary(appId: number): boolean {
+    return this.apiCore.restartAppIfNecessary(appId);
+  }
+
+  /**
    * Get the current game language
    * 
    * Returns the language code that the user has set Steam to use.
