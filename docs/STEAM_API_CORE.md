@@ -5,6 +5,7 @@ The `SteamAPICore` module manages the Steam API lifecycle, including initializat
 ## Overview
 
 `SteamAPICore` is responsible for:
+- Ensuring application was launched through Steam (`restartAppIfNecessary`)
 - Initializing the Steam API connection
 - Managing Steam interface handles (UserStats, User)
 - Processing Steam callbacks
@@ -191,6 +192,182 @@ if (steam.isSteamRunning()) {
   console.error('Please launch Steam first');
 }
 ```
+
+---
+
+### `restartAppIfNecessary(appId: number): boolean`
+
+Ensures your application was launched through the Steam client. If not, Steam will restart your application properly and this function returns `true`, indicating your app should exit immediately.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_RestartAppIfNecessary()` - Check if app needs to restart through Steam
+
+**Parameters:**
+- `appId` (number) - Your Steam Application ID
+
+**Returns:** 
+- `true` - App should terminate immediately (Steam is restarting it)
+- `false` - App should continue normally (launched correctly)
+
+**When to Use:**
+Call this **before** `init()` to ensure your application:
+- Was launched through Steam client
+- Has proper Steam overlay support
+- Has correct Steam authentication
+
+**Example - Basic Usage:**
+```typescript
+import SteamworksSDK from 'steamworks-ffi-node';
+
+const steam = SteamworksSDK.getInstance();
+
+// Check BEFORE initializing
+if (steam.restartAppIfNecessary(480)) {
+  console.log('App was not launched through Steam. Restarting...');
+  process.exit(0);
+}
+
+// If we reach here, continue with normal initialization
+steam.init({ appId: 480 });
+```
+
+**Example - Electron Integration:**
+```typescript
+import { app } from 'electron';
+import SteamworksSDK from 'steamworks-ffi-node';
+
+const steam = SteamworksSDK.getInstance();
+
+app.whenReady().then(() => {
+  // Check before doing anything else
+  if (steam.restartAppIfNecessary(480)) {
+    console.log('Restarting through Steam...');
+    app.quit();
+    return;
+  }
+  
+  // Continue with normal initialization
+  steam.init({ appId: 480 });
+  
+  // ... rest of app initialization
+  createWindow();
+});
+```
+
+**Example - Express/Node.js Server:**
+```typescript
+import express from 'express';
+import SteamworksSDK from 'steamworks-ffi-node';
+
+const steam = SteamworksSDK.getInstance();
+
+// Check at startup
+if (steam.restartAppIfNecessary(480)) {
+  console.log('Server needs to restart through Steam');
+  process.exit(0);
+}
+
+steam.init({ appId: 480 });
+
+const app = express();
+// ... server setup
+```
+
+**How It Works:**
+
+Returns `false` (continue normally) when:
+- ✅ App was launched through Steam client
+- ✅ `steam_appid.txt` file exists (development mode)
+- ✅ `SteamAppId` environment variable is set (development mode)
+- ✅ Steam is not installed (safe fallback)
+
+Returns `true` (should exit) when:
+- ❌ App was launched directly by user (not through Steam)
+- ❌ No development files/env vars present
+- ❌ Steam client detects improper launch
+
+**What Happens When It Returns True:**
+
+1. User double-clicked your `.exe` instead of launching through Steam
+2. Function returns `true`
+3. Your app calls `process.exit(0)`
+4. Steam client detects this and launches your app properly
+5. On relaunch, function returns `false` and app continues normally
+
+**Development Mode:**
+
+You don't need Steam launch during development! Use either:
+
+**Option 1: steam_appid.txt file**
+```bash
+echo "480" > steam_appid.txt
+```
+
+**Option 2: Environment variable**
+```bash
+export SteamAppId=480
+node your-app.js
+```
+
+**Option 3: Skip check in development**
+```typescript
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+if (!isDevelopment && steam.restartAppIfNecessary(480)) {
+  process.exit(0);
+}
+
+steam.init({ appId: 480 });
+```
+
+**Production Deployment:**
+
+For production releases on Steam:
+
+1. **Always call this before `init()`** - Ensures proper Steam integration
+2. **Don't include `steam_appid.txt`** - Only for development
+3. **Steam DRM users can skip** - DRM wrapper handles this automatically
+4. **Test both scenarios:**
+   - Launch through Steam (should continue normally)
+   - Launch `.exe` directly (should restart through Steam)
+
+**When NOT Needed:**
+
+- ❌ Using Steam DRM wrapper on your executable
+- ❌ Development/testing with `steam_appid.txt` or env var
+- ❌ App is not distributed through Steam
+
+**Best Practices:**
+
+✅ **DO:**
+- Call before `init()` for best results
+- Exit immediately if it returns `true`
+- Use during production builds
+- Test both launch methods
+
+❌ **DON'T:**
+- Call after `init()` (too late)
+- Ignore the return value
+- Include `steam_appid.txt` in production
+- Skip this for Steam-distributed apps (unless using DRM)
+
+**Troubleshooting:**
+
+**Problem:** Always returns `true` even when launched through Steam
+- ✅ Solution: Remove `steam_appid.txt` from production build
+- ✅ Solution: Ensure you're testing with the actual Steam build
+
+**Problem:** Returns `false` but overlay doesn't work
+- ✅ Solution: Call this BEFORE `init()`, not after
+- ✅ Solution: Verify Steam overlay is enabled in Steam settings
+
+**Problem:** Can't test during development
+- ✅ Solution: Create `steam_appid.txt` with your App ID
+- ✅ Solution: Set `SteamAppId` environment variable
+
+**See Also:**
+- [Steam Partner Documentation - Redistributables](https://partner.steamgames.com/doc/sdk/api)
+- [Steam DRM Wrapper Guide](https://partner.steamgames.com/doc/features/drm)
 
 ---
 

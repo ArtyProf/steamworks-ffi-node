@@ -49,6 +49,7 @@ This design:
   - Steam callbacks and event handling
   - Status checking and diagnostics
   - Platform-specific library loading
+  - **restartAppIfNecessary()** - Ensure app launches through Steam (production deployment)
 
 ### Achievement System
 
@@ -240,6 +241,7 @@ This design:
 
 **JavaScript Tests** (Production - Uses compiled dist/):
 
+- Run Core API Tests: `npm run test:core:js` - Tests language detection and core functions
 - Run Achievement Tests: `npm run test:achievements:js` - Tests all 20 achievement functions
 - Run Stats Tests: `npm run test:stats:js` - Tests all 14 stats functions
 - Run Leaderboard Tests: `npm run test:leaderboards:js` - Tests all 7 leaderboard functions
@@ -258,9 +260,11 @@ This design:
 - Run Networking Sockets Host: `npm run test:sockets:host:js` - Creates P2P listen socket
 - Run Networking Sockets Join: `npm run test:sockets:join:js` - Connects to host via Steam ID
 - Run User Tests: `npm run test:user:js` - Tests all 28 user authentication and info functions
+- Run Restart App Tests: `npm run test:restart:js` - Tests restartAppIfNecessary() function
 
 **TypeScript Tests** (Development - Direct src/ imports, no rebuild needed):
 
+- Run Core API Tests: `npm run test:core:ts` - With type safety ✨
 - Run Achievement Tests: `npm run test:achievements:ts` - With type safety ✨
 - Run Stats Tests: `npm run test:stats:ts` - With type safety ✨
 - Run Leaderboard Tests: `npm run test:leaderboards:ts` - With type safety ✨
@@ -279,6 +283,7 @@ This design:
 - Run Networking Sockets Host: `npm run test:sockets:host:ts` - Creates P2P listen socket ✨
 - Run Networking Sockets Join: `npm run test:sockets:join:ts` - Connects to host via Steam ID ✨
 - Run User Tests: `npm run test:user:ts` - With type safety ✨
+- Run Restart App Tests: `npm run test:restart:ts` - Tests restartAppIfNecessary() with type safety ✨
 
 ⚠️ **Note:** Matchmaking and Networking Sockets tests require two separate Steam accounts to fully test multiplayer functionality. Run the host test on one machine, then the join test on another machine with a different Steam account.
 
