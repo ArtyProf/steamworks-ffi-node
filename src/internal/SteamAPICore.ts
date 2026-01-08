@@ -117,8 +117,12 @@ export class SteamAPICore {
 
       console.log(`[Steamworks] Loading Steamworks SDK for App ID: ${this.appId}`);
       
-      // Load the library
-      this.libraryLoader.load();
+      if (options.sdkPath) {
+        console.log(`[Steamworks] Using custom SDK path: ${options.sdkPath}`);
+      }
+      
+      // Load the library (with optional custom SDK path)
+      this.libraryLoader.load(options.sdkPath);
 
       console.log('[Steamworks] Initializing Steam API...');
       

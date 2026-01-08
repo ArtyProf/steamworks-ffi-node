@@ -678,25 +678,32 @@ export class SteamLibraryLoader {
   /**
    * Get platform-specific Steam library path
    * Users must download and install Steamworks SDK redistributables separately
+   * Uses customSdkPath if set, otherwise searches default locations
+   * @param customSdkPath Optional custom path to steamworks_sdk folder
    */
-  private getSteamLibraryPath(): string | null {
+  private getSteamLibraryPath(customSdkPath?: string): string | null {
     const platform = process.platform;
     const arch = process.arch;
     
     let steamworksSdkPaths: string[] = [];
     
     // Define possible Steamworks SDK locations (user must install these)
-    const possibleBasePaths = [
-      // Current working directory (most common for Node.js projects)
-      process.cwd(),
-      // Project root (if running from subdirectory)
-      path.resolve(process.cwd(), '..'),
-      path.resolve(process.cwd(), '../..'),
-      // Parent directories relative to this module
-      path.resolve(__dirname, '../..'),
-      path.resolve(__dirname, '../../..'),
-      path.resolve(__dirname, '../../../..'),
-    ];
+    const possibleBasePaths = customSdkPath
+      ? [
+          // Custom SDK path takes priority
+          path.resolve(process.cwd(), customSdkPath),
+        ]
+      : [
+          // Current working directory (most common for Node.js projects)
+          process.cwd(),
+          // Project root (if running from subdirectory)
+          path.resolve(process.cwd(), '..'),
+          path.resolve(process.cwd(), '../..'),
+          // Parent directories relative to this module
+          path.resolve(__dirname, '../..'),
+          path.resolve(__dirname, '../../..'),
+          path.resolve(__dirname, '../../../..'),
+        ];
 
     // Build platform-specific library paths
     for (const basePath of possibleBasePaths) {
@@ -704,23 +711,23 @@ export class SteamLibraryLoader {
       
       if (platform === 'win32') {
         if (arch === 'x64') {
-          platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/win64/steam_api64.dll');
+          platformLibPath = path.join(basePath, customSdkPath ? 'redistributable_bin/win64/steam_api64.dll' : 'steamworks_sdk/redistributable_bin/win64/steam_api64.dll');
         } else {
-          platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/steam_api.dll');
+          platformLibPath = path.join(basePath, customSdkPath ? 'redistributable_bin/steam_api.dll' : 'steamworks_sdk/redistributable_bin/steam_api.dll');
         }
       } else if (platform === 'darwin') {
-        platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/osx/libsteam_api.dylib');
+        platformLibPath = path.join(basePath, customSdkPath ? 'redistributable_bin/osx/libsteam_api.dylib' : 'steamworks_sdk/redistributable_bin/osx/libsteam_api.dylib');
       } else if (platform === 'linux') {
         if (arch === 'arm64') {
-          platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/linuxarm64/libsteam_api.so');
+          platformLibPath = path.join(basePath, customSdkPath ? 'redistributable_bin/linuxarm64/libsteam_api.so' : 'steamworks_sdk/redistributable_bin/linuxarm64/libsteam_api.so');
         } else if (arch === 'ia32') {
-          platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/linux32/libsteam_api.so');
+          platformLibPath = path.join(basePath, customSdkPath ? 'redistributable_bin/linux32/libsteam_api.so' : 'steamworks_sdk/redistributable_bin/linux32/libsteam_api.so');
         } else {
-          platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/linux64/libsteam_api.so');
+          platformLibPath = path.join(basePath, customSdkPath ? 'redistributable_bin/linux64/libsteam_api.so' : 'steamworks_sdk/redistributable_bin/linux64/libsteam_api.so');
         }
       } else if (platform === 'android') {
         // Android ARM64 support (for Electron-based Android apps or similar)
-        platformLibPath = path.join(basePath, 'steamworks_sdk/redistributable_bin/androidarm64/libsteam_api.so');
+        platformLibPath = path.join(basePath, customSdkPath ? 'redistributable_bin/androidarm64/libsteam_api.so' : 'steamworks_sdk/redistributable_bin/androidarm64/libsteam_api.so');
       } else {
         throw new Error(`Unsupported platform: ${platform}`);
       }
@@ -770,9 +777,10 @@ export class SteamLibraryLoader {
 
   /**
    * Load the Steamworks library and bind all FFI functions
+   * @param sdkPath Optional custom path to steamworks_sdk folder
    */
-  load(): void {
-    const libPath = this.getSteamLibraryPath();
+  load(sdkPath?: string): void {
+    const libPath = this.getSteamLibraryPath(sdkPath);
     
     if (!libPath) {
       console.error('[Steamworks] Cannot load Steamworks library: SDK not found');
