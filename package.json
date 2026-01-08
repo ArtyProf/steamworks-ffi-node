@@ -1,6 +1,6 @@
 {
   "name": "steamworks-ffi-node",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "Steamworks SDK wrapper using FFI for Node.js/Electron - Full Steam Integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -52,6 +52,8 @@
     "test:sockets:join:ts": "ts-node tests/ts/test-networking-sockets-join.ts",
     "test:user:ts": "ts-node tests/ts/test-user.ts",
     "test:restart:ts": "ts-node tests/ts/test-restart-app.ts",
+    "test:custom-path:js": "node tests/js/test-custom-sdk-path.js",
+    "test:custom-path:ts": "ts-node tests/ts/test-custom-sdk-path.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
