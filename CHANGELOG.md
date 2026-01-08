@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.6] - 2026-01-07
+
+### Added
+- **Custom SDK Path Support** - Flexible Steamworks SDK location configuration (Fixes #31)
+  - New `sdkPath` option in `SteamInitOptions` to specify custom SDK location
+  - Supports relative paths from project root (e.g., `vendor/steamworks_sdk`, `libs/sdk/steamworks`)
+  - Ideal for monorepo setups, vendor directories, nested structures, and CI/CD pipelines
+  - Maintains backward compatibility - defaults to `steamworks_sdk` in project root
+  - Enhanced `SteamLibraryLoader` with custom path resolution
+
+### Changed
+- Enhanced `SteamAPICore.init()` to accept and log custom SDK paths
+- Improved `SteamLibraryLoader.getSteamLibraryPath()` to prioritize custom paths
+- Updated documentation with real-world examples for various project structures
+
+### Documentation
+- Added "Custom SDK paths" to Features section in README
+- Added comprehensive Setup section with examples for:
+  - Vendor folder organization (`vendor/steamworks_sdk`)
+  - Nested SDK structures (`libs/sdk/steamworks`)
+  - Monorepo configurations (`packages/game/steamworks_sdk`)
+- Enhanced TypeScript interfaces with detailed JSDoc for `sdkPath` option
+
 ## [0.8.5] - 2026-01-07
 
 ### Added
@@ -264,6 +287,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.8.6 | 2026-01-07 | Custom SDK path support (Fixes #31) |
 | 0.8.5 | 2026-01-07 | restartAppIfNecessary(), No steam_appid.txt file required |
 | 0.8.4 | 2026-01-04 | Fix issue with `GetAuthTicketForWebApi()` callback on Windows |
 | 0.8.3 | 2026-01-03 | Native GetAuthTicketForWebApi with callbacks |
@@ -279,6 +303,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.8.6]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.6
 [0.8.5]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.5
 [0.8.4]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.4
 [0.8.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.3

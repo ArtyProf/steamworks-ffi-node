@@ -29,7 +29,8 @@ Initialize the Steam API and connect to the Steam client.
 **Parameters:**
 ```typescript
 interface SteamInitOptions {
-  appId: number;  // Your Steam Application ID
+  appId: number;           // Your Steam Application ID
+  sdkPath?: string;        // Optional: Custom path to steamworks_sdk folder (relative to project root)
 }
 ```
 
@@ -40,7 +41,15 @@ interface SteamInitOptions {
 import SteamworksSDK from 'steamworks-ffi-node';
 
 const steam = SteamworksSDK.getInstance();
+
+// Default: SDK in 'steamworks_sdk' folder at project root
 const success = steam.init({ appId: 480 });
+
+// Custom SDK location (e.g., vendor folder, monorepo)
+const success = steam.init({ 
+  appId: 480,
+  sdkPath: 'vendor/steamworks_sdk'  // or 'libs/sdk/steamworks', etc.
+});
 
 if (success) {
   console.log('✅ Connected to Steam!');
@@ -49,9 +58,21 @@ if (success) {
 }
 ```
 
+**Custom SDK Path Examples:**
+```typescript
+// Vendor folder organization
+steam.init({ appId: 480, sdkPath: 'vendor/steamworks_sdk' });
+
+// Nested SDK structure
+steam.init({ appId: 480, sdkPath: 'libs/sdk/steamworks' });
+
+// Monorepo configuration
+steam.init({ appId: 480, sdkPath: 'packages/game/steamworks_sdk' });
+```
+
 **What it does:**
-1. Sets `SteamAppId` environment variable and creates `steam_appid.txt` file
-2. Loads the Steamworks SDK library via FFI
+1. Sets `SteamAppId` environment variable
+2. Loads the Steamworks SDK library via FFI from custom path (if specified) or default locations
 3. Calls `SteamAPI_Init()` to connect to Steam client
 4. Retrieves interface handles for UserStats and User
 5. Requests current stats from Steam servers via `RequestCurrentStats()`

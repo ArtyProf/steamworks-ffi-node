@@ -175,6 +175,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Easy Setup**: Simple installation with clear SDK setup guide
   - 🎉 **No steam_appid.txt file required** - Uses environment variables automatically
+  - 🎉 **Custom SDK paths** - Organize SDK in vendor/, monorepo/, or any folder structure
   - Just pass your App ID to `init()` and you're ready!
 - **Electron Ready**: Perfect for Electron applications
 - **TypeScript Support**: Complete TypeScript definitions included
@@ -197,15 +198,29 @@ npm install steamworks-ffi-node
    - Download the latest Steamworks SDK
    - Extract and copy `redistributable_bin` folder to your project
    - See [STEAMWORKS_SDK_SETUP.md](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAMWORKS_SDK_SETUP.md) for detailed instructions
+   - Default location: `steamworks_sdk/` in project root
+   - Can now use custom locations! See `sdkPath` option below
 
 2. **Set your Steam App ID** - No file creation needed!
 
    The library automatically sets the `SteamAppId` environment variable when you call `init()`.
    
-   **For Development:**
+   **For Development (Default SDK Location):**
    ```typescript
-   // Just pass your App ID to init() - that's it!
-   steam.init({ appId: 480 }); // Uses environment variable internally
+   // SDK at: your-project/steamworks_sdk/
+   steam.init({ appId: 480 });
+   ```
+   
+   **For Custom SDK Location:**
+   ```typescript
+   // SDK in vendor folder: your-project/vendor/steamworks_sdk/
+   steam.init({ appId: 480, sdkPath: 'vendor/steamworks_sdk' });
+   
+   // SDK in nested structure: your-project/source/main/sdk/steamworks/
+   steam.init({ appId: 480, sdkPath: 'source/main/sdk/steamworks' });
+   
+   // SDK in monorepo: monorepo/shared/steamworks_sdk/
+   steam.init({ appId: 480, sdkPath: '../../shared/steamworks_sdk' });
    ```
 
    **Optional: Create `steam_appid.txt` manually** (if needed for other tools):
@@ -535,6 +550,7 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 
 ### API Guides:
 
+- **[Steam API Core](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_API_CORE.md)** - Core initialization, shutdown, and lifecycle management
 - **[Achievement Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)** - Complete achievement system (20 functions)
 - **[Stats Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)** - User and global statistics (14 functions)
 - **[Leaderboard Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)** - Leaderboard operations (7 functions)
