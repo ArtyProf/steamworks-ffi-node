@@ -55,6 +55,69 @@ steam.setSdkPath('packages/game/steamworks_sdk');
 
 ---
 
+### `setDebug(enabled: boolean): void`
+
+Enable or disable debug logging.
+
+Controls debug output for Steam API operations. When enabled, displays detailed
+information about SDK loading, initialization, and internal operations.
+Errors and warnings are always shown regardless of debug mode.
+
+Must be called **BEFORE** `restartAppIfNecessary()` or `init()` to see early initialization logs.
+
+**Parameters:**
+- `enabled` (boolean) - `true` to enable debug logs, `false` to disable (default: false)
+
+**Example:**
+```typescript
+import SteamworksSDK from 'steamworks-ffi-node';
+
+const steam = SteamworksSDK.getInstance();
+
+// Enable debug mode to see detailed logs
+steam.setDebug(true);
+
+// Set custom SDK path (debug logs will show path resolution)
+steam.setSdkPath('vendor/steamworks_sdk');
+
+// Check restart requirement (debug logs will show library loading)
+if (steam.restartAppIfNecessary(480)) {
+  process.exit(0);
+}
+
+// Initialize (debug logs will show initialization steps)
+steam.init({ appId: 480 });
+
+// Disable debug logs after initialization if desired
+steam.setDebug(false);
+```
+
+**What it does:**
+- Controls visibility of debug-level log messages
+- Shows SDK path resolution and library loading details
+- Displays initialization steps and interface setup
+- Shows shutdown progress
+- **Always displays errors and warnings** regardless of debug setting
+
+**Benefits:**
+- **Development**: See detailed initialization and SDK loading information
+- **Production**: Disable debug logs to reduce noise
+- **Troubleshooting**: Diagnose SDK path issues and initialization problems
+- **Flexibility**: Toggle at any point during runtime
+
+**Debug Log Examples:**
+```
+[Steamworks] Debug mode enabled
+[Steamworks] Using custom SDK path: vendor/steamworks_sdk
+[Steamworks] Loading Steamworks SDK from: /path/to/vendor/steamworks_sdk/redistributable_bin/osx/libsteam_api.dylib
+[Steamworks] Initializing Steam API...
+[Steamworks] Requesting current stats from Steam...
+[Steamworks] Steam API initialized successfully!
+[Steamworks] Connected to Steam for App ID: 480
+```
+
+---
+
 ### `init(options: SteamInitOptions): boolean`
 
 Initialize the Steam API and connect to the Steam client.

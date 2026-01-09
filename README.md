@@ -65,6 +65,8 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Steam status monitoring
   - ✅ Callback processing
   - ✅ Ensure app launches through Steam
+  - ✅ **Debug Mode** - Toggle detailed logging for troubleshooting **across all 16 managers**
+  - ✅ **Centralized Logger** - `SteamLogger` utility for consistent logging across all modules
 - **Complete Achievement API**: 100% coverage of Steam Achievement functionality (20/20 functions)
   - ✅ Core operations (get, unlock, clear, check status)
   - ✅ Visual features (icons, progress notifications)
@@ -242,6 +244,31 @@ npm install steamworks-ffi-node
    // SDK in monorepo: monorepo/packages/game/steamworks_sdk/
    steam.setSdkPath('packages/game/steamworks_sdk');
    ```
+   
+   **Debug Mode (Optional):**
+   ```typescript
+   const steam = SteamworksSDK.getInstance();
+   
+   // Enable debug logs to see initialization details
+   steam.setDebug(true);
+   
+   // Set custom SDK path if needed (debug logs will show path resolution)
+   steam.setSdkPath('vendor/steamworks_sdk');
+   
+   // Check restart requirement (debug logs will show library loading)
+   if (steam.restartAppIfNecessary(480)) {
+     process.exit(0);
+   }
+   
+   // Initialize (debug logs will show initialization steps)
+   steam.init({ appId: 480 });
+   
+   // Disable debug logs after initialization
+   steam.setDebug(false);
+   ```
+   
+   > **Note:** Debug mode is useful for troubleshooting SDK path issues and initialization problems.
+   > Errors and warnings always display regardless of debug mode setting.
 
    **Optional: Create `steam_appid.txt` manually** (if needed for other tools):
    ```bash
