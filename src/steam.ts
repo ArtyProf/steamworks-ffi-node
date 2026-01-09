@@ -833,6 +833,33 @@ class SteamworksSDK {
   }
 
   /**
+   * Set custom SDK path (optional)
+   * 
+   * Must be called BEFORE restartAppIfNecessary() or init() if using a custom SDK location.
+   * The path should be relative to the project root.
+   * 
+   * @param customSdkPath - Path to the steamworks_sdk folder (e.g., 'vendor/steamworks_sdk')
+   * 
+   * @example
+   * ```typescript
+   * const steam = SteamworksSDK.getInstance();
+   * 
+   * // Set custom SDK path before any Steam operations
+   * steam.setSdkPath('vendor/steamworks_sdk');
+   * 
+   * // Now restartAppIfNecessary() will use the custom path
+   * if (steam.restartAppIfNecessary(480)) {
+   *   process.exit(0);
+   * }
+   * 
+   * steam.init({ appId: 480 });
+   * ```
+   */
+  setSdkPath(customSdkPath: string): void {
+    this.apiCore.setSdkPath(customSdkPath);
+  }
+
+  /**
    * Get the current game language
    * 
    * Returns the language code that the user has set Steam to use.

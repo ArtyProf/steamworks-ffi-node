@@ -37,6 +37,9 @@ export class SteamAPICore {
   /** The Steam App ID for this application */
   private appId: number = 0;
   
+  /** Custom SDK path (optional) */
+  private sdkPath?: string;
+  
   /** Pointer to the ISteamUserStats interface */
   private userStatsInterface: any = null;
   
@@ -68,6 +71,34 @@ export class SteamAPICore {
    */
   constructor(libraryLoader: SteamLibraryLoader) {
     this.libraryLoader = libraryLoader;
+  }
+
+  /**
+   * Set custom SDK path (optional)
+   * 
+   * Must be called BEFORE restartAppIfNecessary() or init() if using a custom SDK location.
+   * The path should be relative to the project root.
+   * 
+   * @param customSdkPath - Path to the steamworks_sdk folder (e.g., 'vendor/steamworks_sdk')
+   * 
+   * @example
+   * ```typescript
+   * const steam = SteamworksSDK.getInstance();
+   * 
+   * // Set custom SDK path before any Steam operations
+   * steam.setSdkPath('vendor/steamworks_sdk');
+   * 
+   * // Now restartAppIfNecessary() will use the custom path
+   * if (steam.restartAppIfNecessary(480)) {
+   *   process.exit(0);
+   * }
+   * 
+   * steam.init({ appId: 480 });
+   * ```
+   */
+  setSdkPath(customSdkPath: string): void {
+    this.sdkPath = customSdkPath;
+    console.log(`[Steamworks] Custom SDK path set: ${customSdkPath}`);
   }
 
   /**
@@ -117,12 +148,15 @@ export class SteamAPICore {
 
       console.log(`[Steamworks] Loading Steamworks SDK for App ID: ${this.appId}`);
       
-      if (options.sdkPath) {
-        console.log(`[Steamworks] Using custom SDK path: ${options.sdkPath}`);
+      if (this.sdkPath) {
+        console.log(`[Steamworks] Using custom SDK path: ${this.sdkPath}`);
       }
       
-      // Load the library (with optional custom SDK path)
-      this.libraryLoader.load(options.sdkPath);
+      // Load the library (with optional custom SDK path from setSdkPath())
+      // Only load if not already loaded (e.g., from restartAppIfNecessary())
+      if (!this.libraryLoader.isLoaded()) {
+        this.libraryLoader.load(this.sdkPath);
+      }
 
       console.log('[Steamworks] Initializing Steam API...');
       
@@ -402,7 +436,7 @@ export class SteamAPICore {
    */
   restartAppIfNecessary(appId: number): boolean {
     if (!this.libraryLoader.isLoaded()) {
-      this.libraryLoader.load();
+      this.libraryLoader.load(this.sdkPath);
     }
     
     try {
