@@ -1,5 +1,8 @@
 import SteamworksSDK from './steam';
 
+// Export logger for advanced usage and custom integrations
+export { SteamLogger } from './internal/SteamLogger';
+
 // Export manager classes for advanced usage
 export { SteamAchievementManager } from './internal/SteamAchievementManager';
 export { SteamStatsManager } from './internal/SteamStatsManager';

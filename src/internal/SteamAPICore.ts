@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { SteamInitOptions, SteamStatus } from '../types';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
+import { SteamLogger } from './SteamLogger';
 
 /**
  * SteamAPICore
@@ -74,6 +75,33 @@ export class SteamAPICore {
   }
 
   /**
+   * Enable or disable debug mode
+   * 
+   * Must be called BEFORE restartAppIfNecessary() or init() to see all debug logs.
+   * When disabled (default), only errors and warnings are shown.
+   * 
+   * @param enabled - Whether to enable debug logging
+   * 
+   * @example
+   * ```typescript
+   * const steam = SteamworksSDK.getInstance();
+   * 
+   * // Enable debug logging before any Steam operations
+   * steam.setDebug(true);
+   * 
+   * // Now you'll see detailed logs from restartAppIfNecessary() and init()
+   * if (steam.restartAppIfNecessary(480)) {
+   *   process.exit(0);
+   * }
+   * 
+   * steam.init({ appId: 480 });
+   * ```
+   */
+  setDebug(enabled: boolean): void {
+    SteamLogger.setDebug(enabled);
+  }
+
+  /**
    * Set custom SDK path (optional)
    * 
    * Must be called BEFORE restartAppIfNecessary() or init() if using a custom SDK location.
@@ -98,7 +126,7 @@ export class SteamAPICore {
    */
   setSdkPath(customSdkPath: string): void {
     this.sdkPath = customSdkPath;
-    console.log(`[Steamworks] Custom SDK path set: ${customSdkPath}`);
+    SteamLogger.debug(`[Steamworks] Custom SDK path set: ${customSdkPath}`);
   }
 
   /**
@@ -146,10 +174,10 @@ export class SteamAPICore {
       // This is sufficient for Steam SDK - no file needed
       process.env.SteamAppId = this.appId.toString();
 
-      console.log(`[Steamworks] Loading Steamworks SDK for App ID: ${this.appId}`);
+      SteamLogger.debug(`[Steamworks] Loading Steamworks SDK for App ID: ${this.appId}`);
       
       if (this.sdkPath) {
-        console.log(`[Steamworks] Using custom SDK path: ${this.sdkPath}`);
+        SteamLogger.debug(`[Steamworks] Using custom SDK path: ${this.sdkPath}`);
       }
       
       // Load the library (with optional custom SDK path from setSdkPath())
@@ -158,7 +186,7 @@ export class SteamAPICore {
         this.libraryLoader.load(this.sdkPath);
       }
 
-      console.log('[Steamworks] Initializing Steam API...');
+      SteamLogger.debug('[Steamworks] Initializing Steam API...');
       
       // Initialize Steam API
       const initResult = this.libraryLoader.SteamAPI_Init();
@@ -170,7 +198,7 @@ export class SteamAPICore {
       // Check if Steam is running
       const steamRunning = this.libraryLoader.SteamAPI_IsSteamRunning();
       if (!steamRunning) {
-        console.warn('[Steamworks] WARNING: Steam client might not be running properly');
+        SteamLogger.warn('[Steamworks] WARNING: Steam client might not be running properly');
       }
 
       // Get UserStats interface
@@ -185,62 +213,62 @@ export class SteamAPICore {
       // Get Utils interface
       this.utilsInterface = this.libraryLoader.SteamAPI_SteamUtils_v010();
       if (!this.utilsInterface || this.utilsInterface === null) {
-        console.warn('[Steamworks] WARNING: Failed to get SteamUtils interface');
+        SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamUtils interface');
       }
       
       // Get Apps interface
       this.appsInterface = this.libraryLoader.SteamAPI_SteamApps_v008();
       if (!this.appsInterface || this.appsInterface === null) {
-        console.warn('[Steamworks] WARNING: Failed to get SteamApps interface');
+        SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamApps interface');
       }
       
       // Get Friends interface
       this.friendsInterface = this.libraryLoader.SteamAPI_SteamFriends_v018();
       if (!this.friendsInterface || this.friendsInterface === null) {
-        console.warn('[Steamworks] WARNING: Failed to get SteamFriends interface');
+        SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamFriends interface');
       }
       
       // Get Remote Storage interface
       this.remoteStorageInterface = this.libraryLoader.SteamAPI_SteamRemoteStorage_v016();
       if (!this.remoteStorageInterface || this.remoteStorageInterface === null) {
-        console.warn('[Steamworks] WARNING: Failed to get SteamRemoteStorage interface');
+        SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamRemoteStorage interface');
       }
       
       // Get UGC interface
       this.ugcInterface = this.libraryLoader.SteamAPI_SteamUGC_v021();
       if (!this.ugcInterface || this.ugcInterface === null) {
-        console.warn('[Steamworks] WARNING: Failed to get SteamUGC interface');
+        SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamUGC interface');
       }
       
       // Get Matchmaking interface
       this.matchmakingInterface = this.libraryLoader.SteamAPI_SteamMatchmaking_v009();
       if (!this.matchmakingInterface || this.matchmakingInterface === null) {
-        console.warn('[Steamworks] WARNING: Failed to get SteamMatchmaking interface');
+        SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamMatchmaking interface');
       }
 
       // Request current stats from Steam servers
-      console.log('[Steamworks] Requesting current stats from Steam...');
+      SteamLogger.debug('[Steamworks] Requesting current stats from Steam...');
       const statsRequested = this.libraryLoader.SteamAPI_ISteamUserStats_RequestCurrentStats(this.userStatsInterface, 0);
       
       if (!statsRequested) {
-        console.warn('[Steamworks] WARNING: Failed to request current stats from Steam servers');
+        SteamLogger.warn('[Steamworks] WARNING: Failed to request current stats from Steam servers');
       }
 
       // Run callbacks to process any pending Steam events
       this.runCallbacks();
 
       this.initialized = true;
-      console.log('[Steamworks] Steam API initialized successfully!');
-      console.log(`[Steamworks] Connected to Steam for App ID: ${this.appId}`);
+      SteamLogger.debug('[Steamworks] Steam API initialized successfully!');
+      SteamLogger.debug(`[Steamworks] Connected to Steam for App ID: ${this.appId}`);
       
       return true;
 
     } catch (error) {
-      console.error('[Steamworks] ERROR: Failed to initialize Steam API:', (error as Error).message);
-      console.error('[Steamworks] Make sure:');
-      console.error('[Steamworks]    1. Steam client is running and you\'re logged in');
-      console.error('[Steamworks]    2. Steamworks redistributable binaries are available');
-      console.error('[Steamworks]    3. App ID is valid and game is in your library');
+      SteamLogger.error('[Steamworks] ERROR: Failed to initialize Steam API:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Make sure:');
+      SteamLogger.error('[Steamworks]    1. Steam client is running and you\'re logged in');
+      SteamLogger.error('[Steamworks]    2. Steamworks redistributable binaries are available');
+      SteamLogger.error('[Steamworks]    3. App ID is valid and game is in your library');
       return false;
     }
   }
@@ -269,14 +297,14 @@ export class SteamAPICore {
    */
   shutdown(): void {
     if (this.libraryLoader.isLoaded() && this.initialized) {
-      console.log('[Steamworks] Shutting down Steam API...');
+      SteamLogger.debug('[Steamworks] Shutting down Steam API...');
       this.libraryLoader.SteamAPI_Shutdown();
       this.initialized = false;
       this.userStatsInterface = null;
       this.userInterface = null;
       this.utilsInterface = null;
       this.appsInterface = null;
-      console.log('[Steamworks] Steam API shutdown complete');
+      SteamLogger.debug('[Steamworks] Steam API shutdown complete');
     }
   }
 
@@ -311,7 +339,7 @@ export class SteamAPICore {
         const steamIdNum = this.libraryLoader.SteamAPI_ISteamUser_GetSteamID(this.userInterface);
         steamId = steamIdNum.toString();
       } catch (error) {
-        console.warn('[Steamworks] Failed to get Steam ID:', (error as Error).message);
+        SteamLogger.warn('[Steamworks] Failed to get Steam ID:', (error as Error).message);
       }
     }
 
@@ -349,7 +377,7 @@ export class SteamAPICore {
       try {
         this.libraryLoader.SteamAPI_RunCallbacks();
       } catch (error) {
-        console.warn('[Steamworks] Warning: Error running Steam callbacks:', (error as Error).message);
+        SteamLogger.warn('[Steamworks] Warning: Error running Steam callbacks:', (error as Error).message);
       }
     }
   }
@@ -382,7 +410,7 @@ export class SteamAPICore {
       try {
         return this.libraryLoader.SteamAPI_IsSteamRunning();
       } catch (error) {
-        console.warn('[Steamworks] Warning: Error checking if Steam is running:', (error as Error).message);
+        SteamLogger.warn('[Steamworks] Warning: Error checking if Steam is running:', (error as Error).message);
         return false;
       }
     }
@@ -442,7 +470,7 @@ export class SteamAPICore {
     try {
       return this.libraryLoader.SteamAPI_RestartAppIfNecessary(appId);
     } catch (error) {
-      console.warn('[Steamworks] Warning: Error checking restart requirement:', (error as Error).message);
+      SteamLogger.warn('[Steamworks] Warning: Error checking restart requirement:', (error as Error).message);
       return false;
     }
   }

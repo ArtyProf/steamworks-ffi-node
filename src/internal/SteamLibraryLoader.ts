@@ -1,6 +1,7 @@
 import * as koffi from 'koffi';
 import * as path from 'path';
 import * as fs from 'fs';
+import { SteamLogger } from './SteamLogger';
 
 // Define callback prototype at module level
 // The callback receives a pointer to SteamNetConnectionStatusChangedCallback_t
@@ -750,7 +751,7 @@ export class SteamLibraryLoader {
     // If no library found, provide detailed error message
     const expectedPath = steamworksSdkPaths[0]; // Use the first (most common) path for error message
     
-    console.error(
+    SteamLogger.error(
       `[Steamworks] Steamworks SDK library not found!\n\n` +
       `   Expected location: ${expectedPath}\n\n` +
       `   To fix this issue:\n` +
@@ -783,11 +784,11 @@ export class SteamLibraryLoader {
     const libPath = this.getSteamLibraryPath(sdkPath);
     
     if (!libPath) {
-      console.error('[Steamworks] Cannot load Steamworks library: SDK not found');
+      SteamLogger.error('[Steamworks] Cannot load Steamworks library: SDK not found');
       return;
     }
     
-    console.log(`[Steamworks] Loading library: ${libPath}`);
+    SteamLogger.debug(`[Steamworks] Loading library: ${libPath}`);
     
     this.steamLib = koffi.load(libPath);
 

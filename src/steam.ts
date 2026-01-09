@@ -860,6 +860,49 @@ class SteamworksSDK {
   }
 
   /**
+   * Enable or disable debug logging
+   * 
+   * Controls debug output for Steam API operations. When enabled, displays detailed
+   * information about SDK loading, initialization, and internal operations.
+   * Errors and warnings are always shown regardless of debug mode.
+   * 
+   * Must be called BEFORE restartAppIfNecessary() or init() to see early initialization logs.
+   * 
+   * @param enabled - true to enable debug logs, false to disable (default: false)
+   * 
+   * @example
+   * ```typescript
+   * const steam = SteamworksSDK.getInstance();
+   * 
+   * // Enable debug mode before any Steam operations
+   * steam.setDebug(true);
+   * 
+   * // Set custom SDK path (if needed)
+   * steam.setSdkPath('vendor/steamworks_sdk');
+   * 
+   * // Check restart requirement (debug logs will show library loading)
+   * if (steam.restartAppIfNecessary(480)) {
+   *   process.exit(0);
+   * }
+   * 
+   * // Initialize (debug logs will show initialization details)
+   * steam.init({ appId: 480 });
+   * 
+   * // Disable debug logs after initialization if desired
+   * steam.setDebug(false);
+   * ```
+   * 
+   * @remarks
+   * - Debug logs are only shown when debug mode is enabled
+   * - Errors and warnings always appear regardless of debug setting
+   * - Useful for troubleshooting SDK loading and initialization issues
+   * - Can be toggled at any time during runtime
+   */
+  setDebug(enabled: boolean): void {
+    this.apiCore.setDebug(enabled);
+  }
+
+  /**
    * Get the current game language
    * 
    * Returns the language code that the user has set Steam to use.
