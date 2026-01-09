@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.7] - 2026-01-09
+
+### Changed
+- **BREAKING: Custom SDK Path API Redesign** - Fixed critical initialization order issue (Fixes #31)
+  - **Old API (v0.8.6):** `steam.init({ appId: 480, sdkPath: 'vendor/steamworks_sdk' })`
+  - **New API (v0.8.7):** `steam.setSdkPath('vendor/steamworks_sdk')` must be called BEFORE `restartAppIfNecessary()` or `init()`
+  - Removed `sdkPath` parameter from `SteamInitOptions` interface
+  - Added new `setSdkPath(customSdkPath: string)` method to set SDK location before library loading
+  - This ensures `restartAppIfNecessary()` can load the library from the correct location
+  - Maintains backward compatibility for default SDK location (`steamworks_sdk` in project root)
+
+### Why This Change?
+According to Steamworks standards, `restartAppIfNecessary()` must be called BEFORE `init()` to ensure proper Steam authentication and overlay functionality. The previous v0.8.6 implementation passed `sdkPath` to `init()`, which meant `restartAppIfNecessary()` couldn't access custom SDK paths and would fail. The new `setSdkPath()` method allows setting the path once before any Steam operations.
+
+### Migration Guide
+```typescript
+// OLD (v0.8.6) - BROKEN: restartAppIfNecessary() can't find custom SDK
+if (steam.restartAppIfNecessary(480)) {
+  process.exit(0);
+}
+steam.init({ appId: 480, sdkPath: 'vendor/steamworks_sdk' });
+
+// NEW (v0.8.7) - CORRECT: setSdkPath() before any Steam operations
+steam.setSdkPath('vendor/steamworks_sdk');
+
+if (steam.restartAppIfNecessary(480)) {
+  process.exit(0);
+}
+steam.init({ appId: 480 });
+```
+
+### Documentation
+- Updated README.md with correct `setSdkPath()` usage pattern
+- Updated STEAM_API_CORE.md with new API documentation
+- Added comprehensive test files demonstrating proper usage
+- Added migration guide for v0.8.6 users
+
 ## [0.8.6] - 2026-01-07
 
 ### Added
@@ -27,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Nested SDK structures (`libs/sdk/steamworks`)
   - Monorepo configurations (`packages/game/steamworks_sdk`)
 - Enhanced TypeScript interfaces with detailed JSDoc for `sdkPath` option
+
+### Deprecated
+- ⚠️ **v0.8.6 custom SDK path API** - The `sdkPath` parameter in `init()` was deprecated immediately and replaced in v0.8.7 due to initialization order issues
 
 ## [0.8.5] - 2026-01-07
 
@@ -287,7 +327,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Major Features |
 |---------|------|----------------|
-| 0.8.6 | 2026-01-07 | Custom SDK path support (Fixes #31) |
+| 0.8.7 | 2026-01-09 | Fixed custom SDK path API - setSdkPath() method (BREAKING) |
+| 0.8.6 | 2026-01-07 | Custom SDK path support (deprecated immediately) |
 | 0.8.5 | 2026-01-07 | restartAppIfNecessary(), No steam_appid.txt file required |
 | 0.8.4 | 2026-01-04 | Fix issue with `GetAuthTicketForWebApi()` callback on Windows |
 | 0.8.3 | 2026-01-03 | Native GetAuthTicketForWebApi with callbacks |
@@ -303,6 +344,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.8.7]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.7
 [0.8.6]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.6
 [0.8.5]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.5
 [0.8.4]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.4

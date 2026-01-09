@@ -14,6 +14,47 @@ The `SteamAPICore` module manages the Steam API lifecycle, including initializat
 
 ## API Reference
 
+### `setSdkPath(customSdkPath: string): void`
+
+Set custom SDK path (optional).
+
+Must be called **BEFORE** `restartAppIfNecessary()` or `init()` if using a custom SDK location.
+The path should be relative to the project root.
+
+**Parameters:**
+- `customSdkPath` (string) - Path to the steamworks_sdk folder (e.g., 'vendor/steamworks_sdk')
+
+**Example:**
+```typescript
+import SteamworksSDK from 'steamworks-ffi-node';
+
+const steam = SteamworksSDK.getInstance();
+
+// IMPORTANT: Set SDK path BEFORE any Steam operations
+steam.setSdkPath('vendor/steamworks_sdk');
+
+// Now restartAppIfNecessary() will use the custom path
+if (steam.restartAppIfNecessary(480)) {
+  process.exit(0);
+}
+
+steam.init({ appId: 480 });
+```
+
+**Custom SDK Path Examples:**
+```typescript
+// Vendor folder organization
+steam.setSdkPath('vendor/steamworks_sdk');
+
+// Nested SDK structure
+steam.setSdkPath('libs/sdk/steamworks');
+
+// Monorepo configuration
+steam.setSdkPath('packages/game/steamworks_sdk');
+```
+
+---
+
 ### `init(options: SteamInitOptions): boolean`
 
 Initialize the Steam API and connect to the Steam client.
@@ -29,8 +70,7 @@ Initialize the Steam API and connect to the Steam client.
 **Parameters:**
 ```typescript
 interface SteamInitOptions {
-  appId: number;           // Your Steam Application ID
-  sdkPath?: string;        // Optional: Custom path to steamworks_sdk folder (relative to project root)
+  appId: number;  // Your Steam Application ID
 }
 ```
 
@@ -42,14 +82,8 @@ import SteamworksSDK from 'steamworks-ffi-node';
 
 const steam = SteamworksSDK.getInstance();
 
-// Default: SDK in 'steamworks_sdk' folder at project root
+// Default SDK location (steamworks_sdk/ in project root)
 const success = steam.init({ appId: 480 });
-
-// Custom SDK location (e.g., vendor folder, monorepo)
-const success = steam.init({ 
-  appId: 480,
-  sdkPath: 'vendor/steamworks_sdk'  // or 'libs/sdk/steamworks', etc.
-});
 
 if (success) {
   console.log('✅ Connected to Steam!');
@@ -58,21 +92,25 @@ if (success) {
 }
 ```
 
-**Custom SDK Path Examples:**
+**With Custom SDK Path:**
 ```typescript
-// Vendor folder organization
-steam.init({ appId: 480, sdkPath: 'vendor/steamworks_sdk' });
+const steam = SteamworksSDK.getInstance();
 
-// Nested SDK structure
-steam.init({ appId: 480, sdkPath: 'libs/sdk/steamworks' });
+// Set custom SDK path BEFORE init()
+steam.setSdkPath('vendor/steamworks_sdk');
 
-// Monorepo configuration
-steam.init({ appId: 480, sdkPath: 'packages/game/steamworks_sdk' });
+// Ensure app launched through Steam
+if (steam.restartAppIfNecessary(480)) {
+  process.exit(0);
+}
+
+// Now initialize with custom SDK location
+const success = steam.init({ appId: 480 });
 ```
 
 **What it does:**
 1. Sets `SteamAppId` environment variable
-2. Loads the Steamworks SDK library via FFI from custom path (if specified) or default locations
+2. Loads the Steamworks SDK library via FFI from custom path (if set via setSdkPath()) or default locations
 3. Calls `SteamAPI_Init()` to connect to Steam client
 4. Retrieves interface handles for UserStats and User
 5. Requests current stats from Steam servers via `RequestCurrentStats()`

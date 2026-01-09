@@ -199,7 +199,7 @@ npm install steamworks-ffi-node
    - Extract and copy `redistributable_bin` folder to your project
    - See [STEAMWORKS_SDK_SETUP.md](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAMWORKS_SDK_SETUP.md) for detailed instructions
    - Default location: `steamworks_sdk/` in project root
-   - Can now use custom locations! See `sdkPath` option below
+   - Can now use custom locations! See `setSdkPath()` method below
 
 2. **Set your Steam App ID** - No file creation needed!
 
@@ -207,20 +207,40 @@ npm install steamworks-ffi-node
    
    **For Development (Default SDK Location):**
    ```typescript
+   const steam = SteamworksSDK.getInstance();
+   
    // SDK at: your-project/steamworks_sdk/
+   if (steam.restartAppIfNecessary(480)) {
+     process.exit(0);
+   }
+   
    steam.init({ appId: 480 });
    ```
    
    **For Custom SDK Location:**
    ```typescript
+   const steam = SteamworksSDK.getInstance();
+   
+   // IMPORTANT: Set SDK path BEFORE restartAppIfNecessary() or init()
+   steam.setSdkPath('vendor/steamworks_sdk');  // SDK in vendor folder
+   
+   if (steam.restartAppIfNecessary(480)) {
+     process.exit(0);
+   }
+   
+   steam.init({ appId: 480 });
+   ```
+   
+   **Custom SDK Path Examples:**
+   ```typescript
    // SDK in vendor folder: your-project/vendor/steamworks_sdk/
-   steam.init({ appId: 480, sdkPath: 'vendor/steamworks_sdk' });
+   steam.setSdkPath('vendor/steamworks_sdk');
    
    // SDK in nested structure: your-project/source/main/sdk/steamworks/
-   steam.init({ appId: 480, sdkPath: 'source/main/sdk/steamworks' });
+   steam.setSdkPath('source/main/sdk/steamworks');
    
-   // SDK in monorepo: monorepo/shared/steamworks_sdk/
-   steam.init({ appId: 480, sdkPath: '../../shared/steamworks_sdk' });
+   // SDK in monorepo: monorepo/packages/game/steamworks_sdk/
+   steam.setSdkPath('packages/game/steamworks_sdk');
    ```
 
    **Optional: Create `steam_appid.txt` manually** (if needed for other tools):
