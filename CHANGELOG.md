@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.7] - 2026-01-09
 
+### Added
+- **Debug Mode with Centralized Logger** - Flexible debug logging system (Fixes #30)
+  - New `SteamLogger` utility class for centralized logging control
+  - New `setDebug(enabled: boolean)` method to control debug output visibility
+  - Debug logs show SDK loading, initialization details, and internal operations
+  - Errors and warnings always display regardless of debug mode setting
+  - **Applied globally across ALL 16 managers** (531 logging calls migrated)
+  - Covers: Achievements, Stats, Leaderboards, Friends, Cloud, Workshop, Input, Networking, Matchmaking, Utils, and more
+  - **Flexible integration**: Any manager or custom code can use `SteamLogger`
+  - Should be called BEFORE `restartAppIfNecessary()` or `init()` to see early logs
+  - Exported from main package for advanced usage and custom integrations
+
 ### Changed
 - **BREAKING: Custom SDK Path API Redesign** - Fixed critical initialization order issue (Fixes #31)
   - **Old API (v0.8.6):** `steam.init({ appId: 480, sdkPath: 'vendor/steamworks_sdk' })`
@@ -15,6 +27,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added new `setSdkPath(customSdkPath: string)` method to set SDK location before library loading
   - This ensures `restartAppIfNecessary()` can load the library from the correct location
   - Maintains backward compatibility for default SDK location (`steamworks_sdk` in project root)
+
+### Example
+```typescript
+import SteamworksSDK, { SteamLogger } from 'steamworks-ffi-node';
+
+const steam = SteamworksSDK.getInstance();
+
+// Enable debug mode to see detailed logs
+steam.setDebug(true);
+
+// Set custom SDK path BEFORE any Steam operations
+steam.setSdkPath('vendor/steamworks_sdk');
+
+// Check restart requirement (with debug logs)
+if (steam.restartAppIfNecessary(480)) {
+  process.exit(0);
+}
+
+// Initialize (with debug logs)
+steam.init({ appId: 480 });
+
+// Disable debug logs if desired
+steam.setDebug(false);
+
+// Use SteamLogger in your own code for consistent logging
+SteamLogger.debug('[MyApp] Custom debug message');
+SteamLogger.warn('[MyApp] Warning message');
+SteamLogger.error('[MyApp] Error message');
+```
+
+### Benefits
+- **Development**: See detailed initialization and SDK loading information
+- **Production**: Disable debug logs to reduce noise in production environments
+- **Troubleshooting**: Easily diagnose SDK path issues and initialization problems
+- **Flexibility**: Toggle debug mode at any point during runtime
+- **Integration**: Use `SteamLogger` in your own code for consistent logging
+- **Scalability**: All managers and custom code can use the same logging system
 
 ### Why This Change?
 According to Steamworks standards, `restartAppIfNecessary()` must be called BEFORE `init()` to ensure proper Steam authentication and overlay functionality. The previous v0.8.6 implementation passed `sdkPath` to `init()`, which meant `restartAppIfNecessary()` couldn't access custom SDK paths and would fail. The new `setSdkPath()` method allows setting the path once before any Steam operations.
@@ -327,7 +376,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
-| 0.8.7 | 2026-01-09 | Fixed custom SDK path API - setSdkPath() method (BREAKING) |
+| 0.8.7 | 2026-01-09 | Debug mode with SteamLogger, Custom SDK path API fix (BREAKING) |
 | 0.8.6 | 2026-01-07 | Custom SDK path support (deprecated immediately) |
 | 0.8.5 | 2026-01-07 | restartAppIfNecessary(), No steam_appid.txt file required |
 | 0.8.4 | 2026-01-04 | Fix issue with `GetAuthTicketForWebApi()` callback on Windows |
