@@ -2,6 +2,7 @@ import * as koffi from 'koffi';
 import { SteamLibraryLoader, CCallbackBase, FnCallbackRunPtr, FnCallbackRunResultPtr, FnGetCallbackSizeBytesPtr } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamCallbackPoller } from './SteamCallbackPoller';
+import { SteamLogger } from './SteamLogger';
 import {
   K_I_GET_TICKET_FOR_WEB_API_RESPONSE,
   K_I_ENCRYPTED_APP_TICKET_RESPONSE,
@@ -176,7 +177,7 @@ export class SteamUserManager {
           const response = koffi.decode(pvParam, GetTicketForWebApiResponse_t);
           this.handleWebApiTicketResponse(response);
         } catch (error) {
-          console.error('[SteamUserManager] Error in Web API ticket callback:', error);
+          SteamLogger.error('[Steamworks] Error in Web API ticket callback:', error);
         }
       };
 
@@ -187,7 +188,7 @@ export class SteamUserManager {
           const response = koffi.decode(pvParam, GetTicketForWebApiResponse_t);
           this.handleWebApiTicketResponse(response);
         } catch (error) {
-          console.error('[SteamUserManager] Error in Web API ticket callback (RunResult):', error);
+          SteamLogger.error('[Steamworks] Error in Web API ticket callback (RunResult):', error);
         }
       };
       
@@ -224,7 +225,7 @@ export class SteamUserManager {
 
       this.webApiCallbackRegistered = true;
     } catch (error) {
-      console.error('[SteamUserManager] Failed to register Web API ticket callback:', error);
+      SteamLogger.error('[Steamworks] Failed to register Web API ticket callback:', error);
     }
   }
 
@@ -234,7 +235,7 @@ export class SteamUserManager {
   private handleWebApiTicketResponse(response: GetTicketForWebApiResponseType): void {
     const pending = this.pendingWebApiTickets.get(response.m_hAuthTicket);
     if (!pending) {
-      console.warn('[SteamUserManager] Received callback for unknown auth ticket:', response.m_hAuthTicket);
+      SteamLogger.warn('[Steamworks] Received callback for unknown auth ticket:', response.m_hAuthTicket);
       return;
     }
 
@@ -381,7 +382,7 @@ export class SteamUserManager {
       }
       return this.libraryLoader.SteamAPI_ISteamUser_BLoggedOn(userInterface);
     } catch (error) {
-      console.error('[SteamAuthManager] Error checking login status:', error);
+      SteamLogger.error('[Steamworks] Error checking login status:', error);
       return false;
     }
   }
@@ -493,7 +494,7 @@ export class SteamUserManager {
         ticketSize: actualSize,
       };
     } catch (error) {
-      console.error('[SteamAuthManager] Error getting auth session ticket:', error);
+      SteamLogger.error('[Steamworks] Error getting auth session ticket:', error);
       return {
         success: false,
         authTicket: k_HAuthTicketInvalid,
@@ -657,7 +658,7 @@ export class SteamUserManager {
         };
       });
     } catch (error) {
-      console.error('[SteamUserManager] Error getting Web API ticket:', error);
+      SteamLogger.error('[Steamworks] Error getting Web API ticket:', error);
       return {
         success: false,
         authTicket: k_HAuthTicketInvalid,
@@ -698,7 +699,7 @@ export class SteamUserManager {
       this.libraryLoader.SteamAPI_ISteamUser_CancelAuthTicket(userInterface, authTicket);
       this.activeTickets.delete(authTicket);
     } catch (error) {
-      console.error('[SteamAuthManager] Error canceling auth ticket:', error);
+      SteamLogger.error('[Steamworks] Error canceling auth ticket:', error);
     }
   }
 
@@ -783,7 +784,7 @@ export class SteamUserManager {
         error: errorMessages[result] || `Unknown error: ${result}`,
       };
     } catch (error) {
-      console.error('[SteamAuthManager] Error beginning auth session:', error);
+      SteamLogger.error('[Steamworks] Error beginning auth session:', error);
       return {
         success: false,
         result: EBeginAuthSessionResult.InvalidTicket,
@@ -818,7 +819,7 @@ export class SteamUserManager {
       const steamIdBigInt = BigInt(steamId);
       this.libraryLoader.SteamAPI_ISteamUser_EndAuthSession(userInterface, steamIdBigInt);
     } catch (error) {
-      console.error('[SteamAuthManager] Error ending auth session:', error);
+      SteamLogger.error('[Steamworks] Error ending auth session:', error);
     }
   }
 
@@ -869,7 +870,7 @@ export class SteamUserManager {
         appId
       ) as EUserHasLicenseForAppResult;
     } catch (error) {
-      console.error('[SteamAuthManager] Error checking license:', error);
+      SteamLogger.error('[Steamworks] Error checking license:', error);
       return EUserHasLicenseForAppResult.NoAuth;
     }
   }
@@ -951,7 +952,7 @@ export class SteamUserManager {
 
       return { success: true };
     } catch (error) {
-      console.error('[SteamAuthManager] Error requesting encrypted app ticket:', error);
+      SteamLogger.error('[Steamworks] Error requesting encrypted app ticket:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -1023,7 +1024,7 @@ export class SteamUserManager {
         ticketHex,
       };
     } catch (error) {
-      console.error('[SteamAuthManager] Error getting encrypted app ticket:', error);
+      SteamLogger.error('[Steamworks] Error getting encrypted app ticket:', error);
       return {
         success: false,
         ticketData: Buffer.alloc(0),
@@ -1077,7 +1078,7 @@ export class SteamUserManager {
         phoneRequiringVerification: this.libraryLoader.SteamAPI_ISteamUser_BIsPhoneRequiringVerification(userInterface),
       };
     } catch (error) {
-      console.error('[SteamAuthManager] Error getting security info:', error);
+      SteamLogger.error('[Steamworks] Error getting security info:', error);
       return {
         phoneVerified: false,
         twoFactorEnabled: false,
@@ -1104,7 +1105,7 @@ export class SteamUserManager {
       }
       return this.libraryLoader.SteamAPI_ISteamUser_BIsBehindNAT(userInterface);
     } catch (error) {
-      console.error('[SteamAuthManager] Error checking NAT status:', error);
+      SteamLogger.error('[Steamworks] Error checking NAT status:', error);
       return false;
     }
   }
@@ -1126,7 +1127,7 @@ export class SteamUserManager {
       }
       return this.libraryLoader.SteamAPI_ISteamUser_GetPlayerSteamLevel(userInterface);
     } catch (error) {
-      console.error('[SteamAuthManager] Error getting Steam level:', error);
+      SteamLogger.error('[Steamworks] Error getting Steam level:', error);
       return 0;
     }
   }
@@ -1157,7 +1158,7 @@ export class SteamUserManager {
       }
       return this.libraryLoader.SteamAPI_ISteamUser_GetGameBadgeLevel(userInterface, series, foil);
     } catch (error) {
-      console.error('[SteamAuthManager] Error getting game badge level:', error);
+      SteamLogger.error('[Steamworks] Error getting game badge level:', error);
       return 0;
     }
   }
@@ -1203,7 +1204,7 @@ export class SteamUserManager {
       if (endIndex === -1) endIndex = bufferSize;
       return buffer.toString('utf8', 0, endIndex);
     } catch (error) {
-      console.error('[SteamAuthManager] Error getting user data folder:', error);
+      SteamLogger.error('[Steamworks] Error getting user data folder:', error);
       return null;
     }
   }
@@ -1278,7 +1279,7 @@ export class SteamUserManager {
         newDeviceCooldownDays: result.m_cdayNewDeviceCooldown,
       };
     } catch (error) {
-      console.error('[SteamUserManager] Error getting market eligibility:', error);
+      SteamLogger.error('[Steamworks] Error getting market eligibility:', error);
       return {
         allowed: false,
         notAllowedReason: -1,
@@ -1367,7 +1368,7 @@ export class SteamUserManager {
         url: urlString || null,
       };
     } catch (error) {
-      console.error('[SteamUserManager] Error requesting store auth URL:', error);
+      SteamLogger.error('[Steamworks] Error requesting store auth URL:', error);
       return {
         success: false,
         url: null,
@@ -1462,7 +1463,7 @@ export class SteamUserManager {
         secondsRemaining: result.m_csecsRemaining,
       };
     } catch (error) {
-      console.error('[SteamAuthManager] Error getting duration control:', error);
+      SteamLogger.error('[Steamworks] Error getting duration control:', error);
       return {
         success: false,
         appId: 0,
@@ -1505,7 +1506,7 @@ export class SteamUserManager {
       }
       return this.libraryLoader.SteamAPI_ISteamUser_BSetDurationControlOnlineState(userInterface, state);
     } catch (error) {
-      console.error('[SteamAuthManager] Error setting duration control state:', error);
+      SteamLogger.error('[Steamworks] Error setting duration control state:', error);
       return false;
     }
   }
@@ -1547,7 +1548,7 @@ export class SteamUserManager {
         serverPort
       );
     } catch (error) {
-      console.error('[SteamAuthManager] Error advertising game:', error);
+      SteamLogger.error('[Steamworks] Error advertising game:', error);
     }
   }
 
@@ -1583,7 +1584,7 @@ export class SteamUserManager {
 
       this.libraryLoader.SteamAPI_ISteamUser_StartVoiceRecording(userInterface);
     } catch (error) {
-      console.error('[SteamUserManager] Error starting voice recording:', error);
+      SteamLogger.error('[Steamworks] Error starting voice recording:', error);
     }
   }
 
@@ -1619,7 +1620,7 @@ export class SteamUserManager {
 
       this.libraryLoader.SteamAPI_ISteamUser_StopVoiceRecording(userInterface);
     } catch (error) {
-      console.error('[SteamUserManager] Error stopping voice recording:', error);
+      SteamLogger.error('[Steamworks] Error stopping voice recording:', error);
     }
   }
 
@@ -1662,7 +1663,7 @@ export class SteamUserManager {
         compressedBytes: compressedBytesBuffer.readUInt32LE(0),
       };
     } catch (error) {
-      console.error('[SteamUserManager] Error getting available voice:', error);
+      SteamLogger.error('[Steamworks] Error getting available voice:', error);
       return {
         result: EVoiceResult.NotInitialized,
         compressedBytes: 0,
@@ -1745,7 +1746,7 @@ export class SteamUserManager {
         bytesWritten: 0,
       };
     } catch (error) {
-      console.error('[SteamUserManager] Error getting voice:', error);
+      SteamLogger.error('[Steamworks] Error getting voice:', error);
       return {
         result: EVoiceResult.NotInitialized,
         voiceData: null,
@@ -1830,7 +1831,7 @@ export class SteamUserManager {
         bytesWritten: 0,
       };
     } catch (error) {
-      console.error('[SteamUserManager] Error decompressing voice:', error);
+      SteamLogger.error('[Steamworks] Error decompressing voice:', error);
       return {
         result: EVoiceResult.NotInitialized,
         audioData: null,
@@ -1868,7 +1869,7 @@ export class SteamUserManager {
 
       return this.libraryLoader.SteamAPI_ISteamUser_GetVoiceOptimalSampleRate(userInterface);
     } catch (error) {
-      console.error('[SteamUserManager] Error getting optimal sample rate:', error);
+      SteamLogger.error('[Steamworks] Error getting optimal sample rate:', error);
       return 0;
     }
   }

@@ -1,5 +1,6 @@
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import { SteamLogger } from './SteamLogger';
 import {
   CloudFileInfo,
   CloudQuota,
@@ -102,13 +103,13 @@ export class SteamCloudManager {
    */
   fileWrite(filename: string, data: Buffer): boolean {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const remoteStorage = this.apiCore.getRemoteStorageInterface();
     if (!remoteStorage) {
-      console.error('[Steamworks] ISteamRemoteStorage interface not available');
+      SteamLogger.error('[Steamworks] ISteamRemoteStorage interface not available');
       return false;
     }
 
@@ -122,7 +123,7 @@ export class SteamCloudManager {
 
       return result;
     } catch (error) {
-      console.error('[Steamworks] Error writing file to Steam Cloud:', error);
+      SteamLogger.error('[Steamworks] Error writing file to Steam Cloud:', error);
       return false;
     }
   }
@@ -156,13 +157,13 @@ export class SteamCloudManager {
     };
 
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return result;
     }
 
     const remoteStorage = this.apiCore.getRemoteStorageInterface();
     if (!remoteStorage) {
-      console.error('[Steamworks] ISteamRemoteStorage interface not available');
+      SteamLogger.error('[Steamworks] ISteamRemoteStorage interface not available');
       return result;
     }
 
@@ -191,7 +192,7 @@ export class SteamCloudManager {
 
       return result;
     } catch (error) {
-      console.error('[Steamworks] Error reading file from Steam Cloud:', error);
+      SteamLogger.error('[Steamworks] Error reading file from Steam Cloud:', error);
       return result;
     }
   }
@@ -222,7 +223,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_FileExists(remoteStorage, filename);
     } catch (error) {
-      console.error('[Steamworks] Error checking file existence:', error);
+      SteamLogger.error('[Steamworks] Error checking file existence:', error);
       return false;
     }
   }
@@ -259,7 +260,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_FileDelete(remoteStorage, filename);
     } catch (error) {
-      console.error('[Steamworks] Error deleting file:', error);
+      SteamLogger.error('[Steamworks] Error deleting file:', error);
       return false;
     }
   }
@@ -289,7 +290,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_GetFileSize(remoteStorage, filename);
     } catch (error) {
-      console.error('[Steamworks] Error getting file size:', error);
+      SteamLogger.error('[Steamworks] Error getting file size:', error);
       return 0;
     }
   }
@@ -320,7 +321,7 @@ export class SteamCloudManager {
     try {
       return Number(this.libraryLoader.SteamAPI_ISteamRemoteStorage_GetFileTimestamp(remoteStorage, filename));
     } catch (error) {
-      console.error('[Steamworks] Error getting file timestamp:', error);
+      SteamLogger.error('[Steamworks] Error getting file timestamp:', error);
       return 0;
     }
   }
@@ -349,7 +350,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_GetFileCount(remoteStorage);
     } catch (error) {
-      console.error('[Steamworks] Error getting file count:', error);
+      SteamLogger.error('[Steamworks] Error getting file count:', error);
       return 0;
     }
   }
@@ -405,13 +406,13 @@ export class SteamCloudManager {
       
       // Validate size is non-negative
       if (size < 0) {
-        console.warn('[Steamworks] Invalid file size returned for ' + name + ': ' + size);
+        SteamLogger.warn('[Steamworks] Invalid file size returned for ' + name + ': ' + size);
         return { name, size: 0 };
       }
       
       return { name, size };
     } catch (error) {
-      console.error('[Steamworks] Error getting file name and size:', error);
+      SteamLogger.error('[Steamworks] Error getting file name and size:', error);
       return null;
     }
   }
@@ -488,7 +489,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_FilePersisted(remoteStorage, filename);
     } catch (error) {
-      console.error('[Steamworks] Error checking file persisted status:', error);
+      SteamLogger.error('[Steamworks] Error checking file persisted status:', error);
       return false;
     }
   }
@@ -549,7 +550,7 @@ export class SteamCloudManager {
 
       return quota;
     } catch (error) {
-      console.error('[Steamworks] Error getting cloud quota:', error);
+      SteamLogger.error('[Steamworks] Error getting cloud quota:', error);
       return quota;
     }
   }
@@ -583,7 +584,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount(remoteStorage);
     } catch (error) {
-      console.error('[Steamworks] Error checking cloud enabled for account:', error);
+      SteamLogger.error('[Steamworks] Error checking cloud enabled for account:', error);
       return false;
     }
   }
@@ -617,7 +618,7 @@ export class SteamCloudManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp(remoteStorage);
     } catch (error) {
-      console.error('[Steamworks] Error checking cloud enabled for app:', error);
+      SteamLogger.error('[Steamworks] Error checking cloud enabled for app:', error);
       return false;
     }
   }
@@ -651,7 +652,7 @@ export class SteamCloudManager {
     try {
       this.libraryLoader.SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp(remoteStorage, enabled);
     } catch (error) {
-      console.error('[Steamworks] Error setting cloud enabled for app:', error);
+      SteamLogger.error('[Steamworks] Error setting cloud enabled for app:', error);
     }
   }
 
@@ -688,20 +689,20 @@ export class SteamCloudManager {
    */
   beginFileWriteBatch(): boolean {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const remoteStorage = this.apiCore.getRemoteStorageInterface();
     if (!remoteStorage) {
-      console.error('[Steamworks] ISteamRemoteStorage interface not available');
+      SteamLogger.error('[Steamworks] ISteamRemoteStorage interface not available');
       return false;
     }
 
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_BeginFileWriteBatch(remoteStorage);
     } catch (error) {
-      console.error('[Steamworks] Error beginning file write batch:', error);
+      SteamLogger.error('[Steamworks] Error beginning file write batch:', error);
       return false;
     }
   }
@@ -732,20 +733,20 @@ export class SteamCloudManager {
    */
   endFileWriteBatch(): boolean {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const remoteStorage = this.apiCore.getRemoteStorageInterface();
     if (!remoteStorage) {
-      console.error('[Steamworks] ISteamRemoteStorage interface not available');
+      SteamLogger.error('[Steamworks] ISteamRemoteStorage interface not available');
       return false;
     }
 
     try {
       return this.libraryLoader.SteamAPI_ISteamRemoteStorage_EndFileWriteBatch(remoteStorage);
     } catch (error) {
-      console.error('[Steamworks] Error ending file write batch:', error);
+      SteamLogger.error('[Steamworks] Error ending file write batch:', error);
       return false;
     }
   }
@@ -786,7 +787,7 @@ export class SteamCloudManager {
     };
 
     if (!this.beginFileWriteBatch()) {
-      console.error('[Steamworks] Failed to begin file write batch');
+      SteamLogger.error('[Steamworks] Failed to begin file write batch');
       return result;
     }
 

@@ -1,5 +1,6 @@
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import { SteamLogger } from './SteamLogger';
 import { 
   EOverlayDialog, 
   EOverlayToUserDialog, 
@@ -136,13 +137,13 @@ export class SteamOverlayManager {
    */
   activateGameOverlay(dialog: EOverlayDialog | string): void {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Cannot activate overlay: Steam not initialized');
+      SteamLogger.error('[Steamworks] Cannot activate overlay: Steam not initialized');
       return;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[Steamworks] Friends interface not available');
+      SteamLogger.error('[Steamworks] Friends interface not available');
       return;
     }
 
@@ -152,7 +153,7 @@ export class SteamOverlayManager {
         dialog
       );
     } catch (error) {
-      console.error('[Steamworks] Error activating overlay:', error);
+      SteamLogger.error('[Steamworks] Error activating overlay:', error);
     }
   }
 
@@ -215,13 +216,13 @@ export class SteamOverlayManager {
    */
   activateGameOverlayToUser(dialog: EOverlayToUserDialog | string, steamId: string): void {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Cannot activate overlay to user: Steam not initialized');
+      SteamLogger.error('[Steamworks] Cannot activate overlay to user: Steam not initialized');
       return;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[Steamworks] Friends interface not available');
+      SteamLogger.error('[Steamworks] Friends interface not available');
       return;
     }
 
@@ -233,7 +234,7 @@ export class SteamOverlayManager {
         steamId64
       );
     } catch (error) {
-      console.error('[Steamworks] Error activating overlay to user:', error);
+      SteamLogger.error('[Steamworks] Error activating overlay to user:', error);
     }
   }
 
@@ -294,13 +295,13 @@ export class SteamOverlayManager {
     mode: EActivateGameOverlayToWebPageMode = EActivateGameOverlayToWebPageMode.Default
   ): void {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Cannot activate overlay to web page: Steam not initialized');
+      SteamLogger.error('[Steamworks] Cannot activate overlay to web page: Steam not initialized');
       return;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[Steamworks] Friends interface not available');
+      SteamLogger.error('[Steamworks] Friends interface not available');
       return;
     }
 
@@ -311,7 +312,7 @@ export class SteamOverlayManager {
         mode
       );
     } catch (error) {
-      console.error('[Steamworks] Error activating overlay to web page:', error);
+      SteamLogger.error('[Steamworks] Error activating overlay to web page:', error);
     }
   }
 
@@ -369,13 +370,13 @@ export class SteamOverlayManager {
    */
   activateGameOverlayToStore(appId: number, flag: EOverlayToStoreFlag = EOverlayToStoreFlag.None): void {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Cannot activate overlay to store: Steam not initialized');
+      SteamLogger.error('[Steamworks] Cannot activate overlay to store: Steam not initialized');
       return;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[Steamworks] Friends interface not available');
+      SteamLogger.error('[Steamworks] Friends interface not available');
       return;
     }
 
@@ -386,7 +387,7 @@ export class SteamOverlayManager {
         flag
       );
     } catch (error) {
-      console.error('[Steamworks] Error activating overlay to store:', error);
+      SteamLogger.error('[Steamworks] Error activating overlay to store:', error);
     }
   }
 
@@ -426,13 +427,13 @@ export class SteamOverlayManager {
    */
   activateGameOverlayInviteDialog(steamIdLobby: string): void {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Cannot activate invite dialog: Steam not initialized');
+      SteamLogger.error('[Steamworks] Cannot activate invite dialog: Steam not initialized');
       return;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[Steamworks] Friends interface not available');
+      SteamLogger.error('[Steamworks] Friends interface not available');
       return;
     }
 
@@ -443,7 +444,7 @@ export class SteamOverlayManager {
         lobbyId64
       );
     } catch (error) {
-      console.error('[Steamworks] Error activating invite dialog:', error);
+      SteamLogger.error('[Steamworks] Error activating invite dialog:', error);
     }
   }
 
@@ -480,13 +481,13 @@ export class SteamOverlayManager {
    */
   activateGameOverlayRemotePlayTogetherInviteDialog(steamIdLobby: string): void {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Cannot activate Remote Play invite: Steam not initialized');
+      SteamLogger.error('[Steamworks] Cannot activate Remote Play invite: Steam not initialized');
       return;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[Steamworks] Friends interface not available');
+      SteamLogger.error('[Steamworks] Friends interface not available');
       return;
     }
 
@@ -497,7 +498,7 @@ export class SteamOverlayManager {
         lobbyId64
       );
     } catch (error) {
-      console.error('[Steamworks] Error activating Remote Play invite:', error);
+      SteamLogger.error('[Steamworks] Error activating Remote Play invite:', error);
     }
   }
 
@@ -551,13 +552,13 @@ export class SteamOverlayManager {
    */
   activateGameOverlayInviteDialogConnectString(connectString: string): void {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Cannot activate invite dialog: Steam not initialized');
+      SteamLogger.error('[Steamworks] Cannot activate invite dialog: Steam not initialized');
       return;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.error('[Steamworks] Friends interface not available');
+      SteamLogger.error('[Steamworks] Friends interface not available');
       return;
     }
 
@@ -567,7 +568,7 @@ export class SteamOverlayManager {
         connectString
       );
     } catch (error) {
-      console.error('[Steamworks] Error activating invite dialog with connect string:', error);
+      SteamLogger.error('[Steamworks] Error activating invite dialog with connect string:', error);
     }
   }
 }

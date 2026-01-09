@@ -1,6 +1,7 @@
 import * as koffi from 'koffi';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import { SteamLogger } from './SteamLogger';
 import {
   ESteamNetworkingAvailability,
   ESteamNetworkingSocketsDebugOutputType,
@@ -160,7 +161,7 @@ export class SteamNetworkingUtilsManager {
     try {
       this.libraryLoader.SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess(utils);
     } catch (error) {
-      console.error('Failed to initialize relay network access:', error);
+      SteamLogger.error('[Steamworks] Failed to initialize relay network access:', error);
     }
   }
 
@@ -215,7 +216,7 @@ export class SteamNetworkingUtilsManager {
         debugMessage: '',
       };
     } catch (error) {
-      console.error('Failed to get relay network status:', error);
+      SteamLogger.error('[Steamworks] Failed to get relay network status:', error);
       return defaultStatus;
     }
   }
@@ -288,7 +289,7 @@ export class SteamNetworkingUtilsManager {
         dataAge,
       };
     } catch (error) {
-      console.error('Failed to get local ping location:', error);
+      SteamLogger.error('[Steamworks] Failed to get local ping location:', error);
       return null;
     }
   }
@@ -363,7 +364,7 @@ export class SteamNetworkingUtilsManager {
       
       return { pingMs, valid: true };
     } catch (error) {
-      console.error('Failed to estimate ping between locations:', error);
+      SteamLogger.error('[Steamworks] Failed to estimate ping between locations:', error);
       return { pingMs: -1, valid: false, error: String(error) };
     }
   }
@@ -421,7 +422,7 @@ export class SteamNetworkingUtilsManager {
       
       return { pingMs, valid: true };
     } catch (error) {
-      console.error('Failed to estimate ping from local host:', error);
+      SteamLogger.error('[Steamworks] Failed to estimate ping from local host:', error);
       return { pingMs: -1, valid: false, error: String(error) };
     }
   }
@@ -450,7 +451,7 @@ export class SteamNetworkingUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamNetworkingUtils_CheckPingDataUpToDate(utils, maxAgeSeconds);
     } catch (error) {
-      console.error('Failed to check ping data freshness:', error);
+      SteamLogger.error('[Steamworks] Failed to check ping data freshness:', error);
       return false;
     }
   }
@@ -477,7 +478,7 @@ export class SteamNetworkingUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamNetworkingUtils_GetPOPCount(utils);
     } catch (error) {
-      console.error('Failed to get POP count:', error);
+      SteamLogger.error('[Steamworks] Failed to get POP count:', error);
       return 0;
     }
   }
@@ -553,7 +554,7 @@ export class SteamNetworkingUtilsManager {
       
       return popInfos;
     } catch (error) {
-      console.error('Failed to get POP list:', error);
+      SteamLogger.error('[Steamworks] Failed to get POP list:', error);
       return [];
     }
   }
@@ -592,7 +593,7 @@ export class SteamNetworkingUtilsManager {
       const viaRelayPOP = koffi.decode(viaRelayPopIdPtr, 'uint32') as number;
       return { pingMs, viaRelayPOP };
     } catch (error) {
-      console.error('Failed to get ping to data center:', error);
+      SteamLogger.error('[Steamworks] Failed to get ping to data center:', error);
       return null;
     }
   }
@@ -618,7 +619,7 @@ export class SteamNetworkingUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamNetworkingUtils_GetDirectPingToPOP(utils, popId);
     } catch (error) {
-      console.error('Failed to get direct ping to POP:', error);
+      SteamLogger.error('[Steamworks] Failed to get direct ping to POP:', error);
       return -1;
     }
   }
@@ -656,7 +657,7 @@ export class SteamNetworkingUtilsManager {
       const timestamp = this.libraryLoader.SteamAPI_ISteamNetworkingUtils_GetLocalTimestamp(utils);
       return BigInt(timestamp);
     } catch (error) {
-      console.error('Failed to get local timestamp:', error);
+      SteamLogger.error('[Steamworks] Failed to get local timestamp:', error);
       return 0n;
     }
   }
@@ -694,7 +695,7 @@ export class SteamNetworkingUtilsManager {
       // Pass null for callback since we can't easily handle function pointers in this setup
       this.libraryLoader.SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction(utils, level, null);
     } catch (error) {
-      console.error('Failed to set debug output level:', error);
+      SteamLogger.error('[Steamworks] Failed to set debug output level:', error);
     }
   }
 }

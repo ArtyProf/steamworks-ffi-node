@@ -8,6 +8,7 @@ import {
 } from '../types';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import { SteamLogger } from './SteamLogger';
 
 /**
  * SteamAchievementManager
@@ -76,13 +77,13 @@ export class SteamAchievementManager {
    */
   async getAllAchievements(): Promise<SteamAchievement[]> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return [];
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return [];
     }
 
@@ -93,7 +94,7 @@ export class SteamAchievementManager {
       const achievements: SteamAchievement[] = [];
       const numAchievements = this.libraryLoader.SteamAPI_ISteamUserStats_GetNumAchievements(userStatsInterface);
       
-      console.log(`[Steamworks] Found ${numAchievements} achievements in Steam`);
+      SteamLogger.debug(`[Steamworks] Found ${numAchievements} achievements in Steam`);
 
       for (let i = 0; i < numAchievements; i++) {
         try {
@@ -130,14 +131,14 @@ export class SteamAchievementManager {
           });
 
         } catch (error) {
-          console.warn(`[Steamworks] Failed to get achievement ${i}:`, (error as Error).message);
+          SteamLogger.warn(`[Steamworks] Failed to get achievement ${i}:`, (error as Error).message);
         }
       }
 
       return achievements;
 
     } catch (error) {
-      console.error('[Steamworks] ERROR: Failed to get achievements:', (error as Error).message);
+      SteamLogger.error('[Steamworks] ERROR: Failed to get achievements:', (error as Error).message);
       return [];
     }
   }
@@ -172,18 +173,18 @@ export class SteamAchievementManager {
    */
   async unlockAchievement(achievementName: string): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return false;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return false;
     }
 
     try {
-      console.log(`[Steamworks] Attempting to unlock achievement: ${achievementName}`);
+      SteamLogger.debug(`[Steamworks] Attempting to unlock achievement: ${achievementName}`);
       
       // Set the achievement
       const result = this.libraryLoader.SteamAPI_ISteamUserStats_SetAchievement(userStatsInterface, achievementName);
@@ -196,19 +197,19 @@ export class SteamAchievementManager {
           // Run callbacks to process the achievement unlock
           this.apiCore.runCallbacks();
           
-          console.log(`[Steamworks] Achievement unlocked successfully: ${achievementName}`);
+          SteamLogger.debug(`[Steamworks] Achievement unlocked successfully: ${achievementName}`);
           return true;
         } else {
-          console.error(`[Steamworks] ERROR: Failed to store stats for achievement: ${achievementName}`);
+          SteamLogger.error(`[Steamworks] ERROR: Failed to store stats for achievement: ${achievementName}`);
           return false;
         }
       } else {
-        console.error(`[Steamworks] ERROR: Failed to set achievement: ${achievementName}`);
+        SteamLogger.error(`[Steamworks] ERROR: Failed to set achievement: ${achievementName}`);
         return false;
       }
 
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error unlocking achievement ${achievementName}:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error unlocking achievement ${achievementName}:`, (error as Error).message);
       return false;
     }
   }
@@ -243,13 +244,13 @@ export class SteamAchievementManager {
    */
   async clearAchievement(achievementName: string): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return false;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return false;
     }
 
@@ -270,16 +271,16 @@ export class SteamAchievementManager {
           console.log(`[Steamworks] Achievement cleared successfully: ${achievementName}`);
           return true;
         } else {
-          console.error(`[Steamworks] ERROR: Failed to store stats for clearing achievement: ${achievementName}`);
+          SteamLogger.error(`[Steamworks] ERROR: Failed to store stats for clearing achievement: ${achievementName}`);
           return false;
         }
       } else {
-        console.error(`[Steamworks] ERROR: Failed to clear achievement: ${achievementName}`);
+        SteamLogger.error(`[Steamworks] ERROR: Failed to clear achievement: ${achievementName}`);
         return false;
       }
 
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error clearing achievement ${achievementName}:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error clearing achievement ${achievementName}:`, (error as Error).message);
       return false;
     }
   }
@@ -328,7 +329,7 @@ export class SteamAchievementManager {
       return hasAchievement ? koffi.decode(unlockedPtr, 'bool') : false;
 
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error checking achievement ${achievementName}:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error checking achievement ${achievementName}:`, (error as Error).message);
       return false;
     }
   }
@@ -395,7 +396,7 @@ export class SteamAchievementManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUserStats_GetNumAchievements(userStatsInterface);
     } catch (error) {
-      console.error('[Steamworks] ERROR: Error getting achievement count:', (error as Error).message);
+      SteamLogger.error('[Steamworks] ERROR: Error getting achievement count:', (error as Error).message);
       return 0;
     }
   }
@@ -455,13 +456,13 @@ export class SteamAchievementManager {
    */
   async getAchievementIcon(achievementName: string): Promise<number> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return 0;
     }
 
@@ -474,7 +475,7 @@ export class SteamAchievementManager {
       console.log(`[Steamworks] Achievement icon handle for ${achievementName}: ${iconHandle}`);
       return iconHandle;
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error getting achievement icon:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error getting achievement icon:`, (error as Error).message);
       return 0;
     }
   }
@@ -514,13 +515,13 @@ export class SteamAchievementManager {
     maxProgress: number
   ): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return false;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return false;
     }
 
@@ -539,11 +540,11 @@ export class SteamAchievementManager {
         console.log(`[Steamworks] Achievement progress indicated successfully`);
         return true;
       } else {
-        console.error(`[Steamworks] ERROR: Failed to indicate achievement progress`);
+        SteamLogger.error(`[Steamworks] ERROR: Failed to indicate achievement progress`);
         return false;
       }
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error indicating achievement progress:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error indicating achievement progress:`, (error as Error).message);
       return false;
     }
   }
@@ -576,13 +577,13 @@ export class SteamAchievementManager {
    */
   async getAchievementProgressLimitsInt(achievementName: string): Promise<AchievementProgressLimits | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return null;
     }
 
@@ -606,7 +607,7 @@ export class SteamAchievementManager {
       
       return null;
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error getting achievement progress limits:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error getting achievement progress limits:`, (error as Error).message);
       return null;
     }
   }
@@ -639,13 +640,13 @@ export class SteamAchievementManager {
    */
   async getAchievementProgressLimitsFloat(achievementName: string): Promise<AchievementProgressLimits | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return null;
     }
 
@@ -669,7 +670,7 @@ export class SteamAchievementManager {
       
       return null;
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error getting achievement progress limits:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error getting achievement progress limits:`, (error as Error).message);
       return null;
     }
   }
@@ -709,13 +710,13 @@ export class SteamAchievementManager {
    */
   async requestUserStats(steamId: string): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return false;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return false;
     }
 
@@ -732,11 +733,11 @@ export class SteamAchievementManager {
         console.log(`[Steamworks] User stats request sent (call handle: ${callHandle})`);
         return true;
       } else {
-        console.error(`[Steamworks] ERROR: Failed to request user stats`);
+        SteamLogger.error(`[Steamworks] ERROR: Failed to request user stats`);
         return false;
       }
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error requesting user stats:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error requesting user stats:`, (error as Error).message);
       return false;
     }
   }
@@ -781,13 +782,13 @@ export class SteamAchievementManager {
    */
   async getUserAchievement(steamId: string, achievementName: string): Promise<UserAchievement | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return null;
     }
 
@@ -829,7 +830,7 @@ export class SteamAchievementManager {
       
       return null;
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error getting user achievement:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error getting user achievement:`, (error as Error).message);
       return null;
     }
   }
@@ -868,13 +869,13 @@ export class SteamAchievementManager {
    */
   async requestGlobalAchievementPercentages(): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return false;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return false;
     }
 
@@ -889,11 +890,11 @@ export class SteamAchievementManager {
         console.log(`[Steamworks] Global achievement percentages request sent (call handle: ${callHandle})`);
         return true;
       } else {
-        console.error(`[Steamworks] ERROR: Failed to request global achievement percentages`);
+        SteamLogger.error(`[Steamworks] ERROR: Failed to request global achievement percentages`);
         return false;
       }
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error requesting global achievement percentages:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error requesting global achievement percentages:`, (error as Error).message);
       return false;
     }
   }
@@ -929,13 +930,13 @@ export class SteamAchievementManager {
    */
   async getAchievementAchievedPercent(achievementName: string): Promise<number | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return null;
     }
 
@@ -956,7 +957,7 @@ export class SteamAchievementManager {
       
       return null;
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error getting achievement percentage:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error getting achievement percentage:`, (error as Error).message);
       return null;
     }
   }
@@ -1047,13 +1048,13 @@ export class SteamAchievementManager {
     iterator: number 
   } | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return null;
     }
 
@@ -1080,7 +1081,7 @@ export class SteamAchievementManager {
       
       return null;
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error getting most achieved achievement:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error getting most achieved achievement:`, (error as Error).message);
       return null;
     }
   }
@@ -1131,13 +1132,13 @@ export class SteamAchievementManager {
     iterator: number 
   } | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return null;
     }
 
@@ -1165,7 +1166,7 @@ export class SteamAchievementManager {
       
       return null;
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error getting next most achieved achievement:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error getting next most achieved achievement:`, (error as Error).message);
       return null;
     }
   }
@@ -1214,7 +1215,7 @@ export class SteamAchievementManager {
     // Get first achievement
     const first = await this.getMostAchievedAchievementInfo();
     if (!first) {
-      console.warn('[Steamworks] WARNING: No global achievement data available. Call requestGlobalAchievementPercentages() first.');
+      SteamLogger.warn('[Steamworks] WARNING: No global achievement data available. Call requestGlobalAchievementPercentages() first.');
       return results;
     }
     
@@ -1307,19 +1308,19 @@ export class SteamAchievementManager {
    */
   async resetAllStats(includeAchievements: boolean = false): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return false;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] WARNING: UserStats interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: UserStats interface not available');
       return false;
     }
 
     try {
       console.log(`[Steamworks] Resetting all stats (achievements: ${includeAchievements ? 'YES' : 'NO'})`);
-      console.warn('[Steamworks] WARNING: This will reset ALL user statistics!');
+      SteamLogger.warn('[Steamworks] WARNING: This will reset ALL user statistics!');
       
       const result = this.libraryLoader.SteamAPI_ISteamUserStats_ResetAllStats(
         userStatsInterface,
@@ -1335,15 +1336,15 @@ export class SteamAchievementManager {
           console.log(`[Steamworks] All stats reset successfully`);
           return true;
         } else {
-          console.error(`[Steamworks] ERROR: Failed to store stats after reset`);
+          SteamLogger.error(`[Steamworks] ERROR: Failed to store stats after reset`);
           return false;
         }
       } else {
-        console.error(`[Steamworks] ERROR: Failed to reset stats`);
+        SteamLogger.error(`[Steamworks] ERROR: Failed to reset stats`);
         return false;
       }
     } catch (error) {
-      console.error(`[Steamworks] ERROR: Error resetting stats:`, (error as Error).message);
+      SteamLogger.error(`[Steamworks] ERROR: Error resetting stats:`, (error as Error).message);
       return false;
     }
   }

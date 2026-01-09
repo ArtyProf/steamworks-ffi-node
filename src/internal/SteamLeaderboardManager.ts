@@ -2,6 +2,7 @@ import * as koffi from 'koffi';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamCallbackPoller } from './SteamCallbackPoller';
+import { SteamLogger } from './SteamLogger';
 import {
   LeaderboardEntry,
   LeaderboardInfo,
@@ -207,13 +208,13 @@ export class SteamLeaderboardManager {
     displayType: LeaderboardDisplayType
   ): Promise<LeaderboardInfo | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] UserStats interface not available');
+      SteamLogger.warn('[Steamworks] UserStats interface not available');
       return null;
     }
 
@@ -228,7 +229,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`[Steamworks] Failed to request leaderboard: ${name}`);
+        SteamLogger.error(`[Steamworks] Failed to request leaderboard: ${name}`);
         return null;
       }
 
@@ -239,12 +240,12 @@ export class SteamLeaderboardManager {
       );
 
       if (!result) {
-        console.error(`[Steamworks] Failed to get leaderboard result for: ${name}`);
+        SteamLogger.error(`[Steamworks] Failed to get leaderboard result for: ${name}`);
         return null;
       }
 
       if (!result.m_bLeaderboardFound) {
-        console.warn(`[Steamworks] Leaderboard not found/created: ${name}`);
+        SteamLogger.warn(`[Steamworks] Leaderboard not found/created: ${name}`);
         return null;
       }
 
@@ -253,7 +254,7 @@ export class SteamLeaderboardManager {
       return this.getLeaderboardInfo(result.m_hSteamLeaderboard);
       
     } catch (error: any) {
-      console.error(`[Steamworks] Error finding/creating leaderboard "${name}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error finding/creating leaderboard "${name}":`, error.message);
       return null;
     }
   }
@@ -286,13 +287,13 @@ export class SteamLeaderboardManager {
    */
   async findLeaderboard(name: string): Promise<LeaderboardInfo | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] UserStats interface not available');
+      SteamLogger.warn('[Steamworks] UserStats interface not available');
       return null;
     }
 
@@ -305,7 +306,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`[Steamworks] Failed to request leaderboard: ${name}`);
+        SteamLogger.error(`[Steamworks] Failed to request leaderboard: ${name}`);
         return null;
       }
 
@@ -316,7 +317,7 @@ export class SteamLeaderboardManager {
       );
 
       if (!result) {
-        console.error(`[Steamworks] Failed to get leaderboard result for: ${name}`);
+        SteamLogger.error(`[Steamworks] Failed to get leaderboard result for: ${name}`);
         return null;
       }
 
@@ -330,7 +331,7 @@ export class SteamLeaderboardManager {
       return this.getLeaderboardInfo(result.m_hSteamLeaderboard);
       
     } catch (error: any) {
-      console.error(`[Steamworks] Error finding leaderboard "${name}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error finding leaderboard "${name}":`, error.message);
       return null;
     }
   }
@@ -392,7 +393,7 @@ export class SteamLeaderboardManager {
         displayType
       };
     } catch (error: any) {
-      console.error(`[Steamworks] Error getting leaderboard info:`, error.message);
+      SteamLogger.error(`[Steamworks] Error getting leaderboard info:`, error.message);
       return null;
     }
   }
@@ -454,13 +455,13 @@ export class SteamLeaderboardManager {
     details?: number[]
   ): Promise<LeaderboardScoreUploadResult | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] UserStats interface not available');
+      SteamLogger.warn('[Steamworks] UserStats interface not available');
       return null;
     }
 
@@ -496,7 +497,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`[Steamworks] Failed to upload score`);
+        SteamLogger.error(`[Steamworks] Failed to upload score`);
         return null;
       }
 
@@ -508,12 +509,12 @@ export class SteamLeaderboardManager {
       );
 
       if (!result) {
-        console.error(`[Steamworks] Failed to get upload result`);
+        SteamLogger.error(`[Steamworks] Failed to get upload result`);
         return null;
       }
 
       if (!result.m_bSuccess) {
-        console.warn(`[Steamworks] Score upload was not successful`);
+        SteamLogger.warn(`[Steamworks] Score upload was not successful`);
         return null;
       }
 
@@ -530,7 +531,7 @@ export class SteamLeaderboardManager {
       console.log(`[Steamworks] Score uploaded: ${result.m_nScore} | Rank: ${result.m_nGlobalRankPrevious} → ${result.m_nGlobalRankNew} | Changed: ${result.m_bScoreChanged === 1}`);
       return uploadResult;
     } catch (error: any) {
-      console.error(`[Steamworks] Error uploading score:`, error.message);
+      SteamLogger.error(`[Steamworks] Error uploading score:`, error.message);
       return null;
     }
   }
@@ -596,13 +597,13 @@ export class SteamLeaderboardManager {
     rangeEnd: number
   ): Promise<LeaderboardEntry[]> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return [];
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] UserStats interface not available');
+      SteamLogger.warn('[Steamworks] UserStats interface not available');
       return [];
     }
 
@@ -618,7 +619,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`[Steamworks] Failed to download entries`);
+        SteamLogger.error(`[Steamworks] Failed to download entries`);
         return [];
       }
 
@@ -629,7 +630,7 @@ export class SteamLeaderboardManager {
       );
 
       if (!result) {
-        console.error(`[Steamworks] Failed to get download result`);
+        SteamLogger.error(`[Steamworks] Failed to get download result`);
         return [];
       }
 
@@ -677,7 +678,7 @@ export class SteamLeaderboardManager {
       console.log(`[Steamworks] Downloaded ${entries.length} entries`);
       return entries;
     } catch (error: any) {
-      console.error(`[Steamworks] Error downloading entries:`, error.message);
+      SteamLogger.error(`[Steamworks] Error downloading entries:`, error.message);
       return [];
     }
   }
@@ -721,13 +722,13 @@ export class SteamLeaderboardManager {
     steamIds: string[]
   ): Promise<LeaderboardEntry[]> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return [];
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] UserStats interface not available');
+      SteamLogger.warn('[Steamworks] UserStats interface not available');
       return [];
     }
 
@@ -749,7 +750,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`[Steamworks] Failed to download user entries`);
+        SteamLogger.error(`[Steamworks] Failed to download user entries`);
         return [];
       }
 
@@ -760,7 +761,7 @@ export class SteamLeaderboardManager {
       );
 
       if (!result) {
-        console.error(`[Steamworks] Failed to get download result`);
+        SteamLogger.error(`[Steamworks] Failed to get download result`);
         return [];
       }
 
@@ -808,7 +809,7 @@ export class SteamLeaderboardManager {
       console.log(`[Steamworks] Downloaded ${entries.length} user entries`);
       return entries;
     } catch (error: any) {
-      console.error(`[Steamworks] Error downloading user entries:`, error.message);
+      SteamLogger.error(`[Steamworks] Error downloading user entries:`, error.message);
       return [];
     }
   }
@@ -860,13 +861,13 @@ export class SteamLeaderboardManager {
     ugcHandle: bigint
   ): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const userStatsInterface = this.apiCore.getUserStatsInterface();
     if (!userStatsInterface) {
-      console.warn('[Steamworks] UserStats interface not available');
+      SteamLogger.warn('[Steamworks] UserStats interface not available');
       return false;
     }
 
@@ -880,7 +881,7 @@ export class SteamLeaderboardManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`[Steamworks] Failed to attach UGC`);
+        SteamLogger.error(`[Steamworks] Failed to attach UGC`);
         return false;
       }
 
@@ -892,20 +893,20 @@ export class SteamLeaderboardManager {
       );
 
       if (!result) {
-        console.error(`[Steamworks] Failed to get UGC attachment result`);
+        SteamLogger.error(`[Steamworks] Failed to get UGC attachment result`);
         return false;
       }
 
       // EResult k_EResultOK = 1
       if (result.m_eResult !== 1) {
-        console.warn(`[Steamworks] UGC attachment failed. Result code: ${result.m_eResult}`);
+        SteamLogger.warn(`[Steamworks] UGC attachment failed. Result code: ${result.m_eResult}`);
         return false;
       }
 
       console.log(`[Steamworks] UGC attached successfully`);
       return true;
     } catch (error: any) {
-      console.error(`[Steamworks] Error attaching UGC:`, error.message);
+      SteamLogger.error(`[Steamworks] Error attaching UGC:`, error.message);
       return false;
     }
   }

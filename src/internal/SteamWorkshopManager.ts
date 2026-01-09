@@ -42,6 +42,7 @@ import {
   DeleteItemResultType
 } from './callbackTypes';
 import * as koffi from 'koffi';
+import { SteamLogger } from './SteamLogger';
 
 // Manual buffer parsing for CreateItemResult_t callback
 // Steam uses #pragma pack causing different alignment on Windows vs Mac/Linux:
@@ -230,13 +231,13 @@ export class SteamWorkshopManager {
    */
   async subscribeItem(publishedFileId: PublishedFileId): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('[Steamworks] ISteamUGC interface not available');
+      SteamLogger.error('[Steamworks] ISteamUGC interface not available');
       return false;
     }
 
@@ -244,7 +245,7 @@ export class SteamWorkshopManager {
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_SubscribeItem(ugc, publishedFileId);
       
       if (callHandle === BigInt(0)) {
-        console.error('[Steamworks] Failed to initiate item subscription');
+        SteamLogger.error('[Steamworks] Failed to initiate item subscription');
         return false;
       }
 
@@ -261,10 +262,10 @@ export class SteamWorkshopManager {
         return true;
       }
 
-      console.error(`[Steamworks] Subscribe item failed with result: ${result?.m_eResult || 'unknown'}`);
+      SteamLogger.error(`[Steamworks] Subscribe item failed with result: ${result?.m_eResult || 'unknown'}`);
       return false;
     } catch (error) {
-      console.error('[Steamworks] Error subscribing to item:', error);
+      SteamLogger.error('[Steamworks] Error subscribing to item:', error);
       return false;
     }
   }  /**
@@ -288,13 +289,13 @@ export class SteamWorkshopManager {
    */
   async unsubscribeItem(publishedFileId: PublishedFileId): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('[Steamworks] ISteamUGC interface not available');
+      SteamLogger.error('[Steamworks] ISteamUGC interface not available');
       return false;
     }
 
@@ -302,7 +303,7 @@ export class SteamWorkshopManager {
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_UnsubscribeItem(ugc, publishedFileId);
       
       if (callHandle === BigInt(0)) {
-        console.error('[Steamworks] Failed to initiate item unsubscription');
+        SteamLogger.error('[Steamworks] Failed to initiate item unsubscription');
         return false;
       }
 
@@ -319,10 +320,10 @@ export class SteamWorkshopManager {
         return true;
       }
 
-      console.error(`[Steamworks] Unsubscribe item failed with result: ${result?.m_eResult || 'unknown'}`);
+      SteamLogger.error(`[Steamworks] Unsubscribe item failed with result: ${result?.m_eResult || 'unknown'}`);
       return false;
     } catch (error) {
-      console.error('[Steamworks] Error unsubscribing from item:', error);
+      SteamLogger.error('[Steamworks] Error unsubscribing from item:', error);
       return false;
     }
   }
@@ -351,7 +352,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_GetNumSubscribedItems(ugc);
     } catch (error) {
-      console.error('[Steamworks] Error getting subscribed items count:', error);
+      SteamLogger.error('[Steamworks] Error getting subscribed items count:', error);
       return 0;
     }
   }
@@ -406,7 +407,7 @@ export class SteamWorkshopManager {
 
       return items;
     } catch (error) {
-      console.error('[Steamworks] Error getting subscribed items:', error);
+      SteamLogger.error('[Steamworks] Error getting subscribed items:', error);
       return [];
     }
   }
@@ -460,7 +461,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_GetItemState(ugc, publishedFileId);
     } catch (error) {
-      console.error('[Steamworks] Error getting item state:', error);
+      SteamLogger.error('[Steamworks] Error getting item state:', error);
       return EItemState.None;
     }
   }
@@ -524,7 +525,7 @@ export class SteamWorkshopManager {
         timestamp: timestampBuffer.readUInt32LE(0)
       };
     } catch (error) {
-      console.error('[Steamworks] Error getting item install info:', error);
+      SteamLogger.error('[Steamworks] Error getting item install info:', error);
       return null;
     }
   }
@@ -586,7 +587,7 @@ export class SteamWorkshopManager {
         percentComplete
       };
     } catch (error) {
-      console.error('[Steamworks] Error getting item download info:', error);
+      SteamLogger.error('[Steamworks] Error getting item download info:', error);
       return null;
     }
   }
@@ -627,7 +628,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_DownloadItem(ugc, publishedFileId, highPriority);
     } catch (error) {
-      console.error('[Steamworks] Error downloading item:', error);
+      SteamLogger.error('[Steamworks] Error downloading item:', error);
       return false;
     }
   }
@@ -697,7 +698,7 @@ export class SteamWorkshopManager {
       );
       return BigInt(handle);
     } catch (error) {
-      console.error('[Steamworks] Error creating user UGC query:', error);
+      SteamLogger.error('[Steamworks] Error creating user UGC query:', error);
       return K_UGC_QUERY_HANDLE_INVALID;
     }
   }
@@ -754,7 +755,7 @@ export class SteamWorkshopManager {
       );
       return BigInt(handle);
     } catch (error) {
-      console.error('[Steamworks] Error creating all UGC query:', error);
+      SteamLogger.error('[Steamworks] Error creating all UGC query:', error);
       return K_UGC_QUERY_HANDLE_INVALID;
     }
   }
@@ -799,7 +800,7 @@ export class SteamWorkshopManager {
       console.log(`[Steamworks] SetSearchText result: ${success}`);
       return success;
     } catch (error) {
-      console.error('[Steamworks] Error setting search text:', error);
+      SteamLogger.error('[Steamworks] Error setting search text:', error);
       return false;
     }
   }
@@ -836,7 +837,7 @@ export class SteamWorkshopManager {
       const success = this.libraryLoader.SteamAPI_ISteamUGC_SetReturnPlaytimeStats(ugc, queryHandle, days);
       return success;
     } catch (error) {
-      console.error('[Steamworks] Error setting return playtime stats:', error);
+      SteamLogger.error('[Steamworks] Error setting return playtime stats:', error);
       return false;
     }
   }
@@ -880,13 +881,13 @@ export class SteamWorkshopManager {
     cachedData: boolean;
   } | null> {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return null;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('[Steamworks] ISteamUGC interface not available');
+      SteamLogger.error('[Steamworks] ISteamUGC interface not available');
       return null;
     }
 
@@ -898,7 +899,7 @@ export class SteamWorkshopManager {
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_SendQueryUGCRequest(ugc, queryHandle);
       
       if (callHandle === BigInt(0)) {
-        console.error('[Steamworks] Failed to initiate UGC query');
+        SteamLogger.error('[Steamworks] Failed to initiate UGC query');
         return null;
       }
 
@@ -919,10 +920,10 @@ export class SteamWorkshopManager {
         };
       }
 
-      console.error(`[Steamworks] UGC query failed with result: ${result?.m_eResult || 'unknown'}`);
+      SteamLogger.error(`[Steamworks] UGC query failed with result: ${result?.m_eResult || 'unknown'}`);
       return null;
     } catch (error) {
-      console.error('[Steamworks] Error sending UGC query:', error);
+      SteamLogger.error('[Steamworks] Error sending UGC query:', error);
       return null;
     }
   }
@@ -1175,7 +1176,7 @@ export class SteamWorkshopManager {
         totalFilesSize
       };
     } catch (error) {
-      console.error('[Steamworks] Error getting query UGC result:', error);
+      SteamLogger.error('[Steamworks] Error getting query UGC result:', error);
       return null;
     }
   }
@@ -1210,7 +1211,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_ReleaseQueryUGCRequest(ugc, queryHandle);
     } catch (error) {
-      console.error('[Steamworks] Error releasing UGC query:', error);
+      SteamLogger.error('[Steamworks] Error releasing UGC query:', error);
       return false;
     }
   }
@@ -1240,7 +1241,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_GetQueryUGCNumTags(ugc, queryHandle, index);
     } catch (error) {
-      console.error('[Steamworks] Error getting UGC tag count:', error);
+      SteamLogger.error('[Steamworks] Error getting UGC tag count:', error);
       return 0;
     }
   }
@@ -1295,7 +1296,7 @@ export class SteamWorkshopManager {
       const nullIndex = tagBuffer.indexOf(0);
       return nullIndex >= 0 ? tagBuffer.toString('utf8', 0, nullIndex) : tagBuffer.toString('utf8');
     } catch (error) {
-      console.error('[Steamworks] Error getting UGC tag:', error);
+      SteamLogger.error('[Steamworks] Error getting UGC tag:', error);
       return null;
     }
   }
@@ -1340,7 +1341,7 @@ export class SteamWorkshopManager {
       const nullIndex = urlBuffer.indexOf(0);
       return nullIndex >= 0 ? urlBuffer.toString('utf8', 0, nullIndex) : urlBuffer.toString('utf8');
     } catch (error) {
-      console.error('[Steamworks] Error getting UGC preview URL:', error);
+      SteamLogger.error('[Steamworks] Error getting UGC preview URL:', error);
       return null;
     }
   }
@@ -1385,7 +1386,7 @@ export class SteamWorkshopManager {
       const nullIndex = metadataBuffer.indexOf(0);
       return nullIndex >= 0 ? metadataBuffer.toString('utf8', 0, nullIndex) : metadataBuffer.toString('utf8');
     } catch (error) {
-      console.error('[Steamworks] Error getting UGC metadata:', error);
+      SteamLogger.error('[Steamworks] Error getting UGC metadata:', error);
       return null;
     }
   }
@@ -1426,13 +1427,13 @@ export class SteamWorkshopManager {
    */
   async createItem(consumerAppId: number, fileType: EWorkshopFileType): Promise<PublishedFileId | null> {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return null;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('[Steamworks] ISteamUGC interface not available');
+      SteamLogger.error('[Steamworks] ISteamUGC interface not available');
       return null;
     }
 
@@ -1441,7 +1442,7 @@ export class SteamWorkshopManager {
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_CreateItem(ugc, consumerAppId, fileType);
       
       if (callHandle === BigInt(0)) {
-        console.error('[Steamworks] Failed to initiate item creation');
+        SteamLogger.error('[Steamworks] Failed to initiate item creation');
         return null;
       }
 
@@ -1456,16 +1457,16 @@ export class SteamWorkshopManager {
 
       if (result && result.m_eResult === 1) { // k_EResultOK = 1
         if (result.m_bUserNeedsToAcceptWorkshopLegalAgreement) {
-          console.warn('[Steamworks] User needs to accept Workshop Legal Agreement');
-          console.warn('[Steamworks] Visit: https://steamcommunity.com/sharedfiles/workshoplegalagreement');
+          SteamLogger.warn('[Steamworks] User needs to accept Workshop Legal Agreement');
+          SteamLogger.warn('[Steamworks] Visit: https://steamcommunity.com/sharedfiles/workshoplegalagreement');
         }
         return BigInt(result.m_nPublishedFileId);
       }
 
-      console.error(`[Steamworks] Create item failed with result: ${result?.m_eResult || 'unknown'}`);
+      SteamLogger.error(`[Steamworks] Create item failed with result: ${result?.m_eResult || 'unknown'}`);
       return null;
     } catch (error) {
-      console.error('[Steamworks] Error creating item:', error);
+      SteamLogger.error('[Steamworks] Error creating item:', error);
       return null;
     }
   }
@@ -1506,7 +1507,7 @@ export class SteamWorkshopManager {
       const handle = this.libraryLoader.SteamAPI_ISteamUGC_StartItemUpdate(ugc, consumerAppId, publishedFileId);
       return BigInt(handle);
     } catch (error) {
-      console.error('[Steamworks] Error starting item update:', error);
+      SteamLogger.error('[Steamworks] Error starting item update:', error);
       return K_UGC_UPDATE_HANDLE_INVALID;
     }
   }
@@ -1531,7 +1532,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemTitle(ugc, updateHandle, title);
     } catch (error) {
-      console.error('[Steamworks] Error setting item title:', error);
+      SteamLogger.error('[Steamworks] Error setting item title:', error);
       return false;
     }
   }
@@ -1556,7 +1557,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemDescription(ugc, updateHandle, description);
     } catch (error) {
-      console.error('[Steamworks] Error setting item description:', error);
+      SteamLogger.error('[Steamworks] Error setting item description:', error);
       return false;
     }
   }
@@ -1581,7 +1582,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemVisibility(ugc, updateHandle, visibility);
     } catch (error) {
-      console.error('[Steamworks] Error setting item visibility:', error);
+      SteamLogger.error('[Steamworks] Error setting item visibility:', error);
       return false;
     }
   }
@@ -1609,7 +1610,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemContent(ugc, updateHandle, contentFolder);
     } catch (error) {
-      console.error('[Steamworks] Error setting item content:', error);
+      SteamLogger.error('[Steamworks] Error setting item content:', error);
       return false;
     }
   }
@@ -1634,7 +1635,7 @@ export class SteamWorkshopManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemPreview(ugc, updateHandle, previewFile);
     } catch (error) {
-      console.error('[Steamworks] Error setting item preview:', error);
+      SteamLogger.error('[Steamworks] Error setting item preview:', error);
       return false;
     }
   }
@@ -1662,13 +1663,13 @@ export class SteamWorkshopManager {
    */
   async submitItemUpdate(updateHandle: UGCUpdateHandle, changeNote: string): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('[Steamworks] ISteamUGC interface not available');
+      SteamLogger.error('[Steamworks] ISteamUGC interface not available');
       return false;
     }
 
@@ -1676,7 +1677,7 @@ export class SteamWorkshopManager {
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_SubmitItemUpdate(ugc, updateHandle, changeNote);
       
       if (callHandle === BigInt(0)) {
-        console.error('[Steamworks] Failed to initiate item update submission');
+        SteamLogger.error('[Steamworks] Failed to initiate item update submission');
         return false;
       }
 
@@ -1691,16 +1692,16 @@ export class SteamWorkshopManager {
 
       if (result && result.m_eResult === 1) { // k_EResultOK = 1
         if (result.m_bUserNeedsToAcceptWorkshopLegalAgreement) {
-          console.warn('[Steamworks] User needs to accept Workshop Legal Agreement');
-          console.warn('[Steamworks] Visit: https://steamcommunity.com/sharedfiles/workshoplegalagreement');
+          SteamLogger.warn('[Steamworks] User needs to accept Workshop Legal Agreement');
+          SteamLogger.warn('[Steamworks] Visit: https://steamcommunity.com/sharedfiles/workshoplegalagreement');
         }
         return true;
       }
 
-      console.error(`[Steamworks] Submit item update failed with result: ${result?.m_eResult || 'timeout'}`);
+      SteamLogger.error(`[Steamworks] Submit item update failed with result: ${result?.m_eResult || 'timeout'}`);
       return false;
     } catch (error) {
-      console.error('[Steamworks] Error submitting item update:', error);
+      SteamLogger.error('[Steamworks] Error submitting item update:', error);
       return false;
     }
   }
@@ -1763,7 +1764,7 @@ export class SteamWorkshopManager {
 
       return result;
     } catch (error) {
-      console.error('[Steamworks] Error getting item update progress:', error);
+      SteamLogger.error('[Steamworks] Error getting item update progress:', error);
       return result;
     }
   }
@@ -1791,13 +1792,13 @@ export class SteamWorkshopManager {
    */
   async setUserItemVote(publishedFileId: PublishedFileId, voteUp: boolean): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('[Steamworks] ISteamUGC interface not available');
+      SteamLogger.error('[Steamworks] ISteamUGC interface not available');
       return false;
     }
 
@@ -1805,7 +1806,7 @@ export class SteamWorkshopManager {
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_SetUserItemVote(ugc, publishedFileId, voteUp);
       
       if (callHandle === BigInt(0)) {
-        console.error('[Steamworks] Failed to initiate vote');
+        SteamLogger.error('[Steamworks] Failed to initiate vote');
         return false;
       }
 
@@ -1822,10 +1823,10 @@ export class SteamWorkshopManager {
         return true;
       }
 
-      console.error(`[Steamworks] Set user item vote failed with result: ${result?.m_eResult || 'unknown'}`);
+      SteamLogger.error(`[Steamworks] Set user item vote failed with result: ${result?.m_eResult || 'unknown'}`);
       return false;
     } catch (error) {
-      console.error('[Steamworks] Error setting item vote:', error);
+      SteamLogger.error('[Steamworks] Error setting item vote:', error);
       return false;
     }
   }
@@ -1858,13 +1859,13 @@ export class SteamWorkshopManager {
     voteSkipped: boolean;
   } | null> {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return null;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('[Steamworks] ISteamUGC interface not available');
+      SteamLogger.error('[Steamworks] ISteamUGC interface not available');
       return null;
     }
 
@@ -1872,7 +1873,7 @@ export class SteamWorkshopManager {
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_GetUserItemVote(ugc, publishedFileId);
       
       if (callHandle === BigInt(0)) {
-        console.error('[Steamworks] Failed to initiate get vote');
+        SteamLogger.error('[Steamworks] Failed to initiate get vote');
         return null;
       }
 
@@ -1893,10 +1894,10 @@ export class SteamWorkshopManager {
         };
       }
 
-      console.error(`[Steamworks] Get user item vote failed with result: ${result?.m_eResult || 'unknown'}`);
+      SteamLogger.error(`[Steamworks] Get user item vote failed with result: ${result?.m_eResult || 'unknown'}`);
       return null;
     } catch (error) {
-      console.error('[Steamworks] Error getting item vote:', error);
+      SteamLogger.error('[Steamworks] Error getting item vote:', error);
       return null;
     }
   }
@@ -1920,13 +1921,13 @@ export class SteamWorkshopManager {
    */
   async addItemToFavorites(appId: number, publishedFileId: PublishedFileId): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('[Steamworks] ISteamUGC interface not available');
+      SteamLogger.error('[Steamworks] ISteamUGC interface not available');
       return false;
     }
 
@@ -1934,7 +1935,7 @@ export class SteamWorkshopManager {
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_AddItemToFavorites(ugc, appId, publishedFileId);
       
       if (callHandle === BigInt(0)) {
-        console.error('[Steamworks] Failed to initiate add to favorites');
+        SteamLogger.error('[Steamworks] Failed to initiate add to favorites');
         return false;
       }
 
@@ -1951,10 +1952,10 @@ export class SteamWorkshopManager {
         return true;
       }
 
-      console.error(`[Steamworks] Add item to favorites failed with result: ${result?.m_eResult || 'unknown'}`);
+      SteamLogger.error(`[Steamworks] Add item to favorites failed with result: ${result?.m_eResult || 'unknown'}`);
       return false;
     } catch (error) {
-      console.error('[Steamworks] Error adding item to favorites:', error);
+      SteamLogger.error('[Steamworks] Error adding item to favorites:', error);
       return false;
     }
   }
@@ -1978,13 +1979,13 @@ export class SteamWorkshopManager {
    */
   async removeItemFromFavorites(appId: number, publishedFileId: PublishedFileId): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('[Steamworks] ISteamUGC interface not available');
+      SteamLogger.error('[Steamworks] ISteamUGC interface not available');
       return false;
     }
 
@@ -1992,7 +1993,7 @@ export class SteamWorkshopManager {
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_RemoveItemFromFavorites(ugc, appId, publishedFileId);
       
       if (callHandle === BigInt(0)) {
-        console.error('[Steamworks] Failed to initiate remove from favorites');
+        SteamLogger.error('[Steamworks] Failed to initiate remove from favorites');
         return false;
       }
 
@@ -2009,10 +2010,10 @@ export class SteamWorkshopManager {
         return true;
       }
 
-      console.error(`[Steamworks] Remove item from favorites failed with result: ${result?.m_eResult || 'unknown'}`);
+      SteamLogger.error(`[Steamworks] Remove item from favorites failed with result: ${result?.m_eResult || 'unknown'}`);
       return false;
     } catch (error) {
-      console.error('[Steamworks] Error removing item from favorites:', error);
+      SteamLogger.error('[Steamworks] Error removing item from favorites:', error);
       return false;
     }
   }
@@ -2042,13 +2043,13 @@ export class SteamWorkshopManager {
    */
   async deleteItem(publishedFileId: PublishedFileId): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.error('[Steamworks] Steam API not initialized');
+      SteamLogger.error('[Steamworks] Steam API not initialized');
       return false;
     }
 
     const ugc = this.apiCore.getUGCInterface();
     if (!ugc) {
-      console.error('[Steamworks] ISteamUGC interface not available');
+      SteamLogger.error('[Steamworks] ISteamUGC interface not available');
       return false;
     }
 
@@ -2056,7 +2057,7 @@ export class SteamWorkshopManager {
       const callHandle = this.libraryLoader.SteamAPI_ISteamUGC_DeleteItem(ugc, publishedFileId);
       
       if (callHandle === BigInt(0)) {
-        console.error('[Steamworks] Failed to initiate item deletion');
+        SteamLogger.error('[Steamworks] Failed to initiate item deletion');
         return false;
       }
 
@@ -2079,7 +2080,7 @@ export class SteamWorkshopManager {
           if (eResult === 1) { // k_EResultOK = 1
             return true;
           }
-          console.error(`[Steamworks] Delete item failed with result: ${eResult}`);
+          SteamLogger.error(`[Steamworks] Delete item failed with result: ${eResult}`);
           return false;
         }
         
@@ -2087,12 +2088,12 @@ export class SteamWorkshopManager {
         if (result.m_eResult === 1) {
           return true;
         }
-        console.error(`[Steamworks] Delete item failed with result: ${result.m_eResult || 'unknown'}`);
+        SteamLogger.error(`[Steamworks] Delete item failed with result: ${result.m_eResult || 'unknown'}`);
       }
 
       return false;
     } catch (error) {
-      console.error('[Steamworks] Error deleting item:', error);
+      SteamLogger.error('[Steamworks] Error deleting item:', error);
       return false;
     }
   }

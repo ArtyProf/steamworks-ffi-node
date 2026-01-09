@@ -2,6 +2,7 @@ import * as koffi from 'koffi';
 import { SteamLibraryLoader, FnSteamNetConnectionStatusChangedPtr } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamCallbackPoller } from './SteamCallbackPoller';
+import { SteamLogger } from './SteamLogger';
 import {
   HSteamListenSocket,
   HSteamNetConnection,
@@ -137,7 +138,7 @@ export class SteamNetworkingSocketsManager {
           try {
             this.handleConnectionStatusChanged(infoPtr);
           } catch (error) {
-            console.error('[Steamworks] Error in connection status callback:', error);
+            SteamLogger.error('[Steamworks] Error in connection status callback:', error);
           }
         },
         FnSteamNetConnectionStatusChangedPtr
@@ -146,7 +147,7 @@ export class SteamNetworkingSocketsManager {
       // Get the NetworkingUtils interface
       const utils = this.libraryLoader.SteamAPI_SteamNetworkingUtils_SteamAPI_v004();
       if (!utils) {
-        console.warn('[Steamworks] NetworkingUtils interface not available for callback registration');
+        SteamLogger.warn('[Steamworks] NetworkingUtils interface not available for callback registration');
         return;
       }
 
@@ -159,10 +160,10 @@ export class SteamNetworkingSocketsManager {
       if (success) {
         this.callbackRegistered = true;
       } else {
-        console.warn('[Steamworks] Failed to register global connection status callback');
+        SteamLogger.warn('[Steamworks] Failed to register global connection status callback');
       }
     } catch (error) {
-      console.error('[Steamworks] Error registering connection status callback:', error);
+      SteamLogger.error('[Steamworks] Error registering connection status callback:', error);
     }
   }
 
@@ -232,7 +233,7 @@ export class SteamNetworkingSocketsManager {
           try {
             handler(request);
           } catch (err) {
-            console.error('[Steamworks] Connection request handler error:', err);
+            SteamLogger.error('[Steamworks] Connection request handler error:', err);
           }
         }
       }
@@ -242,7 +243,7 @@ export class SteamNetworkingSocketsManager {
         try {
           handler(change);
         } catch (err) {
-          console.error('[Steamworks] Connection state change handler error:', err);
+          SteamLogger.error('[Steamworks] Connection state change handler error:', err);
         }
       }
 
@@ -257,7 +258,7 @@ export class SteamNetworkingSocketsManager {
       }
 
     } catch (error) {
-      console.error('[Steamworks] Error handling connection status callback:', error);
+      SteamLogger.error('[Steamworks] Error handling connection status callback:', error);
     }
   }
 
@@ -706,7 +707,7 @@ export class SteamNetworkingSocketsManager {
         flags,
       };
     } catch (error) {
-      console.error('[Steamworks] Error parsing network message:', error);
+      SteamLogger.error('[Steamworks] Error parsing network message:', error);
       // Try to release even on error
       try {
         this.libraryLoader.SteamAPI_SteamNetworkingMessage_t_Release(msgPtr);
@@ -1135,7 +1136,7 @@ export class SteamNetworkingSocketsManager {
           try {
             handler(change);
           } catch (err) {
-            console.error('[Steamworks] Connection state change handler error:', err);
+            SteamLogger.error('[Steamworks] Connection state change handler error:', err);
           }
         }
         
@@ -1248,7 +1249,7 @@ export class SteamNetworkingSocketsManager {
         this.callbackRegistered = false;
         this.connectionStatusCallback = null;
       } catch (error) {
-        console.error('[Steamworks] Error unregistering connection status callback:', error);
+        SteamLogger.error('[Steamworks] Error unregistering connection status callback:', error);
       }
     }
     

@@ -1,6 +1,7 @@
 import * as koffi from 'koffi';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import { SteamLogger } from './SteamLogger';
 import { 
   EFriendRelationship, 
   EPersonaState, 
@@ -110,13 +111,13 @@ export class SteamFriendsManager {
    */
   getPersonaName(): string {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return '';
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return '';
     }
 
@@ -124,7 +125,7 @@ export class SteamFriendsManager {
       const name = this.libraryLoader.SteamAPI_ISteamFriends_GetPersonaName(friendsInterface);
       return name || '';
     } catch (error) {
-      console.error('[Steamworks] Error getting persona name:', error);
+      SteamLogger.error('[Steamworks] Error getting persona name:', error);
       return '';
     }
   }
@@ -155,13 +156,13 @@ export class SteamFriendsManager {
    */
   getPersonaState(): EPersonaState {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return EPersonaState.Offline;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return EPersonaState.Offline;
     }
 
@@ -169,7 +170,7 @@ export class SteamFriendsManager {
       const state = this.libraryLoader.SteamAPI_ISteamFriends_GetPersonaState(friendsInterface);
       return state;
     } catch (error) {
-      console.error('[Steamworks] Error getting persona state:', error);
+      SteamLogger.error('[Steamworks] Error getting persona state:', error);
       return EPersonaState.Offline;
     }
   }
@@ -199,13 +200,13 @@ export class SteamFriendsManager {
    */
   getFriendCount(friendFlags: EFriendFlags = EFriendFlags.Immediate): number {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return 0;
     }
 
@@ -213,7 +214,7 @@ export class SteamFriendsManager {
       const count = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendCount(friendsInterface, friendFlags);
       return count;
     } catch (error) {
-      console.error('[Steamworks] Error getting friend count:', error);
+      SteamLogger.error('[Steamworks] Error getting friend count:', error);
       return 0;
     }
   }
@@ -250,13 +251,13 @@ export class SteamFriendsManager {
    */
   getFriendByIndex(index: number, friendFlags: EFriendFlags = EFriendFlags.Immediate): string | null {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return null;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return null;
     }
 
@@ -270,7 +271,7 @@ export class SteamFriendsManager {
 
       return null;
     } catch (error) {
-      console.error(`[Steamworks] Error getting friend by index ${index}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friend by index ${index}:`, error);
       return null;
     }
   }
@@ -299,13 +300,13 @@ export class SteamFriendsManager {
    */
   getFriendPersonaName(steamId: string): string {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return '';
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return '';
     }
 
@@ -313,7 +314,7 @@ export class SteamFriendsManager {
       const name = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendPersonaName(friendsInterface, BigInt(steamId));
       return name || '';
     } catch (error) {
-      console.error(`[Steamworks] Error getting friend persona name for ${steamId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friend persona name for ${steamId}:`, error);
       return '';
     }
   }
@@ -345,13 +346,13 @@ export class SteamFriendsManager {
    */
   getFriendPersonaState(steamId: string): EPersonaState {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return EPersonaState.Offline;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return EPersonaState.Offline;
     }
 
@@ -359,7 +360,7 @@ export class SteamFriendsManager {
       const state = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendPersonaState(friendsInterface, BigInt(steamId));
       return state;
     } catch (error) {
-      console.error(`[Steamworks] Error getting friend persona state for ${steamId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friend persona state for ${steamId}:`, error);
       return EPersonaState.Offline;
     }
   }
@@ -394,13 +395,13 @@ export class SteamFriendsManager {
    */
   getFriendRelationship(steamId: string): EFriendRelationship {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return EFriendRelationship.None;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return EFriendRelationship.None;
     }
 
@@ -408,7 +409,7 @@ export class SteamFriendsManager {
       const relationship = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendRelationship(friendsInterface, BigInt(steamId));
       return relationship;
     } catch (error) {
-      console.error(`[Steamworks] Error getting friend relationship for ${steamId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friend relationship for ${steamId}:`, error);
       return EFriendRelationship.None;
     }
   }
@@ -506,13 +507,13 @@ export class SteamFriendsManager {
    */
   getFriendSteamLevel(steamId: string): number {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return 0;
     }
 
@@ -520,7 +521,7 @@ export class SteamFriendsManager {
       const level = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendSteamLevel(friendsInterface, BigInt(steamId));
       return level;
     } catch (error) {
-      console.error(`[Steamworks] Error getting friend Steam level for ${steamId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friend Steam level for ${steamId}:`, error);
       return 0;
     }
   }
@@ -571,13 +572,13 @@ export class SteamFriendsManager {
    */
   getFriendGamePlayed(steamId: string): FriendGameInfo | null {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return null;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return null;
     }
 
@@ -606,7 +607,7 @@ export class SteamFriendsManager {
 
       return null;
     } catch (error) {
-      console.error(`[Steamworks] Error getting friend game played for ${steamId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friend game played for ${steamId}:`, error);
       return null;
     }
   }
@@ -647,13 +648,13 @@ export class SteamFriendsManager {
    */
   getSmallFriendAvatar(steamId: string): number {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return 0;
     }
 
@@ -661,7 +662,7 @@ export class SteamFriendsManager {
       const handle = this.libraryLoader.SteamAPI_ISteamFriends_GetSmallFriendAvatar(friendsInterface, BigInt(steamId));
       return handle;
     } catch (error) {
-      console.error(`[Steamworks] Error getting small friend avatar for ${steamId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting small friend avatar for ${steamId}:`, error);
       return 0;
     }
   }
@@ -698,13 +699,13 @@ export class SteamFriendsManager {
    */
   getMediumFriendAvatar(steamId: string): number {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return 0;
     }
 
@@ -712,7 +713,7 @@ export class SteamFriendsManager {
       const handle = this.libraryLoader.SteamAPI_ISteamFriends_GetMediumFriendAvatar(friendsInterface, BigInt(steamId));
       return handle;
     } catch (error) {
-      console.error(`[Steamworks] Error getting medium friend avatar for ${steamId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting medium friend avatar for ${steamId}:`, error);
       return 0;
     }
   }
@@ -749,13 +750,13 @@ export class SteamFriendsManager {
    */
   getLargeFriendAvatar(steamId: string): number {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return 0;
     }
 
@@ -763,7 +764,7 @@ export class SteamFriendsManager {
       const handle = this.libraryLoader.SteamAPI_ISteamFriends_GetLargeFriendAvatar(friendsInterface, BigInt(steamId));
       return handle;
     } catch (error) {
-      console.error(`[Steamworks] Error getting large friend avatar for ${steamId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting large friend avatar for ${steamId}:`, error);
       return 0;
     }
   }
@@ -800,13 +801,13 @@ export class SteamFriendsManager {
    */
   getFriendsGroupCount(): number {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return 0;
     }
 
@@ -814,7 +815,7 @@ export class SteamFriendsManager {
       const count = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendsGroupCount(friendsInterface);
       return count;
     } catch (error) {
-      console.error('[Steamworks] Error getting friends group count:', error);
+      SteamLogger.error('[Steamworks] Error getting friends group count:', error);
       return 0;
     }
   }
@@ -850,13 +851,13 @@ export class SteamFriendsManager {
    */
   getFriendsGroupIDByIndex(index: number): FriendsGroupID_t {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return INVALID_FRIENDS_GROUP_ID;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return INVALID_FRIENDS_GROUP_ID;
     }
 
@@ -864,7 +865,7 @@ export class SteamFriendsManager {
       const groupId = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex(friendsInterface, index);
       return groupId;
     } catch (error) {
-      console.error(`[Steamworks] Error getting friends group ID by index ${index}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friends group ID by index ${index}:`, error);
       return INVALID_FRIENDS_GROUP_ID;
     }
   }
@@ -893,13 +894,13 @@ export class SteamFriendsManager {
    */
   getFriendsGroupName(groupId: FriendsGroupID_t): string {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return '';
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return '';
     }
 
@@ -907,7 +908,7 @@ export class SteamFriendsManager {
       const name = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendsGroupName(friendsInterface, groupId);
       return name || '';
     } catch (error) {
-      console.error(`[Steamworks] Error getting friends group name for ${groupId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friends group name for ${groupId}:`, error);
       return '';
     }
   }
@@ -934,13 +935,13 @@ export class SteamFriendsManager {
    */
   getFriendsGroupMembersCount(groupId: FriendsGroupID_t): number {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return 0;
     }
 
@@ -948,7 +949,7 @@ export class SteamFriendsManager {
       const count = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendsGroupMembersCount(friendsInterface, groupId);
       return count;
     } catch (error) {
-      console.error(`[Steamworks] Error getting friends group members count for ${groupId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friends group members count for ${groupId}:`, error);
       return 0;
     }
   }
@@ -985,13 +986,13 @@ export class SteamFriendsManager {
    */
   getFriendsGroupMembersList(groupId: FriendsGroupID_t): string[] {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return [];
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return [];
     }
 
@@ -1012,7 +1013,7 @@ export class SteamFriendsManager {
       const membersArray = koffi.decode(membersPtr, koffi.array('uint64', memberCount));
       return membersArray.map((id: bigint) => id.toString());
     } catch (error) {
-      console.error(`[Steamworks] Error getting friends group members list for ${groupId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friends group members list for ${groupId}:`, error);
       return [];
     }
   }
@@ -1051,13 +1052,13 @@ export class SteamFriendsManager {
    */
   getCoplayFriendCount(): number {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return 0;
     }
 
@@ -1065,7 +1066,7 @@ export class SteamFriendsManager {
       const count = this.libraryLoader.SteamAPI_ISteamFriends_GetCoplayFriendCount(friendsInterface);
       return count;
     } catch (error) {
-      console.error('[Steamworks] Error getting coplay friend count:', error);
+      SteamLogger.error('[Steamworks] Error getting coplay friend count:', error);
       return 0;
     }
   }
@@ -1100,13 +1101,13 @@ export class SteamFriendsManager {
    */
   getCoplayFriend(index: number): string {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return '';
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return '';
     }
 
@@ -1119,7 +1120,7 @@ export class SteamFriendsManager {
 
       return '';
     } catch (error) {
-      console.error(`[Steamworks] Error getting coplay friend by index ${index}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting coplay friend by index ${index}:`, error);
       return '';
     }
   }
@@ -1155,13 +1156,13 @@ export class SteamFriendsManager {
    */
   getFriendCoplayTime(steamId: string): number {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return 0;
     }
 
@@ -1169,7 +1170,7 @@ export class SteamFriendsManager {
       const time = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendCoplayTime(friendsInterface, BigInt(steamId));
       return time;
     } catch (error) {
-      console.error(`[Steamworks] Error getting friend coplay time for ${steamId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friend coplay time for ${steamId}:`, error);
       return 0;
     }
   }
@@ -1229,13 +1230,13 @@ export class SteamFriendsManager {
    */
   getFriendCoplayGame(steamId: string): number {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] WARNING: Steam API not initialized');
+      SteamLogger.warn('[Steamworks] WARNING: Steam API not initialized');
       return 0;
     }
 
     const friendsInterface = this.apiCore.getFriendsInterface();
     if (!friendsInterface) {
-      console.warn('[Steamworks] WARNING: Friends interface not available');
+      SteamLogger.warn('[Steamworks] WARNING: Friends interface not available');
       return 0;
     }
 
@@ -1243,7 +1244,7 @@ export class SteamFriendsManager {
       const appId = this.libraryLoader.SteamAPI_ISteamFriends_GetFriendCoplayGame(friendsInterface, BigInt(steamId));
       return appId;
     } catch (error) {
-      console.error(`[Steamworks] Error getting friend coplay game for ${steamId}:`, error);
+      SteamLogger.error(`[Steamworks] Error getting friend coplay game for ${steamId}:`, error);
       return 0;
     }
   }

@@ -3,6 +3,7 @@ import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamCallbackPoller } from './SteamCallbackPoller';
 import { SteamStat, GlobalStat, GlobalStatHistory, UserStat, NumberOfCurrentPlayersType } from '../types';
+import { SteamLogger } from './SteamLogger';
 
 /**
  * NumberOfCurrentPlayers_t - Result of GetNumberOfCurrentPlayers
@@ -97,7 +98,7 @@ export class SteamStatsManager {
    */
   async getStatInt(statName: string): Promise<SteamStat | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -120,11 +121,11 @@ export class SteamStatsManager {
           type: 'int'
         };
       } else {
-        console.warn(`[Steamworks] Failed to get stat: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to get stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error getting stat "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error getting stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -156,7 +157,7 @@ export class SteamStatsManager {
    */
   async getStatFloat(statName: string): Promise<SteamStat | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -179,11 +180,11 @@ export class SteamStatsManager {
           type: 'float'
         };
       } else {
-        console.warn(`[Steamworks] Failed to get stat: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to get stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error getting stat "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error getting stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -221,7 +222,7 @@ export class SteamStatsManager {
    */
   async setStatInt(statName: string, value: number): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
@@ -243,15 +244,15 @@ export class SteamStatsManager {
           this.libraryLoader.SteamAPI_RunCallbacks();
           return true;
         } else {
-          console.warn(`[Steamworks] Failed to store stat: ${statName}`);
+          SteamLogger.warn(`[Steamworks] Failed to store stat: ${statName}`);
           return false;
         }
       } else {
-        console.warn(`[Steamworks] Failed to set stat: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to set stat: ${statName}`);
         return false;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error setting stat "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error setting stat "${statName}":`, error.message);
       return false;
     }
   }
@@ -287,7 +288,7 @@ export class SteamStatsManager {
    */
   async setStatFloat(statName: string, value: number): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
@@ -309,15 +310,15 @@ export class SteamStatsManager {
           this.libraryLoader.SteamAPI_RunCallbacks();
           return true;
         } else {
-          console.warn(`[Steamworks] Failed to store stat: ${statName}`);
+          SteamLogger.warn(`[Steamworks] Failed to store stat: ${statName}`);
           return false;
         }
       } else {
-        console.warn(`[Steamworks] Failed to set stat: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to set stat: ${statName}`);
         return false;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error setting stat "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error setting stat "${statName}":`, error.message);
       return false;
     }
   }
@@ -355,7 +356,7 @@ export class SteamStatsManager {
    */
   async updateAvgRateStat(statName: string, countThisSession: number, sessionLength: number): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
@@ -378,15 +379,15 @@ export class SteamStatsManager {
           this.libraryLoader.SteamAPI_RunCallbacks();
           return true;
         } else {
-          console.warn(`[Steamworks] Failed to store stat: ${statName}`);
+          SteamLogger.warn(`[Steamworks] Failed to store stat: ${statName}`);
           return false;
         }
       } else {
-        console.warn(`[Steamworks] Failed to update avg rate stat: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to update avg rate stat: ${statName}`);
         return false;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error updating avg rate stat "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error updating avg rate stat "${statName}":`, error.message);
       return false;
     }
   }
@@ -432,7 +433,7 @@ export class SteamStatsManager {
    */
   async requestUserStats(steamId: string | bigint): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
@@ -449,11 +450,11 @@ export class SteamStatsManager {
         console.log(`[Steamworks] Requested stats for user: ${steamId}`);
         return true;
       } else {
-        console.warn(`[Steamworks] Failed to request user stats: ${steamId}`);
+        SteamLogger.warn(`[Steamworks] Failed to request user stats: ${steamId}`);
         return false;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error requesting user stats:`, error.message);
+      SteamLogger.error(`[Steamworks] Error requesting user stats:`, error.message);
       return false;
     }
   }
@@ -494,7 +495,7 @@ export class SteamStatsManager {
    */
   async getUserStatInt(steamId: string | bigint, statName: string): Promise<UserStat | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -520,11 +521,11 @@ export class SteamStatsManager {
           type: 'int'
         };
       } else {
-        console.warn(`[Steamworks] Failed to get user stat: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to get user stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error getting user stat "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error getting user stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -563,7 +564,7 @@ export class SteamStatsManager {
    */
   async getUserStatFloat(steamId: string | bigint, statName: string): Promise<UserStat | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -589,11 +590,11 @@ export class SteamStatsManager {
           type: 'float'
         };
       } else {
-        console.warn(`[Steamworks] Failed to get user stat: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to get user stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error getting user stat "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error getting user stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -637,7 +638,7 @@ export class SteamStatsManager {
    */
   async requestGlobalStats(historyDays: number = 0): Promise<boolean> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return false;
     }
 
@@ -656,11 +657,11 @@ export class SteamStatsManager {
         console.log(`[Steamworks] Requested global stats with ${days} days of history`);
         return true;
       } else {
-        console.warn(`[Steamworks] Failed to request global stats`);
+        SteamLogger.warn(`[Steamworks] Failed to request global stats`);
         return false;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error requesting global stats:`, error.message);
+      SteamLogger.error(`[Steamworks] Error requesting global stats:`, error.message);
       return false;
     }
   }
@@ -698,7 +699,7 @@ export class SteamStatsManager {
    */
   async getGlobalStatInt(statName: string): Promise<GlobalStat | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -721,11 +722,11 @@ export class SteamStatsManager {
           type: 'int64'
         };
       } else {
-        console.warn(`[Steamworks] Failed to get global stat: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to get global stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error getting global stat "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error getting global stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -764,7 +765,7 @@ export class SteamStatsManager {
    */
   async getGlobalStatDouble(statName: string): Promise<GlobalStat | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -787,11 +788,11 @@ export class SteamStatsManager {
           type: 'double'
         };
       } else {
-        console.warn(`[Steamworks] Failed to get global stat: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to get global stat: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error getting global stat "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error getting global stat "${statName}":`, error.message);
       return null;
     }
   }
@@ -835,7 +836,7 @@ export class SteamStatsManager {
    */
   async getGlobalStatHistoryInt(statName: string, days: number = 7): Promise<GlobalStatHistory | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -865,11 +866,11 @@ export class SteamStatsManager {
           type: 'int64'
         };
       } else {
-        console.warn(`[Steamworks] Failed to get global stat history: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to get global stat history: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error getting global stat history "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error getting global stat history "${statName}":`, error.message);
       return null;
     }
   }
@@ -915,7 +916,7 @@ export class SteamStatsManager {
    */
   async getGlobalStatHistoryDouble(statName: string, days: number = 7): Promise<GlobalStatHistory | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -945,11 +946,11 @@ export class SteamStatsManager {
           type: 'double'
         };
       } else {
-        console.warn(`[Steamworks] Failed to get global stat history: ${statName}`);
+        SteamLogger.warn(`[Steamworks] Failed to get global stat history: ${statName}`);
         return null;
       }
     } catch (error: any) {
-      console.error(`[Steamworks] Error getting global stat history "${statName}":`, error.message);
+      SteamLogger.error(`[Steamworks] Error getting global stat history "${statName}":`, error.message);
       return null;
     }
   }
@@ -994,7 +995,7 @@ export class SteamStatsManager {
    */
   async getNumberOfCurrentPlayers(): Promise<number | null> {
     if (!this.apiCore.isInitialized()) {
-      console.warn('[Steamworks] Steam API not initialized');
+      SteamLogger.warn('[Steamworks] Steam API not initialized');
       return null;
     }
 
@@ -1006,7 +1007,7 @@ export class SteamStatsManager {
       );
 
       if (callHandle === BigInt(0)) {
-        console.error(`[Steamworks] Failed to request number of current players`);
+        SteamLogger.error(`[Steamworks] Failed to request number of current players`);
         return null;
       }
 
@@ -1020,12 +1021,12 @@ export class SteamStatsManager {
       );
 
       if (!result) {
-        console.error(`[Steamworks] Failed to get number of current players result`);
+        SteamLogger.error(`[Steamworks] Failed to get number of current players result`);
         return null;
       }
 
       if (!result.m_bSuccess) {
-        console.warn(`[Steamworks] GetNumberOfCurrentPlayers was not successful`);
+        SteamLogger.warn(`[Steamworks] GetNumberOfCurrentPlayers was not successful`);
         return null;
       }
 
@@ -1033,7 +1034,7 @@ export class SteamStatsManager {
       return result.m_cPlayers;
       
     } catch (error: any) {
-      console.error(`[Steamworks] Error getting number of current players:`, error.message);
+      SteamLogger.error(`[Steamworks] Error getting number of current players:`, error.message);
       return null;
     }
   }

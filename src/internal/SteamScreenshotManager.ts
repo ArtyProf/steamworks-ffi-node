@@ -1,5 +1,6 @@
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import { SteamLogger } from './SteamLogger';
 import {
   ScreenshotHandle,
   EVRScreenshotType,
@@ -88,7 +89,7 @@ export class SteamScreenshotManager {
       try {
         this.screenshotsInterface = this.libraryLoader.SteamAPI_SteamScreenshots_v003();
       } catch (error) {
-        console.error('[Steamworks] Failed to get ISteamScreenshots interface:', error);
+        SteamLogger.error('[Steamworks] Failed to get ISteamScreenshots interface:', error);
         return null;
       }
     }
@@ -130,7 +131,7 @@ export class SteamScreenshotManager {
   writeScreenshot(rgbData: Buffer, width: number, height: number): ScreenshotHandle {
     const screenshots = this.getScreenshotsInterface();
     if (!screenshots) {
-      console.error('[Steamworks] Screenshots interface not available');
+      SteamLogger.error('[Steamworks] Screenshots interface not available');
       return INVALID_SCREENSHOT_HANDLE;
     }
 
@@ -144,7 +145,7 @@ export class SteamScreenshotManager {
       );
       return handle;
     } catch (error) {
-      console.error('[Steamworks] Error writing screenshot:', error);
+      SteamLogger.error('[Steamworks] Error writing screenshot:', error);
       return INVALID_SCREENSHOT_HANDLE;
     }
   }
@@ -195,7 +196,7 @@ export class SteamScreenshotManager {
   ): ScreenshotHandle {
     const screenshots = this.getScreenshotsInterface();
     if (!screenshots) {
-      console.error('[Steamworks] Screenshots interface not available');
+      SteamLogger.error('[Steamworks] Screenshots interface not available');
       return INVALID_SCREENSHOT_HANDLE;
     }
 
@@ -209,7 +210,7 @@ export class SteamScreenshotManager {
       );
       return handle;
     } catch (error) {
-      console.error('[Steamworks] Error adding screenshot to library:', error);
+      SteamLogger.error('[Steamworks] Error adding screenshot to library:', error);
       return INVALID_SCREENSHOT_HANDLE;
     }
   }
@@ -235,14 +236,14 @@ export class SteamScreenshotManager {
   triggerScreenshot(): void {
     const screenshots = this.getScreenshotsInterface();
     if (!screenshots) {
-      console.error('[Steamworks] Screenshots interface not available');
+      SteamLogger.error('[Steamworks] Screenshots interface not available');
       return;
     }
 
     try {
       this.libraryLoader.SteamAPI_ISteamScreenshots_TriggerScreenshot(screenshots);
     } catch (error) {
-      console.error('[Steamworks] Error triggering screenshot:', error);
+      SteamLogger.error('[Steamworks] Error triggering screenshot:', error);
     }
   }
 
@@ -281,14 +282,14 @@ export class SteamScreenshotManager {
   hookScreenshots(hook: boolean): void {
     const screenshots = this.getScreenshotsInterface();
     if (!screenshots) {
-      console.error('[Steamworks] Screenshots interface not available');
+      SteamLogger.error('[Steamworks] Screenshots interface not available');
       return;
     }
 
     try {
       this.libraryLoader.SteamAPI_ISteamScreenshots_HookScreenshots(screenshots, hook);
     } catch (error) {
-      console.error('[Steamworks] Error hooking screenshots:', error);
+      SteamLogger.error('[Steamworks] Error hooking screenshots:', error);
     }
   }
 
@@ -315,7 +316,7 @@ export class SteamScreenshotManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamScreenshots_IsScreenshotsHooked(screenshots);
     } catch (error) {
-      console.error('[Steamworks] Error checking screenshot hook status:', error);
+      SteamLogger.error('[Steamworks] Error checking screenshot hook status:', error);
       return false;
     }
   }
@@ -349,7 +350,7 @@ export class SteamScreenshotManager {
   setLocation(handle: ScreenshotHandle, location: string): boolean {
     const screenshots = this.getScreenshotsInterface();
     if (!screenshots) {
-      console.error('[Steamworks] Screenshots interface not available');
+      SteamLogger.error('[Steamworks] Screenshots interface not available');
       return false;
     }
 
@@ -360,7 +361,7 @@ export class SteamScreenshotManager {
         location
       );
     } catch (error) {
-      console.error('[Steamworks] Error setting screenshot location:', error);
+      SteamLogger.error('[Steamworks] Error setting screenshot location:', error);
       return false;
     }
   }
@@ -398,7 +399,7 @@ export class SteamScreenshotManager {
   tagUser(handle: ScreenshotHandle, steamId: bigint): boolean {
     const screenshots = this.getScreenshotsInterface();
     if (!screenshots) {
-      console.error('[Steamworks] Screenshots interface not available');
+      SteamLogger.error('[Steamworks] Screenshots interface not available');
       return false;
     }
 
@@ -409,7 +410,7 @@ export class SteamScreenshotManager {
         steamId
       );
     } catch (error) {
-      console.error('[Steamworks] Error tagging user in screenshot:', error);
+      SteamLogger.error('[Steamworks] Error tagging user in screenshot:', error);
       return false;
     }
   }
@@ -448,7 +449,7 @@ export class SteamScreenshotManager {
   tagPublishedFile(handle: ScreenshotHandle, publishedFileId: bigint): boolean {
     const screenshots = this.getScreenshotsInterface();
     if (!screenshots) {
-      console.error('[Steamworks] Screenshots interface not available');
+      SteamLogger.error('[Steamworks] Screenshots interface not available');
       return false;
     }
 
@@ -459,7 +460,7 @@ export class SteamScreenshotManager {
         publishedFileId
       );
     } catch (error) {
-      console.error('[Steamworks] Error tagging published file in screenshot:', error);
+      SteamLogger.error('[Steamworks] Error tagging published file in screenshot:', error);
       return false;
     }
   }
@@ -497,7 +498,7 @@ export class SteamScreenshotManager {
   ): ScreenshotHandle {
     const screenshots = this.getScreenshotsInterface();
     if (!screenshots) {
-      console.error('[Steamworks] Screenshots interface not available');
+      SteamLogger.error('[Steamworks] Screenshots interface not available');
       return INVALID_SCREENSHOT_HANDLE;
     }
 
@@ -510,7 +511,7 @@ export class SteamScreenshotManager {
       );
       return handle;
     } catch (error) {
-      console.error('[Steamworks] Error adding VR screenshot to library:', error);
+      SteamLogger.error('[Steamworks] Error adding VR screenshot to library:', error);
       return INVALID_SCREENSHOT_HANDLE;
     }
   }

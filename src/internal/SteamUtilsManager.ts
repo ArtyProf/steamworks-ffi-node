@@ -1,6 +1,7 @@
 import * as koffi from 'koffi';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import { SteamLogger } from './SteamLogger';
 import {
   ENotificationPosition,
   EGamepadTextInputMode,
@@ -132,7 +133,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_GetIPCountry(utils) || '';
     } catch (error) {
-      console.error('Failed to get IP country:', error);
+      SteamLogger.error('[Steamworks] Failed to get IP country:', error);
       return '';
     }
   }
@@ -166,7 +167,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_GetCurrentBatteryPower(utils);
     } catch (error) {
-      console.error('Failed to get battery power:', error);
+      SteamLogger.error('[Steamworks] Failed to get battery power:', error);
       return BATTERY_POWER_AC;
     }
   }
@@ -189,7 +190,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_GetAppID(utils);
     } catch (error) {
-      console.error('Failed to get app ID:', error);
+      SteamLogger.error('[Steamworks] Failed to get app ID:', error);
       return 0;
     }
   }
@@ -214,7 +215,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_GetSecondsSinceAppActive(utils);
     } catch (error) {
-      console.error('Failed to get seconds since app active:', error);
+      SteamLogger.error('[Steamworks] Failed to get seconds since app active:', error);
       return 0;
     }
   }
@@ -241,7 +242,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_GetSecondsSinceComputerActive(utils);
     } catch (error) {
-      console.error('Failed to get seconds since computer active:', error);
+      SteamLogger.error('[Steamworks] Failed to get seconds since computer active:', error);
       return 0;
     }
   }
@@ -268,7 +269,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_GetServerRealTime(utils);
     } catch (error) {
-      console.error('Failed to get server real time:', error);
+      SteamLogger.error('[Steamworks] Failed to get server real time:', error);
       return Math.floor(Date.now() / 1000);
     }
   }
@@ -294,7 +295,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_GetSteamUILanguage(utils) || 'english';
     } catch (error) {
-      console.error('Failed to get Steam UI language:', error);
+      SteamLogger.error('[Steamworks] Failed to get Steam UI language:', error);
       return 'english';
     }
   }
@@ -322,7 +323,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_GetConnectedUniverse(utils);
     } catch (error) {
-      console.error('Failed to get connected universe:', error);
+      SteamLogger.error('[Steamworks] Failed to get connected universe:', error);
       return 0;
     }
   }
@@ -354,7 +355,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_IsSteamRunningOnSteamDeck(utils);
     } catch (error) {
-      console.error('Failed to check Steam Deck:', error);
+      SteamLogger.error('[Steamworks] Failed to check Steam Deck:', error);
       return false;
     }
   }
@@ -382,7 +383,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_IsSteamInBigPictureMode(utils);
     } catch (error) {
-      console.error('Failed to check Big Picture Mode:', error);
+      SteamLogger.error('[Steamworks] Failed to check Big Picture Mode:', error);
       return false;
     }
   }
@@ -399,7 +400,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_IsVRHeadsetStreamingEnabled(utils);
     } catch (error) {
-      console.error('Failed to check VR streaming:', error);
+      SteamLogger.error('[Steamworks] Failed to check VR streaming:', error);
       return false;
     }
   }
@@ -416,7 +417,7 @@ export class SteamUtilsManager {
     try {
       this.libraryLoader.SteamAPI_ISteamUtils_SetVRHeadsetStreamingEnabled(utils, enabled);
     } catch (error) {
-      console.error('Failed to set VR streaming:', error);
+      SteamLogger.error('[Steamworks] Failed to set VR streaming:', error);
     }
   }
 
@@ -432,7 +433,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_IsSteamChinaLauncher(utils);
     } catch (error) {
-      console.error('Failed to check Steam China:', error);
+      SteamLogger.error('[Steamworks] Failed to check Steam China:', error);
       return false;
     }
   }
@@ -462,7 +463,7 @@ export class SteamUtilsManager {
     try {
       this.libraryLoader.SteamAPI_ISteamUtils_SetOverlayNotificationPosition(utils, position);
     } catch (error) {
-      console.error('Failed to set notification position:', error);
+      SteamLogger.error('[Steamworks] Failed to set notification position:', error);
     }
   }
 
@@ -488,7 +489,7 @@ export class SteamUtilsManager {
     try {
       this.libraryLoader.SteamAPI_ISteamUtils_SetOverlayNotificationInset(utils, horizontalInset, verticalInset);
     } catch (error) {
-      console.error('Failed to set notification inset:', error);
+      SteamLogger.error('[Steamworks] Failed to set notification inset:', error);
     }
   }
 
@@ -516,7 +517,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_BOverlayNeedsPresent(utils);
     } catch (error) {
-      console.error('Failed to check overlay present:', error);
+      SteamLogger.error('[Steamworks] Failed to check overlay present:', error);
       return false;
     }
   }
@@ -565,7 +566,7 @@ export class SteamUtilsManager {
         height: koffi.decode(heightPtr, 'uint32'),
       };
     } catch (error) {
-      console.error('Failed to get image size:', error);
+      SteamLogger.error('[Steamworks] Failed to get image size:', error);
       return null;
     }
   }
@@ -622,7 +623,7 @@ export class SteamUtilsManager {
         data: imageBuffer,
       };
     } catch (error) {
-      console.error('Failed to get image RGBA:', error);
+      SteamLogger.error('[Steamworks] Failed to get image RGBA:', error);
       return null;
     }
   }
@@ -681,7 +682,7 @@ export class SteamUtilsManager {
         existingText
       );
     } catch (error) {
-      console.error('Failed to show gamepad text input:', error);
+      SteamLogger.error('[Steamworks] Failed to show gamepad text input:', error);
       return false;
     }
   }
@@ -698,7 +699,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_GetEnteredGamepadTextLength(utils);
     } catch (error) {
-      console.error('Failed to get gamepad text length:', error);
+      SteamLogger.error('[Steamworks] Failed to get gamepad text length:', error);
       return 0;
     }
   }
@@ -740,7 +741,7 @@ export class SteamUtilsManager {
       const nullIndex = textBuffer.indexOf(0);
       return textBuffer.slice(0, nullIndex === -1 ? maxLength : nullIndex).toString('utf8');
     } catch (error) {
-      console.error('Failed to get gamepad text input:', error);
+      SteamLogger.error('[Steamworks] Failed to get gamepad text input:', error);
       return '';
     }
   }
@@ -790,7 +791,7 @@ export class SteamUtilsManager {
         textFieldHeight
       );
     } catch (error) {
-      console.error('Failed to show floating gamepad text input:', error);
+      SteamLogger.error('[Steamworks] Failed to show floating gamepad text input:', error);
       return false;
     }
   }
@@ -807,7 +808,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_DismissFloatingGamepadTextInput(utils);
     } catch (error) {
-      console.error('Failed to dismiss floating gamepad text input:', error);
+      SteamLogger.error('[Steamworks] Failed to dismiss floating gamepad text input:', error);
       return false;
     }
   }
@@ -831,7 +832,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_GetIPCCallCount(utils);
     } catch (error) {
-      console.error('Failed to get IPC call count:', error);
+      SteamLogger.error('[Steamworks] Failed to get IPC call count:', error);
       return 0;
     }
   }
@@ -848,7 +849,7 @@ export class SteamUtilsManager {
     try {
       this.libraryLoader.SteamAPI_ISteamUtils_StartVRDashboard(utils);
     } catch (error) {
-      console.error('Failed to start VR dashboard:', error);
+      SteamLogger.error('[Steamworks] Failed to start VR dashboard:', error);
     }
   }
 
@@ -880,7 +881,7 @@ export class SteamUtilsManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamUtils_InitFilterText(utils, unFilterOptions);
     } catch (error) {
-      console.error('Failed to init filter text:', error);
+      SteamLogger.error('[Steamworks] Failed to init filter text:', error);
       return false;
     }
   }
@@ -937,7 +938,7 @@ export class SteamUtilsManager {
       const nullIndex = outputBuffer.indexOf(0);
       return outputBuffer.slice(0, nullIndex === -1 ? filteredLength : nullIndex).toString('utf8');
     } catch (error) {
-      console.error('Failed to filter text:', error);
+      SteamLogger.error('[Steamworks] Failed to filter text:', error);
       return inputMessage;
     }
   }

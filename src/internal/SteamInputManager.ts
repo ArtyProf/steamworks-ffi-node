@@ -17,6 +17,7 @@ import {
   EInputActionOrigin,
 } from '../types';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
+import { SteamLogger } from './SteamLogger';
 
 /**
  * Controller type names for display
@@ -128,7 +129,7 @@ export class SteamInputManager {
   init(explicitlyCallRunFrame: boolean = true): boolean {
     const iface = this.getSteamInputInterface();
     if (!iface) {
-      console.error('[SteamInput] Failed to get ISteamInput interface');
+      SteamLogger.error('[Steamworks] Failed to get ISteamInput interface');
       return false;
     }
 
@@ -136,7 +137,7 @@ export class SteamInputManager {
       const result = this.libraryLoader.SteamAPI_ISteamInput_Init(iface, explicitlyCallRunFrame);
       return result;
     } catch (error) {
-      console.error('[SteamInput] Init error:', error);
+      SteamLogger.error('[Steamworks] Init error:', error);
       return false;
     }
   }
@@ -156,7 +157,7 @@ export class SteamInputManager {
       const result = this.libraryLoader.SteamAPI_ISteamInput_Shutdown(iface);
       return result;
     } catch (error) {
-      console.error('[SteamInput] Shutdown error:', error);
+      SteamLogger.error('[Steamworks] Shutdown error:', error);
       return false;
     }
   }
@@ -177,7 +178,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_SetInputActionManifestFilePath(iface, manifestPath);
     } catch (error) {
-      console.error('[SteamInput] SetInputActionManifestFilePath error:', error);
+      SteamLogger.error('[Steamworks] SetInputActionManifestFilePath error:', error);
       return false;
     }
   }
@@ -208,7 +209,7 @@ export class SteamInputManager {
     try {
       this.libraryLoader.SteamAPI_ISteamInput_RunFrame(iface, reservedValue);
     } catch (error) {
-      console.error('[SteamInput] RunFrame error:', error);
+      SteamLogger.error('[Steamworks] RunFrame error:', error);
     }
   }
 
@@ -251,7 +252,7 @@ export class SteamInputManager {
       
       return handles;
     } catch (error) {
-      console.error('[SteamInput] GetConnectedControllers error:', error);
+      SteamLogger.error('[Steamworks] GetConnectedControllers error:', error);
       return [];
     }
   }
@@ -277,7 +278,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetInputTypeForHandle(iface, inputHandle);
     } catch (error) {
-      console.error('[SteamInput] GetInputTypeForHandle error:', error);
+      SteamLogger.error('[Steamworks] GetInputTypeForHandle error:', error);
       return SteamInputType.Unknown;
     }
   }
@@ -317,7 +318,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetControllerForGamepadIndex(iface, gamepadIndex);
     } catch (error) {
-      console.error('[SteamInput] GetControllerForGamepadIndex error:', error);
+      SteamLogger.error('[Steamworks] GetControllerForGamepadIndex error:', error);
       return BigInt(0);
     }
   }
@@ -335,7 +336,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetGamepadIndexForController(iface, inputHandle);
     } catch (error) {
-      console.error('[SteamInput] GetGamepadIndexForController error:', error);
+      SteamLogger.error('[Steamworks] GetGamepadIndexForController error:', error);
       return -1;
     }
   }
@@ -366,7 +367,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetActionSetHandle(iface, actionSetName);
     } catch (error) {
-      console.error('[SteamInput] GetActionSetHandle error:', error);
+      SteamLogger.error('[Steamworks] GetActionSetHandle error:', error);
       return BigInt(0);
     }
   }
@@ -392,7 +393,7 @@ export class SteamInputManager {
     try {
       this.libraryLoader.SteamAPI_ISteamInput_ActivateActionSet(iface, inputHandle, actionSetHandle);
     } catch (error) {
-      console.error('[SteamInput] ActivateActionSet error:', error);
+      SteamLogger.error('[Steamworks] ActivateActionSet error:', error);
     }
   }
 
@@ -409,7 +410,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetCurrentActionSet(iface, inputHandle);
     } catch (error) {
-      console.error('[SteamInput] GetCurrentActionSet error:', error);
+      SteamLogger.error('[Steamworks] GetCurrentActionSet error:', error);
       return BigInt(0);
     }
   }
@@ -430,7 +431,7 @@ export class SteamInputManager {
     try {
       this.libraryLoader.SteamAPI_ISteamInput_ActivateActionSetLayer(iface, inputHandle, actionSetLayerHandle);
     } catch (error) {
-      console.error('[SteamInput] ActivateActionSetLayer error:', error);
+      SteamLogger.error('[Steamworks] ActivateActionSetLayer error:', error);
     }
   }
 
@@ -447,7 +448,7 @@ export class SteamInputManager {
     try {
       this.libraryLoader.SteamAPI_ISteamInput_DeactivateActionSetLayer(iface, inputHandle, actionSetLayerHandle);
     } catch (error) {
-      console.error('[SteamInput] DeactivateActionSetLayer error:', error);
+      SteamLogger.error('[Steamworks] DeactivateActionSetLayer error:', error);
     }
   }
 
@@ -463,7 +464,7 @@ export class SteamInputManager {
     try {
       this.libraryLoader.SteamAPI_ISteamInput_DeactivateAllActionSetLayers(iface, inputHandle);
     } catch (error) {
-      console.error('[SteamInput] DeactivateAllActionSetLayers error:', error);
+      SteamLogger.error('[Steamworks] DeactivateAllActionSetLayers error:', error);
     }
   }
 
@@ -490,7 +491,7 @@ export class SteamInputManager {
       
       return layers;
     } catch (error) {
-      console.error('[SteamInput] GetActiveActionSetLayers error:', error);
+      SteamLogger.error('[Steamworks] GetActiveActionSetLayers error:', error);
       return [];
     }
   }
@@ -521,7 +522,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetDigitalActionHandle(iface, actionName);
     } catch (error) {
-      console.error('[SteamInput] GetDigitalActionHandle error:', error);
+      SteamLogger.error('[Steamworks] GetDigitalActionHandle error:', error);
       return BigInt(0);
     }
   }
@@ -558,7 +559,7 @@ export class SteamInputManager {
         active: buffer.readUInt8(1) !== 0,
       };
     } catch (error) {
-      console.error('[SteamInput] GetDigitalActionData error:', error);
+      SteamLogger.error('[Steamworks] GetDigitalActionData error:', error);
       return { state: false, active: false };
     }
   }
@@ -576,7 +577,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetStringForDigitalActionName(iface, digitalActionHandle) || '';
     } catch (error) {
-      console.error('[SteamInput] GetStringForDigitalActionName error:', error);
+      SteamLogger.error('[Steamworks] GetStringForDigitalActionName error:', error);
       return '';
     }
   }
@@ -607,7 +608,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetAnalogActionHandle(iface, actionName);
     } catch (error) {
-      console.error('[SteamInput] GetAnalogActionHandle error:', error);
+      SteamLogger.error('[Steamworks] GetAnalogActionHandle error:', error);
       return BigInt(0);
     }
   }
@@ -647,7 +648,7 @@ export class SteamInputManager {
         active: buffer.readUInt8(12) !== 0,
       };
     } catch (error) {
-      console.error('[SteamInput] GetAnalogActionData error:', error);
+      SteamLogger.error('[Steamworks] GetAnalogActionData error:', error);
       return { mode: 0, x: 0, y: 0, active: false };
     }
   }
@@ -665,7 +666,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetStringForAnalogActionName(iface, analogActionHandle) || '';
     } catch (error) {
-      console.error('[SteamInput] GetStringForAnalogActionName error:', error);
+      SteamLogger.error('[Steamworks] GetStringForAnalogActionName error:', error);
       return '';
     }
   }
@@ -686,7 +687,7 @@ export class SteamInputManager {
     try {
       this.libraryLoader.SteamAPI_ISteamInput_StopAnalogActionMomentum(iface, inputHandle, analogActionHandle);
     } catch (error) {
-      console.error('[SteamInput] StopAnalogActionMomentum error:', error);
+      SteamLogger.error('[Steamworks] StopAnalogActionMomentum error:', error);
     }
   }
 
@@ -735,7 +736,7 @@ export class SteamInputManager {
         rotVelZ: buffer.readFloatLE(36),
       };
     } catch (error) {
-      console.error('[SteamInput] GetMotionData error:', error);
+      SteamLogger.error('[Steamworks] GetMotionData error:', error);
       return null;
     }
   }
@@ -770,7 +771,7 @@ export class SteamInputManager {
     try {
       this.libraryLoader.SteamAPI_ISteamInput_TriggerVibration(iface, inputHandle, leftSpeed, rightSpeed);
     } catch (error) {
-      console.error('[SteamInput] TriggerVibration error:', error);
+      SteamLogger.error('[Steamworks] TriggerVibration error:', error);
     }
   }
 
@@ -803,7 +804,7 @@ export class SteamInputManager {
         rightTriggerSpeed
       );
     } catch (error) {
-      console.error('[SteamInput] TriggerVibrationExtended error:', error);
+      SteamLogger.error('[Steamworks] TriggerVibrationExtended error:', error);
     }
   }
 
@@ -839,7 +840,7 @@ export class SteamInputManager {
         otherGainDB
       );
     } catch (error) {
-      console.error('[SteamInput] TriggerSimpleHapticEvent error:', error);
+      SteamLogger.error('[Steamworks] TriggerSimpleHapticEvent error:', error);
     }
   }
 
@@ -871,7 +872,7 @@ export class SteamInputManager {
     try {
       this.libraryLoader.SteamAPI_ISteamInput_SetLEDColor(iface, inputHandle, colorR, colorG, colorB, flags);
     } catch (error) {
-      console.error('[SteamInput] SetLEDColor error:', error);
+      SteamLogger.error('[Steamworks] SetLEDColor error:', error);
     }
   }
 
@@ -889,7 +890,7 @@ export class SteamInputManager {
     try {
       this.libraryLoader.SteamAPI_ISteamInput_Legacy_TriggerHapticPulse(iface, inputHandle, targetPad, durationMicroSec);
     } catch (error) {
-      console.error('[SteamInput] Legacy_TriggerHapticPulse error:', error);
+      SteamLogger.error('[Steamworks] Legacy_TriggerHapticPulse error:', error);
     }
   }
 
@@ -935,7 +936,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetGlyphPNGForActionOrigin(iface, origin, size, flags) || '';
     } catch (error) {
-      console.error('[SteamInput] GetGlyphPNGForActionOrigin error:', error);
+      SteamLogger.error('[Steamworks] GetGlyphPNGForActionOrigin error:', error);
       return '';
     }
   }
@@ -962,7 +963,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetGlyphSVGForActionOrigin(iface, origin, flags) || '';
     } catch (error) {
-      console.error('[SteamInput] GetGlyphSVGForActionOrigin error:', error);
+      SteamLogger.error('[Steamworks] GetGlyphSVGForActionOrigin error:', error);
       return '';
     }
   }
@@ -986,7 +987,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetStringForActionOrigin(iface, origin) || '';
     } catch (error) {
-      console.error('[SteamInput] GetStringForActionOrigin error:', error);
+      SteamLogger.error('[Steamworks] GetStringForActionOrigin error:', error);
       return '';
     }
   }
@@ -1018,7 +1019,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_ShowBindingPanel(iface, inputHandle);
     } catch (error) {
-      console.error('[SteamInput] ShowBindingPanel error:', error);
+      SteamLogger.error('[Steamworks] ShowBindingPanel error:', error);
       return false;
     }
   }
@@ -1053,7 +1054,7 @@ export class SteamInputManager {
       
       return null;
     } catch (error) {
-      console.error('[SteamInput] GetDeviceBindingRevision error:', error);
+      SteamLogger.error('[Steamworks] GetDeviceBindingRevision error:', error);
       return null;
     }
   }
@@ -1071,7 +1072,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetRemotePlaySessionID(iface, inputHandle);
     } catch (error) {
-      console.error('[SteamInput] GetRemotePlaySessionID error:', error);
+      SteamLogger.error('[Steamworks] GetRemotePlaySessionID error:', error);
       return 0;
     }
   }
@@ -1090,7 +1091,7 @@ export class SteamInputManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamInput_GetSessionInputConfigurationSettings(iface);
     } catch (error) {
-      console.error('[SteamInput] GetSessionInputConfigurationSettings error:', error);
+      SteamLogger.error('[Steamworks] GetSessionInputConfigurationSettings error:', error);
       return 0;
     }
   }

@@ -2,6 +2,7 @@ import * as koffi from 'koffi';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamCallbackPoller } from './SteamCallbackPoller';
+import { SteamLogger } from './SteamLogger';
 import {
   K_I_LOBBY_CREATED,
   K_I_LOBBY_ENTER,
@@ -182,7 +183,7 @@ export class SteamMatchmakingManager {
           try {
             handler(event);
           } catch (err) {
-            console.error('[Steamworks] Chat message handler error:', (err as Error).message);
+            SteamLogger.error('[Steamworks] Chat message handler error:', (err as Error).message);
           }
         }
 
@@ -432,7 +433,7 @@ export class SteamMatchmakingManager {
   leaveLobby(lobbyId: LobbyId): void {
     const matchmaking = this.apiCore.getMatchmakingInterface();
     if (!matchmaking) {
-      console.warn('[Steamworks] Cannot leave lobby: Matchmaking interface not available');
+      SteamLogger.warn('[Steamworks] Cannot leave lobby: Matchmaking interface not available');
       return;
     }
 
@@ -440,7 +441,7 @@ export class SteamMatchmakingManager {
       const lobbyIdNum = BigInt(lobbyId);
       this.libraryLoader.SteamAPI_ISteamMatchmaking_LeaveLobby(matchmaking, lobbyIdNum);
     } catch (error) {
-      console.error('[Steamworks] Error leaving lobby:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error leaving lobby:', (error as Error).message);
     }
   }
 
@@ -480,7 +481,7 @@ export class SteamMatchmakingManager {
         inviteeIdNum
       );
     } catch (error) {
-      console.error('[Steamworks] Error inviting user to lobby:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error inviting user to lobby:', (error as Error).message);
       return false;
     }
   }
@@ -560,7 +561,7 @@ export class SteamMatchmakingManager {
         lobbies
       };
     } catch (error) {
-      console.error('[Steamworks] Error requesting lobby list:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error requesting lobby list:', (error as Error).message);
       return { success: false, count: 0, lobbies: [] };
     }
   }
@@ -774,7 +775,7 @@ export class SteamMatchmakingManager {
         key
       ) || '';
     } catch (error) {
-      console.error('[Steamworks] Error getting lobby data:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting lobby data:', (error as Error).message);
       return '';
     }
   }
@@ -812,7 +813,7 @@ export class SteamMatchmakingManager {
         value
       );
     } catch (error) {
-      console.error('[Steamworks] Error setting lobby data:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error setting lobby data:', (error as Error).message);
       return false;
     }
   }
@@ -840,7 +841,7 @@ export class SteamMatchmakingManager {
         key
       );
     } catch (error) {
-      console.error('[Steamworks] Error deleting lobby data:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error deleting lobby data:', (error as Error).message);
       return false;
     }
   }
@@ -864,7 +865,7 @@ export class SteamMatchmakingManager {
         BigInt(lobbyId)
       );
     } catch (error) {
-      console.error('[Steamworks] Error getting lobby data count:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting lobby data count:', (error as Error).message);
       return 0;
     }
   }
@@ -916,7 +917,7 @@ export class SteamMatchmakingManager {
           }
         }
       } catch (error) {
-        console.error('[Steamworks] Error getting lobby data by index:', (error as Error).message);
+        SteamLogger.error('[Steamworks] Error getting lobby data by index:', (error as Error).message);
       }
     }
 
@@ -956,7 +957,7 @@ export class SteamMatchmakingManager {
         key
       ) || '';
     } catch (error) {
-      console.error('[Steamworks] Error getting lobby member data:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting lobby member data:', (error as Error).message);
       return '';
     }
   }
@@ -993,7 +994,7 @@ export class SteamMatchmakingManager {
         value
       );
     } catch (error) {
-      console.error('[Steamworks] Error setting lobby member data:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error setting lobby member data:', (error as Error).message);
     }
   }
 
@@ -1020,7 +1021,7 @@ export class SteamMatchmakingManager {
         BigInt(lobbyId)
       );
     } catch (error) {
-      console.error('[Steamworks] Error getting lobby member count:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting lobby member count:', (error as Error).message);
       return 0;
     }
   }
@@ -1047,7 +1048,7 @@ export class SteamMatchmakingManager {
       );
       return memberId ? memberId.toString() : '';
     } catch (error) {
-      console.error('[Steamworks] Error getting lobby member by index:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting lobby member by index:', (error as Error).message);
       return '';
     }
   }
@@ -1103,7 +1104,7 @@ export class SteamMatchmakingManager {
       );
       return ownerId ? ownerId.toString() : '';
     } catch (error) {
-      console.error('[Steamworks] Error getting lobby owner:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting lobby owner:', (error as Error).message);
       return '';
     }
   }
@@ -1132,7 +1133,7 @@ export class SteamMatchmakingManager {
         BigInt(newOwnerId)
       );
     } catch (error) {
-      console.error('[Steamworks] Error setting lobby owner:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error setting lobby owner:', (error as Error).message);
       return false;
     }
   }
@@ -1160,7 +1161,7 @@ export class SteamMatchmakingManager {
         BigInt(lobbyId)
       );
     } catch (error) {
-      console.error('[Steamworks] Error getting lobby member limit:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting lobby member limit:', (error as Error).message);
       return 0;
     }
   }
@@ -1186,7 +1187,7 @@ export class SteamMatchmakingManager {
         maxMembers
       );
     } catch (error) {
-      console.error('[Steamworks] Error setting lobby member limit:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error setting lobby member limit:', (error as Error).message);
       return false;
     }
   }
@@ -1218,7 +1219,7 @@ export class SteamMatchmakingManager {
         lobbyType
       );
     } catch (error) {
-      console.error('[Steamworks] Error setting lobby type:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error setting lobby type:', (error as Error).message);
       return false;
     }
   }
@@ -1250,7 +1251,7 @@ export class SteamMatchmakingManager {
         joinable
       );
     } catch (error) {
-      console.error('[Steamworks] Error setting lobby joinable:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error setting lobby joinable:', (error as Error).message);
       return false;
     }
   }
@@ -1288,7 +1289,7 @@ export class SteamMatchmakingManager {
         messageBuffer.length
       );
     } catch (error) {
-      console.error('[Steamworks] Error sending lobby chat message:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error sending lobby chat message:', (error as Error).message);
       return false;
     }
   }
@@ -1346,7 +1347,7 @@ export class SteamMatchmakingManager {
         entryType
       };
     } catch (error) {
-      console.error('[Steamworks] Error getting lobby chat entry:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting lobby chat entry:', (error as Error).message);
       return null;
     }
   }
@@ -1392,7 +1393,7 @@ export class SteamMatchmakingManager {
         BigInt(steamId)
       );
     } catch (error) {
-      console.error('[Steamworks] Error setting lobby game server:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error setting lobby game server:', (error as Error).message);
     }
   }
 
@@ -1430,7 +1431,7 @@ export class SteamMatchmakingManager {
         steamId: steamIdBuffer.readBigUInt64LE(0).toString()
       };
     } catch (error) {
-      console.error('[Steamworks] Error getting lobby game server:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting lobby game server:', (error as Error).message);
       return null;
     }
   }
@@ -1457,7 +1458,7 @@ export class SteamMatchmakingManager {
         BigInt(lobbyId)
       );
     } catch (error) {
-      console.error('[Steamworks] Error requesting lobby data:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error requesting lobby data:', (error as Error).message);
       return false;
     }
   }
@@ -1483,7 +1484,7 @@ export class SteamMatchmakingManager {
         BigInt(dependentLobbyId)
       );
     } catch (error) {
-      console.error('[Steamworks] Error setting linked lobby:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error setting linked lobby:', (error as Error).message);
       return false;
     }
   }
@@ -1507,7 +1508,7 @@ export class SteamMatchmakingManager {
     try {
       return this.libraryLoader.SteamAPI_ISteamMatchmaking_GetFavoriteGameCount(matchmaking);
     } catch (error) {
-      console.error('[Steamworks] Error getting favorite game count:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting favorite game count:', (error as Error).message);
       return 0;
     }
   }
@@ -1555,7 +1556,7 @@ export class SteamMatchmakingManager {
         lastPlayedOnServer: lastPlayedBuffer.readUInt32LE(0)
       };
     } catch (error) {
-      console.error('[Steamworks] Error getting favorite game:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error getting favorite game:', (error as Error).message);
       return null;
     }
   }
@@ -1596,7 +1597,7 @@ export class SteamMatchmakingManager {
         lastPlayedOnServer
       );
     } catch (error) {
-      console.error('[Steamworks] Error adding favorite game:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error adding favorite game:', (error as Error).message);
       return -1;
     }
   }
@@ -1634,7 +1635,7 @@ export class SteamMatchmakingManager {
         flags
       );
     } catch (error) {
-      console.error('[Steamworks] Error removing favorite game:', (error as Error).message);
+      SteamLogger.error('[Steamworks] Error removing favorite game:', (error as Error).message);
       return false;
     }
   }

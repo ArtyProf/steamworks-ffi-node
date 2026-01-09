@@ -15,6 +15,7 @@
 
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
+import { SteamLogger } from './SteamLogger';
 import type {
   AppId,
   DepotId,
@@ -69,12 +70,12 @@ export class SteamAppsManager {
     try {
       const apps = this.getSteamApps();
       if (!apps) {
-        console.warn('[Steamworks] ISteamApps interface not available');
+        SteamLogger.warn('[Steamworks] ISteamApps interface not available');
         return false;
       }
       return this.libraryLoader.SteamAPI_ISteamApps_BIsSubscribed(apps);
     } catch (error) {
-      console.error('[Steamworks] Error checking subscription:', error);
+      SteamLogger.error('[Steamworks] Error checking subscription:', error);
       return false;
     }
   }
@@ -101,12 +102,12 @@ export class SteamAppsManager {
     try {
       const apps = this.getSteamApps();
       if (!apps) {
-        console.warn('[Steamworks] ISteamApps interface not available');
+        SteamLogger.warn('[Steamworks] ISteamApps interface not available');
         return false;
       }
       return this.libraryLoader.SteamAPI_ISteamApps_BIsSubscribedApp(apps, appId);
     } catch (error) {
-      console.error('[Steamworks] Error checking app subscription:', error);
+      SteamLogger.error('[Steamworks] Error checking app subscription:', error);
       return false;
     }
   }
@@ -128,12 +129,12 @@ export class SteamAppsManager {
     try {
       const apps = this.getSteamApps();
       if (!apps) {
-        console.warn('[Steamworks] ISteamApps interface not available');
+        SteamLogger.warn('[Steamworks] ISteamApps interface not available');
         return false;
       }
       return this.libraryLoader.SteamAPI_ISteamApps_BIsAppInstalled(apps, appId);
     } catch (error) {
-      console.error('[Steamworks] Error checking app installation:', error);
+      SteamLogger.error('[Steamworks] Error checking app installation:', error);
       return false;
     }
   }
@@ -152,7 +153,7 @@ export class SteamAppsManager {
       if (!apps) return false;
       return this.libraryLoader.SteamAPI_ISteamApps_BIsLowViolence(apps);
     } catch (error) {
-      console.error('[Steamworks] Error checking low violence mode:', error);
+      SteamLogger.error('[Steamworks] Error checking low violence mode:', error);
       return false;
     }
   }
@@ -168,7 +169,7 @@ export class SteamAppsManager {
       if (!apps) return false;
       return this.libraryLoader.SteamAPI_ISteamApps_BIsCybercafe(apps);
     } catch (error) {
-      console.error('[Steamworks] Error checking cybercafe status:', error);
+      SteamLogger.error('[Steamworks] Error checking cybercafe status:', error);
       return false;
     }
   }
@@ -184,7 +185,7 @@ export class SteamAppsManager {
       if (!apps) return false;
       return this.libraryLoader.SteamAPI_ISteamApps_BIsVACBanned(apps);
     } catch (error) {
-      console.error('[Steamworks] Error checking VAC ban status:', error);
+      SteamLogger.error('[Steamworks] Error checking VAC ban status:', error);
       return false;
     }
   }
@@ -207,7 +208,7 @@ export class SteamAppsManager {
       if (!apps) return false;
       return this.libraryLoader.SteamAPI_ISteamApps_BIsSubscribedFromFreeWeekend(apps);
     } catch (error) {
-      console.error('[Steamworks] Error checking free weekend status:', error);
+      SteamLogger.error('[Steamworks] Error checking free weekend status:', error);
       return false;
     }
   }
@@ -234,7 +235,7 @@ export class SteamAppsManager {
       if (!apps) return false;
       return this.libraryLoader.SteamAPI_ISteamApps_BIsSubscribedFromFamilySharing(apps);
     } catch (error) {
-      console.error('[Steamworks] Error checking Family Sharing status:', error);
+      SteamLogger.error('[Steamworks] Error checking Family Sharing status:', error);
       return false;
     }
   }
@@ -292,12 +293,12 @@ export class SteamAppsManager {
     try {
       const apps = this.getSteamApps();
       if (!apps) {
-        console.warn('[Steamworks] ISteamApps interface not available');
+        SteamLogger.warn('[Steamworks] ISteamApps interface not available');
         return false;
       }
       return this.libraryLoader.SteamAPI_ISteamApps_BIsDlcInstalled(apps, dlcAppId);
     } catch (error) {
-      console.error('[Steamworks] Error checking DLC installation:', error);
+      SteamLogger.error('[Steamworks] Error checking DLC installation:', error);
       return false;
     }
   }
@@ -319,7 +320,7 @@ export class SteamAppsManager {
       if (!apps) return 0;
       return this.libraryLoader.SteamAPI_ISteamApps_GetDLCCount(apps);
     } catch (error) {
-      console.error('[Steamworks] Error getting DLC count:', error);
+      SteamLogger.error('[Steamworks] Error getting DLC count:', error);
       return 0;
     }
   }
@@ -365,7 +366,7 @@ export class SteamAppsManager {
         name: nameBuffer.toString('utf8').replace(/\0/g, '').trim()
       };
     } catch (error) {
-      console.error('[Steamworks] Error getting DLC data:', error);
+      SteamLogger.error('[Steamworks] Error getting DLC data:', error);
       return null;
     }
   }
@@ -416,12 +417,12 @@ export class SteamAppsManager {
     try {
       const apps = this.getSteamApps();
       if (!apps) {
-        console.warn('[Steamworks] ISteamApps interface not available');
+        SteamLogger.warn('[Steamworks] ISteamApps interface not available');
         return;
       }
       this.libraryLoader.SteamAPI_ISteamApps_InstallDLC(apps, dlcAppId);
     } catch (error) {
-      console.error('[Steamworks] Error installing DLC:', error);
+      SteamLogger.error('[Steamworks] Error installing DLC:', error);
     }
   }
 
@@ -443,12 +444,12 @@ export class SteamAppsManager {
     try {
       const apps = this.getSteamApps();
       if (!apps) {
-        console.warn('[Steamworks] ISteamApps interface not available');
+        SteamLogger.warn('[Steamworks] ISteamApps interface not available');
         return;
       }
       this.libraryLoader.SteamAPI_ISteamApps_UninstallDLC(apps, dlcAppId);
     } catch (error) {
-      console.error('[Steamworks] Error uninstalling DLC:', error);
+      SteamLogger.error('[Steamworks] Error uninstalling DLC:', error);
     }
   }
 
@@ -495,7 +496,7 @@ export class SteamAppsManager {
         percentComplete: percent
       };
     } catch (error) {
-      console.error('[Steamworks] Error getting DLC download progress:', error);
+      SteamLogger.error('[Steamworks] Error getting DLC download progress:', error);
       return null;
     }
   }
@@ -524,7 +525,7 @@ export class SteamAppsManager {
       if (!apps) return false;
       return this.libraryLoader.SteamAPI_ISteamApps_SetDlcContext(apps, dlcAppId);
     } catch (error) {
-      console.error('[Steamworks] Error setting DLC context:', error);
+      SteamLogger.error('[Steamworks] Error setting DLC context:', error);
       return false;
     }
   }
@@ -568,7 +569,7 @@ export class SteamAppsManager {
         secondsRemaining: Math.max(0, secondsAllowed[0] - secondsPlayed[0])
       };
     } catch (error) {
-      console.error('[Steamworks] Error checking timed trial status:', error);
+      SteamLogger.error('[Steamworks] Error checking timed trial status:', error);
       return null;
     }
   }
@@ -595,7 +596,7 @@ export class SteamAppsManager {
       if (!apps) return 'english';
       return this.libraryLoader.SteamAPI_ISteamApps_GetCurrentGameLanguage(apps) || 'english';
     } catch (error) {
-      console.error('[Steamworks] Error getting game language:', error);
+      SteamLogger.error('[Steamworks] Error getting game language:', error);
       return 'english';
     }
   }
@@ -618,7 +619,7 @@ export class SteamAppsManager {
       if (!apps) return 'english';
       return this.libraryLoader.SteamAPI_ISteamApps_GetAvailableGameLanguages(apps) || 'english';
     } catch (error) {
-      console.error('[Steamworks] Error getting available languages:', error);
+      SteamLogger.error('[Steamworks] Error getting available languages:', error);
       return 'english';
     }
   }
@@ -642,7 +643,7 @@ export class SteamAppsManager {
       if (!apps) return 0;
       return this.libraryLoader.SteamAPI_ISteamApps_GetEarliestPurchaseUnixTime(apps, appId);
     } catch (error) {
-      console.error('[Steamworks] Error getting purchase time:', error);
+      SteamLogger.error('[Steamworks] Error getting purchase time:', error);
       return 0;
     }
   }
@@ -675,7 +676,7 @@ export class SteamAppsManager {
       if (length === 0) return '';
       return pathBuffer.toString('utf8').replace(/\0/g, '').trim();
     } catch (error) {
-      console.error('[Steamworks] Error getting install directory:', error);
+      SteamLogger.error('[Steamworks] Error getting install directory:', error);
       return '';
     }
   }
@@ -699,7 +700,7 @@ export class SteamAppsManager {
       if (!apps) return BigInt(0);
       return BigInt(this.libraryLoader.SteamAPI_ISteamApps_GetAppOwner(apps));
     } catch (error) {
-      console.error('[Steamworks] Error getting app owner:', error);
+      SteamLogger.error('[Steamworks] Error getting app owner:', error);
       return BigInt(0);
     }
   }
@@ -721,7 +722,7 @@ export class SteamAppsManager {
       if (!apps) return 0;
       return this.libraryLoader.SteamAPI_ISteamApps_GetAppBuildId(apps);
     } catch (error) {
-      console.error('[Steamworks] Error getting build ID:', error);
+      SteamLogger.error('[Steamworks] Error getting build ID:', error);
       return 0;
     }
   }
@@ -758,7 +759,7 @@ export class SteamAppsManager {
       }
       return depots;
     } catch (error) {
-      console.error('[Steamworks] Error getting installed depots:', error);
+      SteamLogger.error('[Steamworks] Error getting installed depots:', error);
       return [];
     }
   }
@@ -822,7 +823,7 @@ export class SteamAppsManager {
       if (!onBeta) return 'public';
       return betaBuffer.toString('utf8').replace(/\0/g, '').trim() || 'public';
     } catch (error) {
-      console.error('[Steamworks] Error getting beta name:', error);
+      SteamLogger.error('[Steamworks] Error getting beta name:', error);
       return 'public';
     }
   }
@@ -856,7 +857,7 @@ export class SteamAppsManager {
         private: privateOut[0]
       };
     } catch (error) {
-      console.error('[Steamworks] Error getting beta count:', error);
+      SteamLogger.error('[Steamworks] Error getting beta count:', error);
       return { total: 0, available: 0, private: 0 };
     }
   }
@@ -906,7 +907,7 @@ export class SteamAppsManager {
         flags: flagsOut[0]
       };
     } catch (error) {
-      console.error('[Steamworks] Error getting beta info:', error);
+      SteamLogger.error('[Steamworks] Error getting beta info:', error);
       return null;
     }
   }
@@ -959,7 +960,7 @@ export class SteamAppsManager {
       if (!apps) return false;
       return this.libraryLoader.SteamAPI_ISteamApps_SetActiveBeta(apps, betaName);
     } catch (error) {
-      console.error('[Steamworks] Error setting active beta:', error);
+      SteamLogger.error('[Steamworks] Error setting active beta:', error);
       return false;
     }
   }
@@ -990,7 +991,7 @@ export class SteamAppsManager {
       if (!apps) return '';
       return this.libraryLoader.SteamAPI_ISteamApps_GetLaunchQueryParam(apps, key) || '';
     } catch (error) {
-      console.error('[Steamworks] Error getting launch param:', error);
+      SteamLogger.error('[Steamworks] Error getting launch param:', error);
       return '';
     }
   }
@@ -1021,7 +1022,7 @@ export class SteamAppsManager {
       if (length === 0) return '';
       return cmdBuffer.toString('utf8').replace(/\0/g, '').trim();
     } catch (error) {
-      console.error('[Steamworks] Error getting launch command line:', error);
+      SteamLogger.error('[Steamworks] Error getting launch command line:', error);
       return '';
     }
   }
@@ -1052,7 +1053,7 @@ export class SteamAppsManager {
       if (!apps) return false;
       return this.libraryLoader.SteamAPI_ISteamApps_MarkContentCorrupt(apps, missingFilesOnly);
     } catch (error) {
-      console.error('[Steamworks] Error marking content corrupt:', error);
+      SteamLogger.error('[Steamworks] Error marking content corrupt:', error);
       return false;
     }
   }
