@@ -342,11 +342,36 @@ const dlcResult = steam.user.userHasLicenseForApp(clientSteamId, 12345);
 
 if (dlcResult === EUserHasLicenseForAppResult.HasLicense) {
   console.log('User owns the DLC');
-  grantDLCContent(clientSteamId);
 } else if (dlcResult === EUserHasLicenseForAppResult.DoesNotHaveLicense) {
   console.log('User does not own the DLC');
 } else {
   console.log('User not authenticated');
+}
+```
+
+**Remarks:**
+- ⚠️ **Important:** This function should only be called after successfully authenticating the user with `beginAuthSession()`
+- The user must be authenticated before their license information is available
+- If called before authentication, it will return `NoAuth` (2)
+- Common workflow: Receive ticket → `beginAuthSession()` → `userHasLicenseForApp()` → Grant/deny access
+
+**Complete Authentication Example:**
+```typescript
+// 1. Receive and validate the user's auth ticket
+const authResult = steam.user.beginAuthSession(ticketData, clientSteamId);
+
+if (authResult.success) {
+  // 2. Now check if they own specific DLC/app
+  const licenseResult = steam.user.userHasLicenseForApp(clientSteamId, dlcAppId);
+  
+  if (licenseResult === EUserHasLicenseForAppResult.HasLicense) {
+    console.log('User authenticated and owns the DLC');
+  } else if (licenseResult === EUserHasLicenseForAppResult.NoAuth) {
+    console.log('User not yet authenticated - call beginAuthSession first');
+  }
+  
+  // 3. Clean up when done
+  // steam.user.endAuthSession(clientSteamId);
 }
 ```
 
