@@ -522,6 +522,43 @@ export class SteamUtilsManager {
     }
   }
 
+  /**
+   * Checks if the Steam overlay is enabled
+   * 
+   * Returns whether the Steam overlay is enabled for this user and application.
+   * The overlay can be disabled by the user in Steam settings, or may not be
+   * available in certain configurations (e.g., when running without Steam client).
+   * 
+   * This is useful to check before attempting to use overlay features, so you
+   * can provide alternative UI or functionality when the overlay is unavailable.
+   * 
+   * @returns true if the Steam overlay is enabled and available
+   * 
+   * @example Check overlay availability
+   * ```typescript
+   * if (steam.utils.isOverlayEnabled()) {
+   *   // Use Steam overlay features
+   *   steam.overlay.activateGameOverlay('Friends');
+   * } else {
+   *   // Provide alternative functionality
+   *   showInGameFriendsList();
+   * }
+   * ```
+   * 
+   * @see {@link https://partner.steamgames.com/doc/api/ISteamUtils#IsOverlayEnabled ISteamUtils::IsOverlayEnabled}
+   */
+  isOverlayEnabled(): boolean {
+    const utils = this.getUtilsInterface();
+    if (!utils) return false;
+    
+    try {
+      return this.libraryLoader.SteamAPI_ISteamUtils_IsOverlayEnabled(utils);
+    } catch (error) {
+      SteamLogger.error('[Steamworks] Failed to check if overlay is enabled:', error);
+      return false;
+    }
+  }
+
   // ========================================
   // Image Loading Methods
   // ========================================

@@ -12,6 +12,7 @@ The overlay appears on top of your game window and provides access to friends li
 
 | Function | Description |
 |----------|-------------|
+| [`isOverlayEnabled()`](#isoverlayenabled) | Check if Steam overlay is enabled |
 | [`activateGameOverlay()`](#activategameoverlaydialog) | Open overlay to a specific dialog |
 | [`activateGameOverlayToUser()`](#activategameoverlaytouserdialog-steamid) | Open overlay to user's profile/stats/etc |
 | [`activateGameOverlayToWebPage()`](#activategameoverlaytowebpageurl-mode) | Open overlay web browser to URL |
@@ -31,6 +32,81 @@ The Steam overlay works when:
 - ✅ Steam API is initialized
 
 Users can disable the overlay in Steam settings. Provide alternative UI for critical features if overlay is unavailable.
+
+---
+
+## Checking Overlay Availability
+
+### `isOverlayEnabled()`
+
+Checks if the Steam overlay is enabled for the current user.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUtils_IsOverlayEnabled()` - Check overlay status
+
+**Returns:**
+- `boolean` - `true` if overlay is enabled, `false` otherwise
+
+**Description:**
+
+Returns whether the Steam overlay is enabled and available. The overlay can be disabled by:
+- User preference in Steam settings
+- Running without Steam client
+- Certain graphics configurations
+- Running in headless mode
+
+This is useful to check before using overlay features, allowing you to provide alternative UI when the overlay is unavailable.
+
+**Example:**
+```typescript
+import SteamworksSDK from 'steamworks-ffi-node';
+
+const steam = SteamworksSDK.getInstance();
+steam.init({ appId: 480 });
+
+// Check if overlay is available
+const overlayEnabled = steam.utils.isOverlayEnabled();
+
+if (overlayEnabled) {
+  console.log('✅ Steam overlay is enabled');
+  
+  // Safe to use overlay features
+  steam.overlay.activateGameOverlay('Friends');
+} else {
+  console.log('❌ Steam overlay is not available');
+  
+  // Provide alternative UI
+  showInGameFriendsList();
+}
+```
+
+**Use Cases:**
+- Check before opening overlay dialogs
+- Show/hide overlay-related UI buttons
+- Provide alternative functionality when overlay is disabled
+- Display warnings about missing overlay features
+- Adapt UI based on overlay availability
+
+**Best Practice:**
+```typescript
+// ✅ Good - Check before using overlay
+function openFriendsList() {
+  if (steam.utils.isOverlayEnabled()) {
+    steam.overlay.activateGameOverlay('Friends');
+  } else {
+    // Show custom friends list UI
+    showCustomFriendsList();
+    
+    // Optional: Show message
+    showNotification('Steam overlay is disabled. Enable it in Steam settings for full features.');
+  }
+}
+
+// ❌ Bad - No check, will fail silently if overlay disabled
+function openFriendsList() {
+  steam.overlay.activateGameOverlay('Friends'); // May not work
+}
+```
 
 ---
 

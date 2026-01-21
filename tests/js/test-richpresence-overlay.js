@@ -140,25 +140,49 @@ async function testRichPresenceAndOverlay() {
     console.log('='.repeat(80));
     console.log('');
 
+    // Test 4: Check overlay availability
+    console.log('Test 4: Checking Overlay Availability');
+    console.log('-'.repeat(40));
+    const overlayEnabled = steam.utils.isOverlayEnabled();
+    console.log(`Overlay Enabled: ${overlayEnabled ? '✅ Yes' : '❌ No'}`);
+    
+    if (!overlayEnabled) {
+      console.log('');
+      console.log('⚠️  Steam overlay is not available.');
+      console.log('Reasons could be:');
+      console.log('  - Overlay disabled in Steam settings');
+      console.log('  - Running in unsupported graphics mode');
+      console.log('  - Not launched through Steam');
+      console.log('');
+      console.log('To enable: Steam > Settings > In-Game > "Enable Steam Overlay"');
+      console.log('');
+      console.log('Overlay tests will attempt to run, but may not be visible.');
+    } else {
+      console.log('✅ Steam overlay is available and ready to use');
+    }
+    console.log('');
+
     console.log('Note: Overlay tests will open Steam overlay windows.');
     console.log('Press Shift+Tab or close the overlay to continue.');
     console.log('Waiting 3 seconds before starting overlay tests...');
     console.log('');
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Test 4: Open overlay dialogs
-    console.log('Test 4: Opening Overlay Dialogs');
+    // Test 5: Open overlay dialogs
+    console.log('Test 5: Opening Overlay Dialogs');
     console.log('-'.repeat(40));
     console.log('Opening Friends list...');
     steam.overlay.activateGameOverlay(EOverlayDialog.FRIENDS);
     console.log('✅ Opened overlay to Friends');
-    console.log('Overlay should be visible now. Close it to continue.');
+    if (overlayEnabled) {
+      console.log('Overlay should be visible now. Close it to continue.');
+    }
     console.log('');
     await new Promise(resolve => setTimeout(resolve, 5000));
 
-    // Test 5: Open overlay to user (if we have friends)
+    // Test 6: Open overlay to user (if we have friends)
     if (friends.length > 0) {
-      console.log('Test 5: Opening Overlay to User Profile');
+      console.log('Test 6: Opening Overlay to User Profile');
       console.log('-'.repeat(40));
       const firstFriend = friends[0];
       console.log(`Opening profile for: ${firstFriend.personaName}`);
@@ -168,8 +192,8 @@ async function testRichPresenceAndOverlay() {
       await new Promise(resolve => setTimeout(resolve, 5000));
     }
 
-    // Test 6: Open overlay to web page
-    console.log('Test 6: Opening Overlay Web Page');
+    // Test 7: Open overlay to web page
+    console.log('Test 7: Opening Overlay Web Page');
     console.log('-'.repeat(40));
     console.log('Opening Steam Community...');
     steam.overlay.activateGameOverlayToWebPage(
@@ -180,8 +204,8 @@ async function testRichPresenceAndOverlay() {
     console.log('');
     await new Promise(resolve => setTimeout(resolve, 5000));
 
-    // Test 7: Open overlay to store
-    console.log('Test 7: Opening Overlay Store Page');
+    // Test 8: Open overlay to store
+    console.log('Test 8: Opening Overlay Store Page');
     console.log('-'.repeat(40));
     console.log('Opening store page for Counter-Strike 2 (App ID 730)...');
     steam.overlay.activateGameOverlayToStore(730, EOverlayToStoreFlag.None);
@@ -201,6 +225,8 @@ async function testRichPresenceAndOverlay() {
     console.log('  ✅ Clear rich presence');
     console.log('');
     console.log('Overlay Tests:');
+    console.log('  ✅ Check overlay availability');
+    console.log(`  ${overlayEnabled ? '✅' : '⚠️ '} Overlay ${overlayEnabled ? 'enabled' : 'disabled'}`);
     console.log('  ✅ Open overlay to Friends dialog');
     if (friends.length > 0) {
       console.log('  ✅ Open overlay to user profile');

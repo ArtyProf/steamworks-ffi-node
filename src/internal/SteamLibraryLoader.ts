@@ -168,6 +168,7 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUtils_SetOverlayNotificationPosition!: koffi.KoffiFunction;
   public SteamAPI_ISteamUtils_SetOverlayNotificationInset!: koffi.KoffiFunction;
   public SteamAPI_ISteamUtils_BOverlayNeedsPresent!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_IsOverlayEnabled!: koffi.KoffiFunction;
   
   // Image loading
   public SteamAPI_ISteamUtils_GetImageSize!: koffi.KoffiFunction;
@@ -920,6 +921,7 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUtils_SetOverlayNotificationPosition = this.steamLib.func('SteamAPI_ISteamUtils_SetOverlayNotificationPosition', 'void', ['void*', 'int']);
     this.SteamAPI_ISteamUtils_SetOverlayNotificationInset = this.steamLib.func('SteamAPI_ISteamUtils_SetOverlayNotificationInset', 'void', ['void*', 'int', 'int']);
     this.SteamAPI_ISteamUtils_BOverlayNeedsPresent = this.steamLib.func('SteamAPI_ISteamUtils_BOverlayNeedsPresent', 'bool', ['void*']);
+    this.SteamAPI_ISteamUtils_IsOverlayEnabled = this.steamLib.func('SteamAPI_ISteamUtils_IsOverlayEnabled', 'bool', ['void*']);
     
     // Image loading
     this.SteamAPI_ISteamUtils_GetImageSize = this.steamLib.func('SteamAPI_ISteamUtils_GetImageSize', 'bool', ['void*', 'int', 'uint32*', 'uint32*']);
