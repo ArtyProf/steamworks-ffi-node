@@ -1103,14 +1103,6 @@ class SteamworksSDK {
   isOverlayAvailable(): boolean {
     return this.nativeOverlay.isAvailable();
   }
-
-  /**
-   * Check if Metal overlay is available (legacy alias)
-   * @deprecated Use isOverlayAvailable() instead - now supports all platforms
-   */
-  isMetalOverlayAvailable(): boolean {
-    return this.isOverlayAvailable();
-  }
 }
 
 export default SteamworksSDK;
