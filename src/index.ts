@@ -16,6 +16,7 @@ export { SteamMatchmakingManager } from './internal/SteamMatchmakingManager';
 export { SteamNetworkingUtilsManager } from './internal/SteamNetworkingUtilsManager';
 export { SteamNetworkingSocketsManager } from './internal/SteamNetworkingSocketsManager';
 export { SteamUserManager } from './internal/SteamUserManager';
+export { SteamOverlay } from './internal/SteamOverlay';
 
 // Export all types from organized structure
 export * from './types';

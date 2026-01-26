@@ -8,12 +8,82 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 jobs:
+  # Build native modules for all platforms
+  build-native:
+    name: Build Native (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+          - os: macos-14
+            platform: darwin
+            arch: arm64
+          - os: windows-latest
+            platform: win32
+            arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+    
+    # Linux: Install OpenGL/X11 dev packages
+    - name: Install Linux dependencies
+      if: matrix.platform == 'linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgl1-mesa-dev libx11-dev libxext-dev
+    
+    # Install npm dependencies
+    - name: Install dependencies
+      run: npm i
+    
+    # Build native module
+    - name: Build native module
+      working-directory: native
+      run: npx node-gyp rebuild
+      env:
+        npm_config_arch: ${{ matrix.arch }}
+    
+    # Package the built binary
+    - name: Package native binary
+      shell: bash
+      run: |
+        mkdir -p prebuilds/${{ matrix.platform }}-${{ matrix.arch }}
+        if [ "${{ matrix.platform }}" == "win32" ]; then
+          cp native/build/Release/steam-overlay.node prebuilds/${{ matrix.platform }}-${{ matrix.arch }}/
+        else
+          cp native/build/Release/steam-overlay.node prebuilds/${{ matrix.platform }}-${{ matrix.arch }}/
+        fi
+        echo "✅ Built for ${{ matrix.platform }}-${{ matrix.arch }}"
+        ls -la prebuilds/${{ matrix.platform }}-${{ matrix.arch }}/
+    
+    # Upload artifact for later use
+    - name: Upload prebuild artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: prebuild-${{ matrix.platform }}-${{ matrix.arch }}
+        path: prebuilds/
+        retention-days: 1
+
   test:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    needs: build-native
     
     strategy:
       matrix:
@@ -113,7 +183,7 @@ jobs:
 
   publish:
     name: Publish to npm
-    needs: [test, lint, check-version]
+    needs: [build-native, test, lint, check-version]
     runs-on: ubuntu-latest
     if: needs.check-version.outputs.changed == 'true'
     permissions:
@@ -139,6 +209,36 @@ jobs:
     - name: Build TypeScript
       run: npm run build
     
+    # Download all prebuild artifacts
+    - name: Download macOS x64 prebuild
+      uses: actions/download-artifact@v4
+      with:
+        name: prebuild-darwin-x64
+        path: prebuilds/
+    
+    - name: Download macOS arm64 prebuild
+      uses: actions/download-artifact@v4
+      with:
+        name: prebuild-darwin-arm64
+        path: prebuilds/
+    
+    - name: Download Windows x64 prebuild
+      uses: actions/download-artifact@v4
+      with:
+        name: prebuild-win32-x64
+        path: prebuilds/
+    
+    - name: Download Linux x64 prebuild
+      uses: actions/download-artifact@v4
+      with:
+        name: prebuild-linux-x64
+        path: prebuilds/
+    
+    - name: List prebuilds
+      run: |
+        echo "📦 Pre-built binaries:"
+        find prebuilds -name "*.node" -type f
+    
     - name: Verify build
       shell: bash
       run: |
@@ -158,7 +258,6 @@ jobs:
         # Check types folder exists
         if [ -d "dist/types" ]; then
           echo "✅ dist/types/ folder exists"
-          # Check if types folder has files
           if [ "$(ls -A dist/types)" ]; then
             echo "✅ dist/types/ contains files"
           else
@@ -169,6 +268,16 @@ jobs:
           echo "❌ dist/types/ folder missing"
           exit 1
         fi
+        
+        # Check prebuilds exist
+        echo "Checking prebuilds..."
+        for platform in darwin-x64 darwin-arm64 win32-x64 linux-x64; do
+          if [ -f "prebuilds/$platform/steam-overlay.node" ]; then
+            echo "✅ prebuilds/$platform/steam-overlay.node exists"
+          else
+            echo "⚠️ prebuilds/$platform/steam-overlay.node missing"
+          fi
+        done
         
         echo "✅ All required files present"
     
@@ -184,10 +293,8 @@ jobs:
         VERSION="v${{ needs.check-version.outputs.version }}"
         echo "Creating tag: $VERSION"
         
-        # Fetch existing tags first
         git fetch --tags 2>/dev/null || true
         
-        # Check if tag already exists
         if git tag -l | grep -q "^${VERSION}$"; then
           echo "⚠️ Tag $VERSION already exists, skipping creation"
         else
@@ -203,34 +310,37 @@ jobs:
       run: |
         VERSION="v${{ needs.check-version.outputs.version }}"
         
-        # Fetch all tags and history
         git fetch --tags --unshallow 2>/dev/null || git fetch --tags 2>/dev/null || true
         
-        # Get the previous tag (excluding current if it exists)
         LAST_TAG=$(git tag -l --sort=-version:refname | grep -v "^${VERSION}$" | head -1)
         
         if [ -z "$LAST_TAG" ]; then
           echo "📝 No previous tag found, generating release notes from all history..."
           echo "## 📝 What's Changed" > release_notes.md
           echo "" >> release_notes.md
-          # All commits for first release
           git log --pretty=format:"- %s (%h)" >> release_notes.md
         else
           echo "📝 Generating release notes from ${LAST_TAG} to current HEAD"
-          echo "Previous tag: $LAST_TAG"
-          echo "Current HEAD: $(git rev-parse HEAD)"
-          
           echo "## 📝 What's Changed" > release_notes.md
           echo "" >> release_notes.md
-          # All commits between the previous tag and current HEAD
           git log ${LAST_TAG}..HEAD --pretty=format:"- %s (%h)" >> release_notes.md
         fi
         
         echo "" >> release_notes.md
         echo "" >> release_notes.md
         
-        # Add links
-        cat >> release_notes.md << EOF
+        cat >> release_notes.md << 'EOF'
+        ## 🖥️ Platform Support
+        
+        This release includes pre-built native binaries for Steam overlay:
+        
+        | Platform | Architecture | Renderer |
+        |----------|--------------|----------|
+        | macOS | x64 | Metal |
+        | macOS | arm64 (Apple Silicon) | Metal |
+        | Windows | x64 | DirectX 11 |
+        | Linux | x64 | OpenGL |
+        
         ## 📚 Links
         
         - [GitHub Repository](https://github.com/ArtyProf/steamworks-ffi-node)
@@ -242,7 +352,6 @@ jobs:
         
         echo "" >> release_notes.md
         
-        # Add changelog link
         if [ -n "$LAST_TAG" ]; then
           echo "**Full Changelog**: https://github.com/ArtyProf/steamworks-ffi-node/compare/${LAST_TAG}...${VERSION}" >> release_notes.md
         else
@@ -252,6 +361,13 @@ jobs:
         echo "✅ Release notes created"
         cat release_notes.md
     
+    # Upload prebuilds to GitHub release
+    - name: Create prebuilds archive
+      run: |
+        tar -czvf prebuilds.tar.gz prebuilds/
+        echo "✅ Created prebuilds.tar.gz"
+        ls -la prebuilds.tar.gz
+    
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
@@ -260,6 +376,8 @@ jobs:
         body_path: release_notes.md
         draft: false
         prerelease: false
+        files: |
+          prebuilds.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
@@ -271,6 +389,15 @@ jobs:
         echo "- **Version**: ${{ needs.check-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Tag**: latest" >> $GITHUB_STEP_SUMMARY
         echo "- **Registry**: https://www.npmjs.com/package/steamworks-ffi-node" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 🖥️ Pre-built Binaries" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Platform | Architecture | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|--------------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| macOS | x64 | ✅ |" >> $GITHUB_STEP_SUMMARY
+        echo "| macOS | arm64 | ✅ |" >> $GITHUB_STEP_SUMMARY
+        echo "| Windows | x64 | ✅ |" >> $GITHUB_STEP_SUMMARY
+        echo "| Linux | x64 | ✅ |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "## 🏷️ GitHub Release Created" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -286,5 +413,5 @@ jobs:
       run: |
         curl -H "Content-Type: application/json" \
           -X POST \
-          -d "{\"content\": \"🚀 steamworks-ffi-node v${{ needs.check-version.outputs.version }} published to npm!\\nhttps://www.npmjs.com/package/steamworks-ffi-node\\nRelease notes: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v${{ needs.check-version.outputs.version }}\"}" \
+          -d "{\"content\": \"🚀 steamworks-ffi-node v${{ needs.check-version.outputs.version }} published to npm!\\n\\n🖥️ **Platform Support:**\\n- macOS (x64, arm64) - Metal\\n- Windows (x64) - DirectX 11\\n- Linux (x64) - OpenGL\\n\\nhttps://www.npmjs.com/package/steamworks-ffi-node\\nRelease notes: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v${{ needs.check-version.outputs.version }}\"}" \
           ${{ secrets.DISCORD_WEBHOOK_URL }}

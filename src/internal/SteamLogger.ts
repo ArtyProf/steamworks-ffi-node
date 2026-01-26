@@ -27,6 +27,17 @@ export class SteamLogger {
   /** Global debug mode flag */
   private static debugMode: boolean = false;
 
+  /** Callback to notify when debug mode changes (used by Metal overlay) */
+  private static onDebugChangeCallback: ((enabled: boolean) => void) | null = null;
+
+  /**
+   * Register a callback for debug mode changes
+   * @internal Used by SteamOverlay to sync native debug mode
+   */
+  static onDebugChange(callback: (enabled: boolean) => void): void {
+    SteamLogger.onDebugChangeCallback = callback;
+  }
+
   /**
    * Enable or disable debug logging globally
    * 
@@ -42,6 +53,10 @@ export class SteamLogger {
     SteamLogger.debugMode = enabled;
     if (enabled) {
       console.log('[Steamworks] Debug mode enabled');
+    }
+    // Notify listeners (e.g., Metal overlay native module)
+    if (SteamLogger.onDebugChangeCallback) {
+      SteamLogger.onDebugChangeCallback(enabled);
     }
   }
 

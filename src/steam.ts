@@ -20,6 +20,7 @@ import { SteamUtilsManager } from './internal/SteamUtilsManager';
 import { SteamNetworkingUtilsManager } from './internal/SteamNetworkingUtilsManager';
 import { SteamNetworkingSocketsManager } from './internal/SteamNetworkingSocketsManager';
 import { SteamUserManager } from './internal/SteamUserManager';
+import { SteamOverlay } from './internal/SteamOverlay';
 
 /**
  * Real Steamworks SDK implementation using Koffi FFI
@@ -689,10 +690,41 @@ class SteamworksSDK {
    */
   public readonly user!: SteamUserManager;
 
+  /**
+   * Metal Overlay Integration - Electron offscreen rendering to native Metal window
+   * 
+   * Provides Steam overlay support for Electron applications on macOS by rendering
+   * Electron's offscreen output to a native Metal window.
+   * 
+   * @remarks
+   * This is macOS-only functionality. On other platforms, this will be available
+   * but methods will no-op gracefully.
+   * 
+   * @example
+   * ```typescript
+   * import { app, BrowserWindow } from 'electron';
+   * 
+   * const win = new BrowserWindow({
+   *   width: 1280,
+   *   height: 720,
+   *   webPreferences: {
+   *     offscreen: true
+   *   }
+   * });
+   * 
+   * // Add Steam overlay support
+   * steam.addElectronSteamOverlay(win);
+   * ```
+   * 
+   * @see {@link SteamOverlay} for complete API documentation
+   */
+  private nativeOverlay: SteamOverlay;
+
   private constructor() {
     // Initialize internal modules
     this.libraryLoader = new SteamLibraryLoader();
     this.apiCore = new SteamAPICore(this.libraryLoader);
+    this.nativeOverlay = new SteamOverlay();
     
     // Initialize public managers
     this.achievements = new SteamAchievementManager(this.libraryLoader, this.apiCore);
@@ -945,6 +977,139 @@ class SteamworksSDK {
    */
   getCurrentGameLanguage(): string {
     return this.apps.getCurrentGameLanguage();
+  }
+
+  // ========================================
+  // ELECTRON METAL OVERLAY INTEGRATION
+  // ========================================
+
+  /**
+   * Add Steam overlay support to an Electron BrowserWindow (macOS only)
+   * 
+   * This method enables Steam overlay for Electron applications by setting up
+   * offscreen rendering to a native Metal window. The BrowserWindow must be
+   * created with `offscreen: true` in webPreferences.
+   * 
+   * @param browserWindow - The Electron BrowserWindow to add overlay support to
+   * @param options - Optional configuration for the Metal window
+   * @returns True if overlay was successfully added, false otherwise
+   * 
+   * @remarks
+   * - macOS only (gracefully no-ops on other platforms)
+   * - Requires Electron BrowserWindow with offscreen rendering enabled
+   * - Requires proper entitlements for Steam overlay injection
+   * - The native Metal window will match the BrowserWindow size
+   * - Handles resize and close events automatically
+   * 
+   * @example Basic usage
+   * ```typescript
+   * import { app, BrowserWindow } from 'electron';
+   * import SteamworksSDK from 'steamworks-ffi-node';
+   * 
+   * const steam = SteamworksSDK.getInstance();
+   * steam.init({ appId: 480 });
+   * 
+   * app.whenReady().then(() => {
+   *   const win = new BrowserWindow({
+   *     width: 1280,
+   *     height: 720,
+   *     webPreferences: {
+   *       offscreen: true
+   *     }
+   *   });
+   * 
+   *   // Add Steam overlay
+   *   steam.addElectronSteamOverlay(win);
+   *   
+   *   win.loadFile('index.html');
+   * });
+   * ```
+   * 
+   * @example With custom options
+   * ```typescript
+   * steam.addElectronSteamOverlay(win, {
+   *   title: 'My Steam Game',
+   *   fps: 60,
+   *   vsync: true
+   * });
+   * ```
+   * 
+   * @example Full Electron app
+   * ```typescript
+   * import { app, BrowserWindow } from 'electron';
+   * import SteamworksSDK from 'steamworks-ffi-node';
+   * 
+   * const steam = SteamworksSDK.getInstance();
+   * 
+   * // Initialize Steam
+   * if (!steam.init({ appId: 480 })) {
+   *   console.error('Failed to initialize Steam');
+   *   app.quit();
+   * }
+   * 
+   * // Run callbacks periodically
+   * setInterval(() => steam.runCallbacks(), 1000);
+   * 
+   * app.whenReady().then(() => {
+   *   const win = new BrowserWindow({
+   *     width: 1280,
+   *     height: 720,
+   *     webPreferences: {
+   *       offscreen: true,
+   *       nodeIntegration: true,
+   *       contextIsolation: false
+   *     }
+   *   });
+   * 
+   *   // Enable Steam overlay
+   *   if (steam.addElectronSteamOverlay(win)) {
+   *     console.log('Steam overlay enabled!');
+   *   }
+   *   
+   *   win.loadFile('index.html');
+   * });
+   * 
+   * app.on('before-quit', () => {
+   *   steam.shutdown();
+   * });
+   * ```
+   */
+  addElectronSteamOverlay(
+    browserWindow: any,
+    options?: {
+      title?: string;
+      fps?: number;
+      vsync?: boolean;
+    }
+  ): boolean {
+    return this.nativeOverlay.addElectronSteamOverlay(browserWindow, options);
+  }
+
+  /**
+   * Check if Metal overlay is available on this system
+   * 
+   * @returns True if native overlay can be used
+   * 
+   * @example
+   * ```typescript
+   * if (steam.isOverlayAvailable()) {
+   *   console.log('Steam overlay is available!');
+   *   steam.addElectronSteamOverlay(win);
+   * } else {
+   *   console.log('Steam overlay not available (native module missing)');
+   * }
+   * ```
+   */
+  isOverlayAvailable(): boolean {
+    return this.nativeOverlay.isAvailable();
+  }
+
+  /**
+   * Check if Metal overlay is available (legacy alias)
+   * @deprecated Use isOverlayAvailable() instead - now supports all platforms
+   */
+  isMetalOverlayAvailable(): boolean {
+    return this.isOverlayAvailable();
   }
 }
 
