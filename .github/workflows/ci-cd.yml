@@ -207,7 +207,7 @@ jobs:
       run: npm i
     
     - name: Build TypeScript
-      run: npm run build
+      run: npx tsc
     
     # Download all prebuild artifacts
     - name: Download macOS x64 prebuild
