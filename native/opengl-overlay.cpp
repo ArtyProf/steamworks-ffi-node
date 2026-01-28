@@ -1,17 +1,27 @@
-// Linux OpenGL/X11 Overlay for Steam Integration
-// Enables Steam overlay injection for Electron apps on Linux
+// Cross-platform OpenGL Overlay for Steam Integration
+// Supports both Windows and Linux with OpenGL
 
-#if defined(__linux__) && !defined(__ANDROID__)
+#if defined(_WIN32) || (defined(__linux__) && !defined(__ANDROID__))
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
 #include <node_api.h>
-#include <cstring>
-#include <cstdio>
+#include <string>
 #include <mutex>
+#include <cstdio>
+
+// Platform-specific includes
+#ifdef _WIN32
+    #include <windows.h>
+    #include <GL/gl.h>
+    #pragma comment(lib, "opengl32.lib")
+    #pragma comment(lib, "gdi32.lib")
+    #pragma comment(lib, "user32.lib")
+#else
+    #include <X11/Xlib.h>
+    #include <X11/Xutil.h>
+    #include <X11/Xatom.h>
+    #include <GL/gl.h>
+    #include <GL/glx.h>
+#endif
 
 // Global debug flag - controlled from JavaScript via SteamLogger
 static bool g_debugMode = false;
@@ -20,20 +30,28 @@ static bool g_debugMode = false;
 #define OverlayLog(fmt, ...) do { if (g_debugMode) { printf("[OpenGL Overlay] " fmt "\n", ##__VA_ARGS__); } } while(0)
 #define OverlayLogError(fmt, ...) do { printf("[OpenGL Overlay] ERROR: " fmt "\n", ##__VA_ARGS__); } while(0)
 
-// OpenGL function pointers (loaded dynamically)
-typedef void (*PFNGLGENFRAMEBUFFERSPROC)(GLsizei, GLuint*);
-typedef void (*PFNGLBINDFRAMEBUFFERPROC)(GLenum, GLuint);
-typedef void (*PFNGLFRAMEBUFFERTEXTURE2DPROC)(GLenum, GLenum, GLenum, GLuint, GLint);
-typedef GLenum (*PFNGLCHECKFRAMEBUFFERSTATUSPROC)(GLenum);
-typedef void (*PFNGLDELETEFRAMEBUFFERSPROC)(GLsizei, const GLuint*);
+// OpenGL extensions for modern texture formats
+#ifndef GL_BGRA
+#define GL_BGRA 0x80E1
+#endif
+
+#ifndef GL_CLAMP_TO_EDGE
+#define GL_CLAMP_TO_EDGE 0x812F
+#endif
 
 // OpenGL Overlay Window class
 class GLOverlayWindow {
 public:
+#ifdef _WIN32
+    HWND hwnd = nullptr;
+    HDC hdc = nullptr;
+    HGLRC hglrc = nullptr;
+#else
     Display* display = nullptr;
     Window window = 0;
     GLXContext glContext = nullptr;
     Colormap colormap = 0;
+#endif
     
     GLuint texture = 0;
     int texWidth = 0;
@@ -44,10 +62,107 @@ public:
     bool isDestroyed = false;
     std::mutex renderMutex;
     
+#ifdef _WIN32
+    static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+        switch (msg) {
+            case WM_NCHITTEST:
+                // Return HTTRANSPARENT to make clicks pass through to window behind
+                return HTTRANSPARENT;
+            case WM_DESTROY:
+                return 0;
+            case WM_CLOSE:
+                // Don't close - let the Electron app control the lifecycle
+                return 0;
+            default:
+                return DefWindowProc(hwnd, msg, wParam, lParam);
+        }
+    }
+#endif
+    
     bool init(int w, int h, const char* title) {
         width = w;
         height = h;
         
+#ifdef _WIN32
+        // Windows OpenGL initialization
+        // Note: Don't set DPI awareness - inherit from Electron process
+        
+        // Register window class
+        WNDCLASSEX wc = {};
+        wc.cbSize = sizeof(WNDCLASSEX);
+        wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+        wc.lpfnWndProc = WndProc;
+        wc.hInstance = GetModuleHandle(nullptr);
+        wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+        wc.lpszClassName = "SteamOverlayWindowGL";
+        
+        static bool classRegistered = false;
+        if (!classRegistered) {
+            RegisterClassEx(&wc);
+            classRegistered = true;
+        }
+        
+        // Create borderless window
+        // Note: Don't use WS_EX_LAYERED - it's incompatible with OpenGL rendering
+        hwnd = CreateWindowEx(
+            WS_EX_TOPMOST | WS_EX_NOACTIVATE,
+            "SteamOverlayWindowGL",
+            title,
+            WS_POPUP,
+            100, 100, w, h,
+            nullptr, nullptr,
+            GetModuleHandle(nullptr),
+            nullptr
+        );
+        
+        if (!hwnd) {
+            OverlayLogError("Failed to create window");
+            return false;
+        }
+        
+        // Get device context
+        hdc = GetDC(hwnd);
+        if (!hdc) {
+            OverlayLogError("Failed to get device context");
+            return false;
+        }
+        
+        // Set pixel format for OpenGL
+        PIXELFORMATDESCRIPTOR pfd = {};
+        pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.cColorBits = 32;
+        pfd.cAlphaBits = 8;
+        pfd.cDepthBits = 24;
+        pfd.iLayerType = PFD_MAIN_PLANE;
+        
+        int pixelFormat = ChoosePixelFormat(hdc, &pfd);
+        if (!pixelFormat) {
+            OverlayLogError("Failed to choose pixel format");
+            return false;
+        }
+        
+        if (!SetPixelFormat(hdc, pixelFormat, &pfd)) {
+            OverlayLogError("Failed to set pixel format");
+            return false;
+        }
+        
+        // Create OpenGL context
+        hglrc = wglCreateContext(hdc);
+        if (!hglrc) {
+            OverlayLogError("Failed to create OpenGL context");
+            return false;
+        }
+        
+        if (!wglMakeCurrent(hdc, hglrc)) {
+            OverlayLogError("Failed to make OpenGL context current");
+            return false;
+        }
+        
+#else
+        // Linux OpenGL initialization
         // Open X display
         display = XOpenDisplay(nullptr);
         if (!display) {
@@ -115,10 +230,6 @@ public:
         XChangeProperty(display, window, wmState, XA_ATOM, 32, PropModeReplace,
                        (unsigned char*)&wmStateAbove, 1);
         
-        // Make window click-through (if supported)
-        // This uses the SHAPE extension or input region
-        setClickThrough();
-        
         // Create OpenGL context
         glContext = glXCreateContext(display, visual, nullptr, True);
         if (!glContext) {
@@ -141,8 +252,9 @@ public:
             display = nullptr;
             return false;
         }
+#endif
         
-        // Initialize OpenGL
+        // Initialize OpenGL (common for both platforms)
         initGL();
         
         OverlayLog("OpenGL overlay window created: %dx%d", w, h);
@@ -150,20 +262,6 @@ public:
         OverlayLog("OpenGL Renderer: %s", glGetString(GL_RENDERER));
         
         return true;
-    }
-    
-    void setClickThrough() {
-        // Try to make window click-through using X11 input shape
-        // This requires the XShape extension
-        
-        // For now, we'll rely on the window manager
-        // Steam overlay will capture input when active
-        
-        // Set window type to utility/splash to reduce WM interference
-        Atom wmWindowType = XInternAtom(display, "_NET_WM_WINDOW_TYPE", False);
-        Atom wmWindowTypeSplash = XInternAtom(display, "_NET_WM_WINDOW_TYPE_SPLASH", False);
-        XChangeProperty(display, window, wmWindowType, XA_ATOM, 32, PropModeReplace,
-                       (unsigned char*)&wmWindowTypeSplash, 1);
     }
     
     void initGL() {
@@ -189,27 +287,88 @@ public:
     }
     
     void show() {
-        if (display && window && !isDestroyed) {
+        if (isDestroyed) return;
+        
+#ifdef _WIN32
+        if (hwnd) {
+            OverlayLog("Showing overlay window");
+            ShowWindow(hwnd, SW_SHOWNOACTIVATE);
+            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, 
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            UpdateWindow(hwnd);
+        }
+#else
+        if (display && window) {
             XMapWindow(display, window);
             XRaiseWindow(display, window);
             XFlush(display);
         }
+#endif
     }
     
     void hide() {
-        if (display && window && !isDestroyed) {
+        if (isDestroyed) return;
+        
+#ifdef _WIN32
+        if (hwnd) {
+            ShowWindow(hwnd, SW_HIDE);
+        }
+#else
+        if (display && window) {
             XUnmapWindow(display, window);
             XFlush(display);
         }
+#endif
     }
     
     void setFrame(int x, int y, int w, int h) {
-        if (display && window && !isDestroyed) {
-            width = w;
-            height = h;
+        if (isDestroyed) return;
+        
+#ifdef _WIN32
+        if (hwnd) {
+            // Get DPI scale factor for proper coordinate conversion
+            // Electron gives logical coordinates, we need physical coordinates
+            HDC screen = GetDC(nullptr);
+            int dpiX = GetDeviceCaps(screen, LOGPIXELSX);
+            ReleaseDC(nullptr, screen);
+            float scale = dpiX / 96.0f;
+            
+            // Scale coordinates from logical (Electron) to physical (screen)
+            int physX = (int)(x * scale);
+            int physY = (int)(y * scale);
+            int physW = (int)(w * scale);
+            int physH = (int)(h * scale);
+            
+            OverlayLog("Setting window frame: logical x=%d, y=%d, w=%d, h=%d -> physical x=%d, y=%d, w=%d, h=%d (scale=%.2f)", 
+                x, y, w, h, physX, physY, physW, physH, scale);
+            
+            width = physW;
+            height = physH;
+            
+            SetWindowPos(hwnd, HWND_TOPMOST, physX, physY, physW, physH, 
+                SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            
+            // Update OpenGL viewport
+            if (hglrc && hdc) {
+                wglMakeCurrent(hdc, hglrc);
+                glViewport(0, 0, physW, physH);
+                
+                glMatrixMode(GL_PROJECTION);
+                glLoadIdentity();
+                glOrtho(0, physW, physH, 0, -1, 1);
+                
+                glMatrixMode(GL_MODELVIEW);
+                glLoadIdentity();
+            }
+        }
+#else
+        width = w;
+        height = h;
+        
+        if (display && window) {
             XMoveResizeWindow(display, window, x, y, w, h);
             
-            // Update OpenGL viewport and projection
+            // Update OpenGL viewport
             if (glContext) {
                 glXMakeCurrent(display, window, glContext);
                 glViewport(0, 0, w, h);
@@ -224,17 +383,21 @@ public:
             
             XFlush(display);
         }
+#endif
     }
     
     void renderFrame(const uint8_t* data, int w, int h) {
-        if (isDestroyed || !display || !glContext) return;
+        if (isDestroyed) return;
         
         std::lock_guard<std::mutex> lock(renderMutex);
         
-        // Make context current
-        if (!glXMakeCurrent(display, window, glContext)) {
-            return;
-        }
+#ifdef _WIN32
+        if (!hglrc || !hdc) return;
+        if (!wglMakeCurrent(hdc, hglrc)) return;
+#else
+        if (!display || !glContext) return;
+        if (!glXMakeCurrent(display, window, glContext)) return;
+#endif
         
         // Create or update texture
         if (texture == 0 || w != texWidth || h != texHeight) {
@@ -263,12 +426,6 @@ public:
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, data);
         
-        static int frameCount = 0;
-        frameCount++;
-        if (frameCount == 1) {
-            OverlayLog("First frame uploaded to texture!");
-        }
-        
         // Clear and render
         glClear(GL_COLOR_BUFFER_BIT);
         
@@ -284,14 +441,17 @@ public:
         glEnd();
         
         // Swap buffers
+#ifdef _WIN32
+        SwapBuffers(hdc);
+#else
         glXSwapBuffers(display, window);
         
         // Process any pending X events
         while (XPending(display)) {
             XEvent event;
             XNextEvent(display, &event);
-            // Handle events if needed
         }
+#endif
     }
     
     void destroy() {
@@ -300,11 +460,29 @@ public:
         
         OverlayLog("Destroying OpenGL overlay...");
         
-        if (texture != 0) {
+        // Delete texture
+        if (texture) {
             glDeleteTextures(1, &texture);
             texture = 0;
         }
         
+#ifdef _WIN32
+        if (hglrc) {
+            wglMakeCurrent(nullptr, nullptr);
+            wglDeleteContext(hglrc);
+            hglrc = nullptr;
+        }
+        
+        if (hdc) {
+            ReleaseDC(hwnd, hdc);
+            hdc = nullptr;
+        }
+        
+        if (hwnd) {
+            DestroyWindow(hwnd);
+            hwnd = nullptr;
+        }
+#else
         if (glContext) {
             glXMakeCurrent(display, None, nullptr);
             glXDestroyContext(display, glContext);
@@ -325,6 +503,7 @@ public:
             XCloseDisplay(display);
             display = nullptr;
         }
+#endif
         
         OverlayLog("OpenGL overlay destroyed");
     }
@@ -370,168 +549,128 @@ static napi_value CreateOverlayWindow(napi_env env, napi_callback_info info) {
     
     // Wrap pointer
     napi_value external;
-    status = napi_create_external(env, window,
-        [](napi_env env, void* data, void* hint) {
-            GLOverlayWindow* w = (GLOverlayWindow*)data;
-            if (w && !w->isDestroyed) {
-                w->destroy();
-            }
-            delete w;
-        },
-        nullptr, &external);
-    
-    if (status != napi_ok) {
-        delete window;
-        napi_throw_error(env, nullptr, "Failed to create external");
-        return nullptr;
-    }
+    status = napi_create_external(env, window, nullptr, nullptr, &external);
     
     return external;
 }
 
 static napi_value ShowOverlayWindow(napi_env env, napi_callback_info info) {
-    napi_status status;
     size_t argc = 1;
     napi_value args[1];
-    status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     
-    void* data;
-    napi_get_value_external(env, args[0], &data);
+    GLOverlayWindow* window;
+    napi_get_value_external(env, args[0], (void**)&window);
     
-    if (data) {
-        ((GLOverlayWindow*)data)->show();
+    if (window) {
+        window->show();
     }
     
-    napi_value undefined;
-    napi_get_undefined(env, &undefined);
-    return undefined;
+    return nullptr;
 }
 
 static napi_value HideOverlayWindow(napi_env env, napi_callback_info info) {
-    napi_status status;
     size_t argc = 1;
     napi_value args[1];
-    status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     
-    void* data;
-    napi_get_value_external(env, args[0], &data);
+    GLOverlayWindow* window;
+    napi_get_value_external(env, args[0], (void**)&window);
     
-    if (data) {
-        ((GLOverlayWindow*)data)->hide();
+    if (window) {
+        window->hide();
     }
     
-    napi_value undefined;
-    napi_get_undefined(env, &undefined);
-    return undefined;
+    return nullptr;
 }
 
 static napi_value SetOverlayWindowFrame(napi_env env, napi_callback_info info) {
-    napi_status status;
     size_t argc = 5;
     napi_value args[5];
-    status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     
-    void* data;
-    napi_get_value_external(env, args[0], &data);
+    GLOverlayWindow* window;
+    napi_get_value_external(env, args[0], (void**)&window);
     
-    int x, y, w, h;
+    int x, y, width, height;
     napi_get_value_int32(env, args[1], &x);
     napi_get_value_int32(env, args[2], &y);
-    napi_get_value_int32(env, args[3], &w);
-    napi_get_value_int32(env, args[4], &h);
+    napi_get_value_int32(env, args[3], &width);
+    napi_get_value_int32(env, args[4], &height);
     
-    if (data) {
-        ((GLOverlayWindow*)data)->setFrame(x, y, w, h);
+    if (window) {
+        window->setFrame(x, y, width, height);
     }
     
-    napi_value undefined;
-    napi_get_undefined(env, &undefined);
-    return undefined;
+    return nullptr;
 }
 
 static napi_value RenderFrame(napi_env env, napi_callback_info info) {
-    napi_status status;
     size_t argc = 4;
     napi_value args[4];
-    status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     
-    void* windowData;
-    napi_get_value_external(env, args[0], &windowData);
+    GLOverlayWindow* window;
+    napi_get_value_external(env, args[0], (void**)&window);
     
-    void* bufferData;
-    size_t bufferLen;
-    napi_get_buffer_info(env, args[1], &bufferData, &bufferLen);
+    void* buffer;
+    size_t length;
+    napi_get_buffer_info(env, args[1], &buffer, &length);
     
     int width, height;
     napi_get_value_int32(env, args[2], &width);
     napi_get_value_int32(env, args[3], &height);
     
-    if (windowData && bufferData) {
-        ((GLOverlayWindow*)windowData)->renderFrame((uint8_t*)bufferData, width, height);
+    if (window && buffer) {
+        window->renderFrame((const uint8_t*)buffer, width, height);
     }
     
-    napi_value undefined;
-    napi_get_undefined(env, &undefined);
-    return undefined;
+    return nullptr;
 }
 
 static napi_value DestroyOverlayWindow(napi_env env, napi_callback_info info) {
-    napi_status status;
     size_t argc = 1;
     napi_value args[1];
-    status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     
-    void* data;
-    napi_get_value_external(env, args[0], &data);
+    GLOverlayWindow* window;
+    napi_get_value_external(env, args[0], (void**)&window);
     
-    if (data) {
-        ((GLOverlayWindow*)data)->destroy();
+    if (window) {
+        delete window;
     }
     
-    napi_value undefined;
-    napi_get_undefined(env, &undefined);
-    return undefined;
+    return nullptr;
 }
 
 static napi_value SetDebugMode(napi_env env, napi_callback_info info) {
-    napi_status status;
     size_t argc = 1;
     napi_value args[1];
-    status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     
     bool enabled;
     napi_get_value_bool(env, args[0], &enabled);
     g_debugMode = enabled;
     
-    napi_value undefined;
-    napi_get_undefined(env, &undefined);
-    return undefined;
+    return nullptr;
 }
 
 // Module initialization
 static napi_value Init(napi_env env, napi_value exports) {
-    napi_status status;
-    napi_value fn;
+    napi_property_descriptor desc[] = {
+        { "createMetalWindow", nullptr, CreateOverlayWindow, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "showMetalWindow", nullptr, ShowOverlayWindow, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "hideMetalWindow", nullptr, HideOverlayWindow, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "setMetalWindowFrame", nullptr, SetOverlayWindowFrame, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "renderFrame", nullptr, RenderFrame, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "destroyMetalWindow", nullptr, DestroyOverlayWindow, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "setDebugMode", nullptr, SetDebugMode, nullptr, nullptr, nullptr, napi_default, nullptr }
+    };
     
-    #define EXPORT_FUNCTION(name, func) \
-        status = napi_create_function(env, nullptr, 0, func, nullptr, &fn); \
-        if (status != napi_ok) return nullptr; \
-        status = napi_set_named_property(env, exports, name, fn); \
-        if (status != napi_ok) return nullptr;
-    
-    EXPORT_FUNCTION("setDebugMode", SetDebugMode)
-    EXPORT_FUNCTION("createMetalWindow", CreateOverlayWindow)  // Keep same API names for compatibility
-    EXPORT_FUNCTION("showMetalWindow", ShowOverlayWindow)
-    EXPORT_FUNCTION("hideMetalWindow", HideOverlayWindow)
-    EXPORT_FUNCTION("setMetalWindowFrame", SetOverlayWindowFrame)
-    EXPORT_FUNCTION("renderFrame", RenderFrame)
-    EXPORT_FUNCTION("destroyMetalWindow", DestroyOverlayWindow)
-    
-    #undef EXPORT_FUNCTION
-    
+    napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;
 }
 
 NAPI_MODULE(NODE_GYP_MODULE_NAME, Init)
 
-#endif // __linux__
+#endif // _WIN32 || __linux__

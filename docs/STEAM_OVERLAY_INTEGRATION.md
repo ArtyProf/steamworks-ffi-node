@@ -2,11 +2,12 @@
 
 This guide explains how to add Steam overlay support (Shift+Tab) to Electron applications using native rendering across all platforms.
 
-> **Status: Experimental** - This feature is under active development. macOS (Metal) is tested, Windows (DirectX 11) and Linux (OpenGL) implementations are available but may require additional testing.
+> **Status: Experimental** - This feature is under active development. macOS (Metal) and Windows (OpenGL) are tested, Linux (OpenGL) implementation is available but may require additional testing.
 
 ## Overview
 
 The Steam overlay integration allows Electron applications to display the Steam overlay by:
+
 1. Creating a native graphics window (Metal on macOS, DirectX 11 on Windows, OpenGL on Linux)
 2. Capturing Electron's content and rendering it to the native surface
 3. Allowing Steam to inject its overlay renderer
@@ -15,19 +16,19 @@ This enables full Steam overlay functionality (Shift+Tab, friends list, achievem
 
 ## Platform Support
 
-| Platform | Renderer | Status |
-|----------|----------|--------|
-| **macOS** | Metal | Tested |
-| **Windows** | DirectX 11 | Available |
-| **Linux** | OpenGL + X11 | Available |
+| Platform    | Renderer     | Status    |
+| ----------- | ------------ | --------- |
+| **macOS**   | Metal        | Tested    |
+| **Windows** | OpenGL       | Tested    |
+| **Linux**   | OpenGL + X11 | Available |
 
 ### System Requirements
 
-| Platform | Minimum Version |
-|----------|-----------------|
-| macOS | 10.15+ (Catalina) |
-| Windows | Windows 10+ |
-| Linux | X11 with OpenGL 3.0+ |
+| Platform | Minimum Version      |
+| -------- | -------------------- |
+| macOS    | 10.15+ (Catalina)    |
+| Windows  | Windows 10+          |
+| Linux    | X11 with OpenGL 3.0+ |
 
 ## Quick Start
 
@@ -52,14 +53,14 @@ npm run build:native
 ### 3. Basic Integration
 
 ```typescript
-import { app, BrowserWindow } from 'electron';
-import SteamworksSDK from 'steamworks-ffi-node';
+import { app, BrowserWindow } from "electron";
+import SteamworksSDK from "steamworks-ffi-node";
 
 const steam = SteamworksSDK.getInstance();
 
 // Initialize Steam
 if (!steam.init({ appId: 480 })) {
-  console.error('Failed to initialize Steam');
+  console.error("Failed to initialize Steam");
   app.quit();
 }
 
@@ -73,19 +74,19 @@ app.whenReady().then(() => {
     height: 720,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
-    }
+      contextIsolation: false,
+    },
   });
 
   // Add Steam overlay - ONE LINE!
   if (steam.isOverlayAvailable()) {
     steam.addElectronSteamOverlay(win);
   }
-  
-  win.loadFile('index.html');
+
+  win.loadFile("index.html");
 });
 
-app.on('before-quit', () => {
+app.on("before-quit", () => {
   steam.shutdown();
 });
 ```
@@ -97,6 +98,7 @@ app.on('before-quit', () => {
 Adds Steam overlay support to an Electron BrowserWindow.
 
 **Parameters:**
+
 - `browserWindow` - The Electron BrowserWindow
 - `options` (optional):
   - `title?: string` - Window title (default: "Electron Steam App")
@@ -106,17 +108,18 @@ Adds Steam overlay support to an Electron BrowserWindow.
 **Returns:** `boolean` - True if overlay was successfully added
 
 **Example:**
+
 ```typescript
 const success = steam.addElectronSteamOverlay(win, {
-  title: 'My Steam Game',
+  title: "My Steam Game",
   fps: 60,
-  vsync: true
+  vsync: true,
 });
 
 if (success) {
-  console.log('Steam overlay enabled!');
+  console.log("Steam overlay enabled!");
 } else {
-  console.log('Failed to enable overlay');
+  console.log("Failed to enable overlay");
 }
 ```
 
@@ -127,11 +130,12 @@ Checks if Steam overlay is available on the current system.
 **Returns:** `boolean` - True if overlay can be used
 
 **Example:**
+
 ```typescript
 if (steam.isOverlayAvailable()) {
   steam.addElectronSteamOverlay(win);
 } else {
-  console.log('Steam overlay not available on this platform');
+  console.log("Steam overlay not available on this platform");
 }
 ```
 
@@ -140,11 +144,13 @@ if (steam.isOverlayAvailable()) {
 ### macOS (Metal)
 
 The macOS implementation uses Metal for rendering:
+
 - Creates a borderless `MTKView` window
 - Uses a custom `NSWindow` subclass to prevent focus stealing
 - Syncs with Electron window position, size, minimize/restore, and focus states
 
 **Required Entitlements** (`entitlements.mac.plist`):
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -155,7 +161,7 @@ The macOS implementation uses Metal for rendering:
   <true/>
   <key>com.apple.security.cs.disable-library-validation</key>
   <true/>
-  
+
   <!-- Standard Electron entitlements -->
   <key>com.apple.security.cs.allow-jit</key>
   <true/>
@@ -165,25 +171,30 @@ The macOS implementation uses Metal for rendering:
 </plist>
 ```
 
-### Windows (DirectX 11)
+### Windows (OpenGL)
 
-The Windows implementation uses DirectX 11:
-- Creates a borderless, layered window with `WS_EX_LAYERED` and `WS_EX_TRANSPARENT`
-- Uses D3D11 swap chain for rendering
-- Click-through input handling via `SetLayeredWindowAttributes`
+The Windows implementation uses OpenGL:
+
+- Creates a borderless window with `WS_EX_TOPMOST` and `WS_EX_NOACTIVATE`
+- Uses WGL for OpenGL context creation
+- Click-through input handling via `WM_NCHITTEST` returning `HTTRANSPARENT`
+- DPI-aware coordinate scaling for high-DPI displays
 
 **Requirements:**
-- DirectX 11 compatible GPU
+
+- OpenGL capable GPU
 - Windows 10 or later recommended
 
 ### Linux (OpenGL)
 
 The Linux implementation uses OpenGL with X11:
+
 - Creates an X11 window with override redirect
 - Uses GLX for OpenGL context
 - Supports all major distributions (SteamOS, Ubuntu, Arch, Mint, Fedora, etc.)
 
 **Requirements:**
+
 - X11 display server (Wayland not yet supported)
 - OpenGL 3.0+ capable driver
 
@@ -207,8 +218,8 @@ Add to your `package.json`:
 ## Complete Example
 
 ```typescript
-import { app, BrowserWindow } from 'electron';
-import SteamworksSDK from 'steamworks-ffi-node';
+import { app, BrowserWindow } from "electron";
+import SteamworksSDK from "steamworks-ffi-node";
 
 const steam = SteamworksSDK.getInstance();
 let mainWindow: BrowserWindow | null = null;
@@ -217,7 +228,7 @@ let mainWindow: BrowserWindow | null = null;
 const STEAM_APP_ID = 480; // Replace with your Steam App ID
 
 if (!steam.init({ appId: STEAM_APP_ID })) {
-  console.error('Failed to initialize Steam - is Steam running?');
+  console.error("Failed to initialize Steam - is Steam running?");
   app.quit();
 }
 
@@ -231,57 +242,57 @@ app.whenReady().then(() => {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 720,
-    title: 'My Steam Game',
+    title: "My Steam Game",
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
-    }
+      contextIsolation: false,
+    },
   });
 
   // Check if Steam overlay is available
   if (steam.isOverlayAvailable()) {
     // Wait for content to load before enabling overlay
-    mainWindow.webContents.once('did-finish-load', () => {
+    mainWindow.webContents.once("did-finish-load", () => {
       setTimeout(() => {
         const success = steam.addElectronSteamOverlay(mainWindow!, {
-          title: 'My Steam Game',
+          title: "My Steam Game",
           fps: 60,
-          vsync: true
+          vsync: true,
         });
-        
+
         if (success) {
-          console.log('Steam overlay enabled! Press Shift+Tab to open.');
+          console.log("Steam overlay enabled! Press Shift+Tab to open.");
         } else {
-          console.error('Failed to enable Steam overlay');
+          console.error("Failed to enable Steam overlay");
         }
       }, 500); // Small delay to ensure window is fully rendered
     });
   } else {
-    console.warn('Steam overlay not available on this system');
+    console.warn("Steam overlay not available on this system");
   }
 
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile("index.html");
 
-  mainWindow.on('closed', () => {
+  mainWindow.on("closed", () => {
     mainWindow = null;
   });
 });
 
 // Quit when all windows are closed
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
     app.quit();
   }
 });
 
 // Clean up Steam on quit
-app.on('before-quit', () => {
-  console.log('Shutting down Steam...');
+app.on("before-quit", () => {
+  console.log("Shutting down Steam...");
   steam.shutdown();
 });
 
 // macOS: Re-create window when dock icon is clicked
-app.on('activate', () => {
+app.on("activate", () => {
   if (mainWindow === null) {
     // Re-create window logic here
   }
@@ -323,9 +334,10 @@ Launch your app from Steam (not directly). Press **Shift+Tab** to open the overl
 
 ### Windows-specific issues
 
-- Ensure DirectX 11 is available
-- Check Windows Event Viewer for DirectX errors
+- Ensure OpenGL is available
+- Check Windows Event Viewer for graphics errors
 - Update graphics drivers
+- For high-DPI displays, coordinates are automatically scaled
 
 ### Linux-specific issues
 
@@ -378,7 +390,7 @@ Launch your app from Steam (not directly). Press **Shift+Tab** to open the overl
 ┌─────────────────────────────────────────────────────────────┐
 │                   Native Overlay Window                     │
 │  ┌───────────────────────────────────────────────────────┐  │
-│  │   Metal (macOS) / D3D11 (Win) / OpenGL (Linux)        │  │
+│  │   Metal (macOS) / OpenGL (Win/Linux)                  │  │
 │  │                                                       │  │
 │  │   ┌─────────────────────────────────────────────────┐ │  │
 │  │   │           Texture with Electron Content         │ │  │

@@ -23,10 +23,11 @@
           }
         }],
         ['OS=="win"', {
-          "sources": [ "windows-overlay.cpp" ],
+          "sources": [ "opengl-overlay.cpp" ],
           "libraries": [
-            "-ld3d11",
-            "-ldxgi"
+            "-lopengl32",
+            "-lgdi32",
+            "-luser32"
           ],
           "msvs_settings": {
             "VCCLCompilerTool": {
@@ -35,7 +36,7 @@
           }
         }],
         ['OS=="linux"', {
-          "sources": [ "linux-overlay.cpp" ],
+          "sources": [ "opengl-overlay.cpp" ],
           "libraries": [
             "-lX11",
             "-lGL",
