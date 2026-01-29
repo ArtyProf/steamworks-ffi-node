@@ -58,7 +58,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: User API** - 28 functions for auth tickets, user info, voice chat, and security! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/USER_MANAGER.md)
 
-> 🧪 **EXPERIMENTAL: Steam Overlay for Electron** - Native overlay integration (Shift+Tab) for Electron apps on macOS (Metal), Windows (DirectX 11), and Linux (OpenGL)! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_OVERLAY_INTEGRATION.md)
+> 🧪 **EXPERIMENTAL: Steam Overlay for Electron** - Native overlay integration (Shift+Tab) for Electron apps on macOS (Metal), Windows (OpenGL), and Linux (OpenGL, but Linux one is broken at the moment, need to find solution to fix it)! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_OVERLAY_INTEGRATION.md)
 
 ## Features
 
