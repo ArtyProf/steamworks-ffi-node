@@ -36,14 +36,16 @@
           }
         }],
         ['OS=="linux"', {
-          "sources": [ "opengl-overlay.cpp" ],
+          "sources": [ "linux-overlay.cpp" ],
           "libraries": [
             "-lX11",
-            "-lGL",
-            "-lGLX"
+            "-lXext",
+            "-lXfixes",
+            "-lGL"
           ],
           "cflags_cc": [
-            "-std=c++17"
+            "-std=c++17",
+            "-fPIC"
           ]
         }]
       ]
