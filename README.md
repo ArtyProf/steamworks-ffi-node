@@ -292,7 +292,12 @@ npm install steamworks-ffi-node
 ### Basic Usage
 
 ```typescript
-import SteamworksSDK from "steamworks-ffi-node";
+import SteamworksSDK, {
+  LeaderboardSortMethod,
+  LeaderboardDisplayType,
+  LeaderboardUploadScoreMethod,
+  LeaderboardDataRequest
+} from "steamworks-ffi-node";
 
 // Helper to auto-start callback polling
 function startCallbackPolling(steam: SteamworksSDK, interval: number = 1000) {
@@ -340,8 +345,8 @@ if (initialized) {
   // Work with leaderboards
   const leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
     "HighScores",
-    1, // Descending (higher is better)
-    0 // Numeric display
+    LeaderboardSortMethod.Descending, // Higher is better
+    LeaderboardDisplayType.Numeric // Display as numbers
   );
 
   if (leaderboard) {
@@ -349,15 +354,15 @@ if (initialized) {
     await steam.leaderboards.uploadLeaderboardScore(
       leaderboard.handle,
       1000,
-      1 // Keep best score
+      LeaderboardUploadScoreMethod.KeepBest // Keep best score
     );
 
     // Download top 10 scores
     const topScores = await steam.leaderboards.downloadLeaderboardEntries(
       leaderboard.handle,
-      0, // Global
-      0,
-      9
+      LeaderboardDataRequest.Global, // Global top scores
+      1, // Start at rank 1
+      10 // End at rank 10
     );
     console.log("Top 10 scores:", topScores);
   }
