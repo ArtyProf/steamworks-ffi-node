@@ -8,7 +8,7 @@
       "defines": [ "NAPI_DISABLE_CPP_EXCEPTIONS" ],
       "conditions": [
         ['OS=="mac"', {
-          "sources": [ "metal-overlay.mm" ],
+          "sources": [ "macos-overlay.mm" ],
           "xcode_settings": {
             "OTHER_CFLAGS": [
               "-ObjC++",
@@ -23,7 +23,7 @@
           }
         }],
         ['OS=="win"', {
-          "sources": [ "opengl-overlay.cpp" ],
+          "sources": [ "windows-overlay.cpp" ],
           "libraries": [
             "-lopengl32",
             "-lgdi32",
