@@ -1,27 +1,17 @@
-// Cross-platform OpenGL Overlay for Steam Integration
-// Supports both Windows and Linux with OpenGL
+// Windows OpenGL Overlay for Steam Integration
 
-#if defined(_WIN32) || (defined(__linux__) && !defined(__ANDROID__))
+#ifdef _WIN32
 
 #include <node_api.h>
 #include <string>
 #include <mutex>
 #include <cstdio>
 
-// Platform-specific includes
-#ifdef _WIN32
-    #include <windows.h>
-    #include <GL/gl.h>
-    #pragma comment(lib, "opengl32.lib")
-    #pragma comment(lib, "gdi32.lib")
-    #pragma comment(lib, "user32.lib")
-#else
-    #include <X11/Xlib.h>
-    #include <X11/Xutil.h>
-    #include <X11/Xatom.h>
-    #include <GL/gl.h>
-    #include <GL/glx.h>
-#endif
+#include <windows.h>
+#include <GL/gl.h>
+#pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "user32.lib")
 
 // Global debug flag - controlled from JavaScript via SteamLogger
 static bool g_debugMode = false;
@@ -42,16 +32,9 @@ static bool g_debugMode = false;
 // OpenGL Overlay Window class
 class GLOverlayWindow {
 public:
-#ifdef _WIN32
     HWND hwnd = nullptr;
     HDC hdc = nullptr;
     HGLRC hglrc = nullptr;
-#else
-    Display* display = nullptr;
-    Window window = 0;
-    GLXContext glContext = nullptr;
-    Colormap colormap = 0;
-#endif
     
     GLuint texture = 0;
     int texWidth = 0;
@@ -62,7 +45,6 @@ public:
     bool isDestroyed = false;
     std::mutex renderMutex;
     
-#ifdef _WIN32
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         switch (msg) {
             case WM_NCHITTEST:
@@ -77,13 +59,11 @@ public:
                 return DefWindowProc(hwnd, msg, wParam, lParam);
         }
     }
-#endif
     
     bool init(int w, int h, const char* title) {
         width = w;
         height = h;
         
-#ifdef _WIN32
         // Windows OpenGL initialization
         // Note: Don't set DPI awareness - inherit from Electron process
         
@@ -161,100 +141,7 @@ public:
             return false;
         }
         
-#else
-        // Linux OpenGL initialization
-        // Open X display
-        display = XOpenDisplay(nullptr);
-        if (!display) {
-            OverlayLogError("Failed to open X display");
-            return false;
-        }
-        
-        // Get default screen
-        int screen = DefaultScreen(display);
-        Window root = RootWindow(display, screen);
-        
-        // Choose visual with OpenGL support
-        static int visualAttribs[] = {
-            GLX_RGBA,
-            GLX_DEPTH_SIZE, 24,
-            GLX_DOUBLEBUFFER,
-            None
-        };
-        
-        XVisualInfo* visual = glXChooseVisual(display, screen, visualAttribs);
-        if (!visual) {
-            OverlayLogError("Failed to choose visual");
-            XCloseDisplay(display);
-            display = nullptr;
-            return false;
-        }
-        
-        // Create colormap
-        colormap = XCreateColormap(display, root, visual->visual, AllocNone);
-        
-        // Set window attributes
-        XSetWindowAttributes attrs;
-        attrs.colormap = colormap;
-        attrs.event_mask = ExposureMask | StructureNotifyMask;
-        attrs.override_redirect = True;  // Borderless
-        attrs.background_pixel = 0;
-        attrs.border_pixel = 0;
-        
-        // Create window
-        window = XCreateWindow(
-            display, root,
-            100, 100, w, h,
-            0,
-            visual->depth,
-            InputOutput,
-            visual->visual,
-            CWColormap | CWEventMask | CWOverrideRedirect | CWBackPixel | CWBorderPixel,
-            &attrs
-        );
-        
-        if (!window) {
-            OverlayLogError("Failed to create X window");
-            XFree(visual);
-            XCloseDisplay(display);
-            display = nullptr;
-            return false;
-        }
-        
-        // Set window title
-        XStoreName(display, window, title);
-        
-        // Make window stay on top
-        Atom wmStateAbove = XInternAtom(display, "_NET_WM_STATE_ABOVE", False);
-        Atom wmState = XInternAtom(display, "_NET_WM_STATE", False);
-        XChangeProperty(display, window, wmState, XA_ATOM, 32, PropModeReplace,
-                       (unsigned char*)&wmStateAbove, 1);
-        
-        // Create OpenGL context
-        glContext = glXCreateContext(display, visual, nullptr, True);
-        if (!glContext) {
-            OverlayLogError("Failed to create GLX context");
-            XDestroyWindow(display, window);
-            XFree(visual);
-            XCloseDisplay(display);
-            display = nullptr;
-            return false;
-        }
-        
-        XFree(visual);
-        
-        // Make context current
-        if (!glXMakeCurrent(display, window, glContext)) {
-            OverlayLogError("Failed to make GLX context current");
-            glXDestroyContext(display, glContext);
-            XDestroyWindow(display, window);
-            XCloseDisplay(display);
-            display = nullptr;
-            return false;
-        }
-#endif
-        
-        // Initialize OpenGL (common for both platforms)
+        // Initialize OpenGL
         initGL();
         
         OverlayLog("OpenGL overlay window created: %dx%d", w, h);
@@ -289,7 +176,6 @@ public:
     void show() {
         if (isDestroyed) return;
         
-#ifdef _WIN32
         if (hwnd) {
             OverlayLog("Showing overlay window");
             ShowWindow(hwnd, SW_SHOWNOACTIVATE);
@@ -297,34 +183,19 @@ public:
                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
             UpdateWindow(hwnd);
         }
-#else
-        if (display && window) {
-            XMapWindow(display, window);
-            XRaiseWindow(display, window);
-            XFlush(display);
-        }
-#endif
     }
     
     void hide() {
         if (isDestroyed) return;
         
-#ifdef _WIN32
         if (hwnd) {
             ShowWindow(hwnd, SW_HIDE);
         }
-#else
-        if (display && window) {
-            XUnmapWindow(display, window);
-            XFlush(display);
-        }
-#endif
     }
     
     void setFrame(int x, int y, int w, int h) {
         if (isDestroyed) return;
         
-#ifdef _WIN32
         if (hwnd) {
             // Get DPI scale factor for proper coordinate conversion
             // Electron gives logical coordinates, we need physical coordinates
@@ -361,29 +232,6 @@ public:
                 glLoadIdentity();
             }
         }
-#else
-        width = w;
-        height = h;
-        
-        if (display && window) {
-            XMoveResizeWindow(display, window, x, y, w, h);
-            
-            // Update OpenGL viewport
-            if (glContext) {
-                glXMakeCurrent(display, window, glContext);
-                glViewport(0, 0, w, h);
-                
-                glMatrixMode(GL_PROJECTION);
-                glLoadIdentity();
-                glOrtho(0, w, h, 0, -1, 1);
-                
-                glMatrixMode(GL_MODELVIEW);
-                glLoadIdentity();
-            }
-            
-            XFlush(display);
-        }
-#endif
     }
     
     void renderFrame(const uint8_t* data, int w, int h) {
@@ -391,13 +239,8 @@ public:
         
         std::lock_guard<std::mutex> lock(renderMutex);
         
-#ifdef _WIN32
         if (!hglrc || !hdc) return;
         if (!wglMakeCurrent(hdc, hglrc)) return;
-#else
-        if (!display || !glContext) return;
-        if (!glXMakeCurrent(display, window, glContext)) return;
-#endif
         
         // Create or update texture
         if (texture == 0 || w != texWidth || h != texHeight) {
@@ -441,17 +284,7 @@ public:
         glEnd();
         
         // Swap buffers
-#ifdef _WIN32
         SwapBuffers(hdc);
-#else
-        glXSwapBuffers(display, window);
-        
-        // Process any pending X events
-        while (XPending(display)) {
-            XEvent event;
-            XNextEvent(display, &event);
-        }
-#endif
     }
     
     void destroy() {
@@ -466,7 +299,6 @@ public:
             texture = 0;
         }
         
-#ifdef _WIN32
         if (hglrc) {
             wglMakeCurrent(nullptr, nullptr);
             wglDeleteContext(hglrc);
@@ -482,28 +314,6 @@ public:
             DestroyWindow(hwnd);
             hwnd = nullptr;
         }
-#else
-        if (glContext) {
-            glXMakeCurrent(display, None, nullptr);
-            glXDestroyContext(display, glContext);
-            glContext = nullptr;
-        }
-        
-        if (window) {
-            XDestroyWindow(display, window);
-            window = 0;
-        }
-        
-        if (colormap) {
-            XFreeColormap(display, colormap);
-            colormap = 0;
-        }
-        
-        if (display) {
-            XCloseDisplay(display);
-            display = nullptr;
-        }
-#endif
         
         OverlayLog("OpenGL overlay destroyed");
     }
@@ -673,4 +483,4 @@ static napi_value Init(napi_env env, napi_value exports) {
 
 NAPI_MODULE(NODE_GYP_MODULE_NAME, Init)
 
-#endif // _WIN32 || __linux__
+#endif // _WIN32
