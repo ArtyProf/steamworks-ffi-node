@@ -6,7 +6,7 @@ import { SteamLogger } from "./SteamLogger";
  * Provides cross-platform Steam overlay support for Electron apps:
  * - **macOS**: Metal rendering
  * - **Windows**: OpenGL rendering
- * - **Linux**: OpenGL rendering
+ * - **Linux**: OpenGL (GLX) rendering
  *
  * This enables Steam overlay (Shift+Tab) to work with Electron applications by:
  * 1. Creating a native graphics window (Metal/OpenGL)
@@ -49,34 +49,25 @@ export class SteamOverlay {
     const supportedPlatforms = ["darwin", "win32", "linux"];
 
     if (supportedPlatforms.includes(platform)) {
-      // Try loading in order of preference:
-      // 1. Pre-built binary from prebuilds folder (npm package)
-      // 2. Local build from native/build/Release (development)
       const prebuildPath = `../../prebuilds/${platform}-${arch}/steam-overlay.node`;
       const localBuildPath = "../../native/build/Release/steam-overlay.node";
 
       let loaded = false;
       let loadError: any = null;
 
-      // Try prebuild first
       try {
         this.nativeModule = require(prebuildPath);
         loaded = true;
-        SteamLogger.debug(
-          `[Steam Overlay] Loaded prebuild from ${prebuildPath}`,
-        );
+        SteamLogger.debug(`[Steam Overlay] Loaded prebuild from ${prebuildPath}`);
       } catch (e) {
         loadError = e;
       }
 
-      // Fall back to local build
       if (!loaded) {
         try {
           this.nativeModule = require(localBuildPath);
           loaded = true;
-          SteamLogger.debug(
-            `[Steam Overlay] Loaded local build from ${localBuildPath}`,
-          );
+          SteamLogger.debug(`[Steam Overlay] Loaded local build from ${localBuildPath}`);
         } catch (e) {
           loadError = e;
         }
@@ -89,7 +80,7 @@ export class SteamOverlay {
         // Listen for debug mode changes
         SteamLogger.onDebugChange((enabled) => this.setDebugMode(enabled));
 
-        const rendererName = platform === "darwin" ? "Metal" : "OpenGL";
+        const rendererName = platform === "darwin" ? "Metal" : platform === "linux" ? "OpenGL (GLX)" : "OpenGL";
         SteamLogger.debug(
           `[Steam Overlay] Native module loaded (${rendererName})`,
         );
@@ -189,13 +180,37 @@ export class SteamOverlay {
         vsync: options?.vsync !== false,
       };
 
-      // Note: Native API uses "createMetalWindow" for all platforms (legacy naming)
       this.overlayWindow =
-        this.nativeModule.createMetalWindow(overlayWindowOptions);
+        this.nativeModule.createOverlayWindow(overlayWindowOptions);
 
       if (!this.overlayWindow) {
         SteamLogger.error("[Steam Overlay] Failed to create overlay window");
         return false;
+      }
+
+      // On Linux: tag the Electron window with STEAM_GAME and wire up input forwarding
+      if (process.platform === "linux") {
+        try {
+          const nativeHandle = browserWindow.getNativeWindowHandle();
+          // On 64-bit Linux, XID is stored as uint64 LE (value fits in 32 bits)
+          const xid = nativeHandle.length >= 8
+            ? Number(nativeHandle.readBigUInt64LE(0))
+            : nativeHandle.readUInt32LE(0);
+          const appId = parseInt(process.env["SteamAppId"] || "0", 10);
+
+          if (xid > 0 && appId > 0 && this.nativeModule.setSteamGameAtomOnWindow) {
+            this.nativeModule.setSteamGameAtomOnWindow(xid, appId);
+            SteamLogger.debug(`[Steam Overlay] Tagged Electron window with STEAM_GAME (XID: 0x${xid.toString(16)}, appId: ${appId})`);
+          }
+
+          // Wire up input forwarding: overlay window forwards all key/mouse events to Electron
+          if (xid > 0 && this.overlayWindow && this.nativeModule.setElectronWindow) {
+            this.nativeModule.setElectronWindow(this.overlayWindow, xid);
+            SteamLogger.debug(`[Steam Overlay] Wired input forwarding → Electron XID 0x${xid.toString(16)}`);
+          }
+        } catch (e) {
+          SteamLogger.debug(`[Steam Overlay] Could not set up Linux window properties: ${e}`);
+        }
       }
 
       SteamLogger.debug(
@@ -255,11 +270,12 @@ export class SteamOverlay {
         if (
           this.overlayWindow &&
           this.nativeModule &&
-          !browserWindow.isDestroyed()
+          !browserWindow.isDestroyed() &&
+          !browserWindow.isMinimized()
         ) {
           // Use getContentBounds() to get the content area (excludes title bar)
           const contentBounds = browserWindow.getContentBounds();
-          this.nativeModule.setMetalWindowFrame(
+          this.nativeModule.setOverlayFrame(
             this.overlayWindow,
             contentBounds.x,
             contentBounds.y,
@@ -269,82 +285,89 @@ export class SteamOverlay {
         }
       };
 
-      // Handle window resize - use 'resized' for completed resize
+      // Track overlay visibility to prevent duplicate show/hide calls.
+      // On Linux/Gamescope 'show'+'restore' fire together on restore, and
+      // 'hide'+'minimize' fire together on minimize — deduplication is critical.
+      let overlayVisible = false;
+
+      const showOverlay = (reason: string) => {
+        if (this.overlayWindow && this.nativeModule && !overlayVisible) {
+          this.nativeModule.showOverlayWindow(this.overlayWindow);
+          overlayVisible = true;
+          SteamLogger.debug(`[Steam Overlay] Overlay window shown (${reason})`);
+        }
+      };
+
+      const hideOverlay = (reason: string) => {
+        if (this.overlayWindow && this.nativeModule && overlayVisible) {
+          this.nativeModule.hideOverlayWindow(this.overlayWindow);
+          overlayVisible = false;
+          SteamLogger.debug(`[Steam Overlay] Overlay window hidden (${reason})`);
+        }
+      };
+
+      // Handle window resize/move — 'resized'/'moved' are completion events.
+      // On KDE/KWin they may not fire during live drag; add throttled fallbacks.
+      let resizeThrottle: NodeJS.Timeout | null = null;
+      const syncOverlayFrameThrottled = () => {
+        if (resizeThrottle) return;
+        resizeThrottle = setTimeout(() => {
+          resizeThrottle = null;
+          syncOverlayFrame();
+        }, 100);
+      };
       browserWindow.on("resized", syncOverlayFrame);
-      browserWindow.on("resize", syncOverlayFrame);
-
-      // Handle window move - use 'moved' for completed move
+      browserWindow.on("resize", syncOverlayFrameThrottled);
       browserWindow.on("moved", syncOverlayFrame);
-      browserWindow.on("move", syncOverlayFrame);
+      browserWindow.on("move", syncOverlayFrameThrottled);
 
-      // Handle window maximize/restore - sync frame
+      // Handle maximize/unmaximize — WM needs a moment to finalize bounds
       browserWindow.on("maximize", () => setTimeout(syncOverlayFrame, 100));
       browserWindow.on("unmaximize", () => setTimeout(syncOverlayFrame, 100));
 
-      // Handle minimize - HIDE overlay window when Electron minimizes
-      browserWindow.on("minimize", () => {
-        if (this.overlayWindow && this.nativeModule) {
-          this.nativeModule.hideMetalWindow(this.overlayWindow);
-          SteamLogger.debug("[Steam Overlay] Overlay window hidden (minimize)");
-        }
-      });
+      // Minimize → hide overlay
+      browserWindow.on("minimize", () => hideOverlay("minimize"));
 
-      // Handle restore from minimize - SHOW overlay window
+      // Restore from minimize → show overlay, then sync frame after WM settles.
+      // On Linux/Gamescope the 'show' event fires BEFORE 'restore' during the restore
+      // animation with wrong bounds (y=0); the 200ms delay lets the WM finalize position.
       browserWindow.on("restore", () => {
-        if (this.overlayWindow && this.nativeModule) {
-          this.nativeModule.showMetalWindow(this.overlayWindow);
-          syncOverlayFrame();
-          SteamLogger.debug("[Steam Overlay] Overlay window shown (restore)");
-        }
+        showOverlay("restore");
+        setTimeout(syncOverlayFrame, process.platform === "linux" ? 200 : 0);
       });
 
-      // Handle show/hide - sync overlay visibility
+      // On Linux: 'hide' fires alongside 'minimize' and 'show' fires alongside 'restore'
+      // but the overlayVisible dedup flag prevents double calls.
+      // We still need both events for hide-to-tray / open-from-tray support.
       browserWindow.on("show", () => {
-        if (this.overlayWindow && this.nativeModule) {
-          this.nativeModule.showMetalWindow(this.overlayWindow);
-          syncOverlayFrame();
-        }
+        showOverlay("show");
+        syncOverlayFrame();
       });
-      browserWindow.on("hide", () => {
-        if (this.overlayWindow && this.nativeModule) {
-          this.nativeModule.hideMetalWindow(this.overlayWindow);
-        }
-      });
+      browserWindow.on("hide", () => hideOverlay("hide"));
 
-      // Handle focus/blur - hide overlay when switching to another app
-      // Use delay to avoid hiding when Steam overlay opens (it briefly steals focus)
+      // On non-Linux, focus/blur also control visibility
       let blurTimeout: NodeJS.Timeout | null = null;
       let isBlurred = false;
 
-      browserWindow.on("blur", () => {
-        isBlurred = true;
-        // Wait 150ms before hiding - if focus returns quickly (Steam overlay), don't hide
-        blurTimeout = setTimeout(() => {
-          if (isBlurred && this.overlayWindow && this.nativeModule) {
-            this.nativeModule.hideMetalWindow(this.overlayWindow);
-            SteamLogger.debug(
-              "[Steam Overlay] Overlay window hidden (app switch)",
-            );
+      if (process.platform !== "linux") {
+        browserWindow.on("blur", () => {
+          isBlurred = true;
+          blurTimeout = setTimeout(() => {
+            if (isBlurred) hideOverlay("app switch");
+          }, 150);
+        });
+        browserWindow.on("focus", () => {
+          isBlurred = false;
+          if (blurTimeout) {
+            clearTimeout(blurTimeout);
+            blurTimeout = null;
           }
-        }, 150);
-      });
-      browserWindow.on("focus", () => {
-        isBlurred = false;
-        // Cancel pending hide if focus returned quickly
-        if (blurTimeout) {
-          clearTimeout(blurTimeout);
-          blurTimeout = null;
-        }
-        if (
-          this.overlayWindow &&
-          this.nativeModule &&
-          !browserWindow.isMinimized()
-        ) {
-          this.nativeModule.showMetalWindow(this.overlayWindow);
-          syncOverlayFrame();
-          SteamLogger.debug("[Steam Overlay] Overlay window shown (focus)");
-        }
-      });
+          if (!browserWindow.isMinimized()) {
+            showOverlay("focus");
+            syncOverlayFrame();
+          }
+        });
+      }
 
       // Cleanup function
       const cleanup = () => {
@@ -354,12 +377,7 @@ export class SteamOverlay {
       };
 
       // Handle window close - hide immediately then cleanup
-      browserWindow.on("close", () => {
-        // Hide overlay window immediately when close starts
-        if (this.overlayWindow && this.nativeModule) {
-          this.nativeModule.hideMetalWindow(this.overlayWindow);
-        }
-      });
+      browserWindow.on("close", () => hideOverlay("close"));
       browserWindow.on("closed", cleanup);
 
       // IMPORTANT: Also clean up on app quit to prevent crash
@@ -367,9 +385,7 @@ export class SteamOverlay {
       const { app } = require("electron");
       app.on("before-quit", () => {
         SteamLogger.debug("[Steam Overlay] App quitting, cleaning up...");
-        if (this.overlayWindow && this.nativeModule) {
-          this.nativeModule.hideMetalWindow(this.overlayWindow);
-        }
+        hideOverlay("before-quit");
         cleanup();
       });
 
@@ -378,24 +394,24 @@ export class SteamOverlay {
 
       // Show the overlay window (it floats above Electron but ignores mouse)
       if (this.nativeModule) {
-        this.nativeModule.showMetalWindow(this.overlayWindow);
+        this.nativeModule.showOverlayWindow(this.overlayWindow);
+        overlayVisible = true;
         SteamLogger.debug(
           "[Steam Overlay] Overlay window shown (pass-through mode)",
         );
       }
 
-      // Keep Electron window visible and focused - it receives all input
-      // Overlay window floats above it but passes mouse events through
-      // Use setImmediate to ensure focus happens after window is shown
-      setImmediate(() => {
-        if (!browserWindow.isDestroyed()) {
-          browserWindow.focus();
-          browserWindow.moveTop(); // Ensure Electron is at the window level we need
-          SteamLogger.debug(
-            "[Steam Overlay] Electron window focused for input",
-          );
-        }
-      });
+      // On Linux: do NOT call moveTop() — the GLX window must stay above Electron.
+      // On other platforms focus + raise ensures Electron is on top.
+      if (process.platform !== "linux") {
+        setImmediate(() => {
+          if (!browserWindow.isDestroyed()) {
+            browserWindow.focus();
+            browserWindow.moveTop();
+            SteamLogger.debug("[Steam Overlay] Electron window focused for input");
+          }
+        });
+      }
 
       SteamLogger.debug(
         "[Steam Overlay] Successfully added Steam overlay to Electron window",
@@ -418,7 +434,7 @@ export class SteamOverlay {
   destroyOverlayWindow(): void {
     if (this.overlayWindow && this.nativeModule) {
       try {
-        this.nativeModule.destroyMetalWindow(this.overlayWindow);
+        this.nativeModule.destroyOverlayWindow(this.overlayWindow);
         this.overlayWindow = null;
         SteamLogger.debug("[Steam Overlay] Overlay window destroyed");
       } catch (error) {

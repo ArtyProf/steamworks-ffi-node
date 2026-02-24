@@ -350,7 +350,7 @@ static BOOL g_debugMode = NO;
 
 // N-API wrapper functions
 
-static napi_value CreateMetalWindow(napi_env env, napi_callback_info info) {
+static napi_value CreateOverlayWindow(napi_env env, napi_callback_info info) {
     napi_status status;
     size_t argc = 1;
     napi_value args[1];
@@ -409,7 +409,7 @@ static napi_value CreateMetalWindow(napi_env env, napi_callback_info info) {
     return external;
 }
 
-static napi_value ShowMetalWindow(napi_env env, napi_callback_info info) {
+static napi_value ShowOverlayWindow(napi_env env, napi_callback_info info) {
     napi_status status;
     size_t argc = 1;
     napi_value args[1];
@@ -436,7 +436,7 @@ static napi_value ShowMetalWindow(napi_env env, napi_callback_info info) {
     return result;
 }
 
-static napi_value HideMetalWindow(napi_env env, napi_callback_info info) {
+static napi_value HideOverlayWindow(napi_env env, napi_callback_info info) {
     napi_status status;
     size_t argc = 1;
     napi_value args[1];
@@ -463,7 +463,7 @@ static napi_value HideMetalWindow(napi_env env, napi_callback_info info) {
     return result;
 }
 
-static napi_value ResizeMetalWindow(napi_env env, napi_callback_info info) {
+static napi_value ResizeOverlayWindow(napi_env env, napi_callback_info info) {
     napi_status status;
     size_t argc = 3;
     napi_value args[3];
@@ -494,7 +494,7 @@ static napi_value ResizeMetalWindow(napi_env env, napi_callback_info info) {
     return result;
 }
 
-static napi_value SetMetalWindowFrame(napi_env env, napi_callback_info info) {
+static napi_value SetOverlayFrame(napi_env env, napi_callback_info info) {
     napi_status status;
     size_t argc = 5;
     napi_value args[5];
@@ -562,7 +562,7 @@ static napi_value RenderFrame(napi_env env, napi_callback_info info) {
     return result;
 }
 
-static napi_value DestroyMetalWindow(napi_env env, napi_callback_info info) {
+static napi_value DestroyOverlayWindow(napi_env env, napi_callback_info info) {
     napi_status status;
     size_t argc = 1;
     napi_value args[1];
@@ -626,29 +626,29 @@ static napi_value Init(napi_env env, napi_value exports) {
     status = napi_set_named_property(env, exports, "setDebugMode", fn);
     if (status != napi_ok) return nullptr;
     
-    status = napi_create_function(env, nullptr, 0, CreateMetalWindow, nullptr, &fn);
+    status = napi_create_function(env, nullptr, 0, CreateOverlayWindow, nullptr, &fn);
     if (status != napi_ok) return nullptr;
-    status = napi_set_named_property(env, exports, "createMetalWindow", fn);
-    if (status != napi_ok) return nullptr;
-    
-    status = napi_create_function(env, nullptr, 0, ShowMetalWindow, nullptr, &fn);
-    if (status != napi_ok) return nullptr;
-    status = napi_set_named_property(env, exports, "showMetalWindow", fn);
+    status = napi_set_named_property(env, exports, "createOverlayWindow", fn);
     if (status != napi_ok) return nullptr;
     
-    status = napi_create_function(env, nullptr, 0, HideMetalWindow, nullptr, &fn);
+    status = napi_create_function(env, nullptr, 0, ShowOverlayWindow, nullptr, &fn);
     if (status != napi_ok) return nullptr;
-    status = napi_set_named_property(env, exports, "hideMetalWindow", fn);
-    if (status != napi_ok) return nullptr;
-    
-    status = napi_create_function(env, nullptr, 0, ResizeMetalWindow, nullptr, &fn);
-    if (status != napi_ok) return nullptr;
-    status = napi_set_named_property(env, exports, "resizeMetalWindow", fn);
+    status = napi_set_named_property(env, exports, "showOverlayWindow", fn);
     if (status != napi_ok) return nullptr;
     
-    status = napi_create_function(env, nullptr, 0, SetMetalWindowFrame, nullptr, &fn);
+    status = napi_create_function(env, nullptr, 0, HideOverlayWindow, nullptr, &fn);
     if (status != napi_ok) return nullptr;
-    status = napi_set_named_property(env, exports, "setMetalWindowFrame", fn);
+    status = napi_set_named_property(env, exports, "hideOverlayWindow", fn);
+    if (status != napi_ok) return nullptr;
+    
+    status = napi_create_function(env, nullptr, 0, ResizeOverlayWindow, nullptr, &fn);
+    if (status != napi_ok) return nullptr;
+    status = napi_set_named_property(env, exports, "resizeOverlayWindow", fn);
+    if (status != napi_ok) return nullptr;
+    
+    status = napi_create_function(env, nullptr, 0, SetOverlayFrame, nullptr, &fn);
+    if (status != napi_ok) return nullptr;
+    status = napi_set_named_property(env, exports, "setOverlayFrame", fn);
     if (status != napi_ok) return nullptr;
     
     status = napi_create_function(env, nullptr, 0, RenderFrame, nullptr, &fn);
@@ -656,9 +656,9 @@ static napi_value Init(napi_env env, napi_value exports) {
     status = napi_set_named_property(env, exports, "renderFrame", fn);
     if (status != napi_ok) return nullptr;
     
-    status = napi_create_function(env, nullptr, 0, DestroyMetalWindow, nullptr, &fn);
+    status = napi_create_function(env, nullptr, 0, DestroyOverlayWindow, nullptr, &fn);
     if (status != napi_ok) return nullptr;
-    status = napi_set_named_property(env, exports, "destroyMetalWindow", fn);
+    status = napi_set_named_property(env, exports, "destroyOverlayWindow", fn);
     if (status != napi_ok) return nullptr;
     
     return exports;

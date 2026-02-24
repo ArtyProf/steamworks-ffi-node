@@ -1,5 +1,5 @@
-// Linux OpenGL Overlay for Steam Integration
-// Optimized for X11 with proper click-through and Steam overlay injection support
+// Linux OpenGL (GLX) Overlay for Steam Integration
+// Uses glXSwapBuffers hook in gameoverlayrenderer64.so to enable Steam overlay (Shift+Tab).
 
 #if defined(__linux__) && !defined(__ANDROID__)
 
@@ -10,6 +10,9 @@
 #include <thread>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
+#include <unistd.h>
+#include <ctime>
 
 // X11 and OpenGL includes
 #include <X11/Xlib.h>
@@ -42,11 +45,12 @@ static bool g_debugMode = false;
 typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 typedef void (*glXSwapIntervalEXTProc)(Display*, GLXDrawable, int);
 
-// Linux OpenGL Overlay Window class with enhanced Steam overlay support
+// Linux OpenGL/GLX Overlay Window — glXSwapBuffers is hooked by gameoverlayrenderer64.so
 class LinuxOverlayWindow {
 public:
     Display* display = nullptr;
     Window window = 0;
+    Window electronWindow = 0; // Electron XID — keyboard/mouse events are forwarded here
     GLXContext glContext = nullptr;
     Colormap colormap = 0;
     GLXFBConfig fbConfig = nullptr;
@@ -59,7 +63,18 @@ public:
     int width = 0;
     int height = 0;
     std::atomic<bool> isDestroyed{false};
+    std::atomic<bool> isMapped{false};  // true while window is XMapRaised, false after XUnmapWindow
     std::mutex renderMutex;
+
+    // Cursor warp suppression on Steam overlay close.
+    // When Shift+Tab opens the overlay, Steam saves the cursor position.
+    // When the overlay closes, Steam warps the cursor back to that saved position.
+    // We detect this by: Shift+Tab sets overlayWasOpened=true, then the next FocusIn
+    // (overlay handed focus back to us) triggers a 500ms MotionNotify suppression.
+    // The 30px-distance approach doesn't work because lastMouseX/Y is already at the
+    // restored position (we receive no MotionNotify while the overlay holds focus).
+    bool overlayWasOpened = false;
+    long long suppressMotionUntilMs = 0;
     
     // For continuous rendering (Steam overlay requirement)
     std::atomic<bool> renderThreadRunning{false};
@@ -70,11 +85,19 @@ public:
     int frameHeight = 0;
     std::atomic<bool> hasNewFrame{false};
     
+    static long long getMonotonicMs() {
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+    }
+
     bool init(int w, int h, const char* title) {
         width = w;
         height = h;
         
         OverlayLog("Initializing Linux overlay window: %dx%d", w, h);
+        
+        XInitThreads(); // Required for multi-threaded X11 access
         
         // Open X display
         display = XOpenDisplay(nullptr);
@@ -142,14 +165,19 @@ public:
         // Create colormap
         colormap = XCreateColormap(display, root, visualInfo->visual, AllocNone);
         
-        // Set window attributes for overlay
+        // Receive ALL input — we forward keyboard/mouse to Electron via XSendEvent.
+        // The window must hold X11 keyboard focus for gameoverlayrenderer64.so to
+        // intercept Shift+Tab and trigger the Steam overlay.
         XSetWindowAttributes attrs;
         attrs.colormap = colormap;
         attrs.background_pixmap = None;
         attrs.background_pixel = 0;
         attrs.border_pixel = 0;
-        attrs.event_mask = ExposureMask | StructureNotifyMask | VisibilityChangeMask;
-        attrs.override_redirect = False;  // Use False to work with window manager
+        attrs.event_mask = ExposureMask | StructureNotifyMask | VisibilityChangeMask
+                         | KeyPressMask | KeyReleaseMask
+                         | ButtonPressMask | ButtonReleaseMask | PointerMotionMask
+                         | FocusChangeMask;
+        attrs.override_redirect = True;  // Bypass KWin stacking entirely — window always on top
         
         // Create window with 32-bit depth for alpha
         window = XCreateWindow(
@@ -173,6 +201,23 @@ public:
         
         // Set window title
         XStoreName(display, window, title);
+        
+        // STEAM_GAME atom — critical for Steam overlay detection
+        const char* steamAppId = getenv("SteamAppId");
+        if (steamAppId) {
+            uint32_t appId = (uint32_t)atoi(steamAppId);
+            Atom steamGameAtom = XInternAtom(display, "STEAM_GAME", False);
+            XChangeProperty(display, window, steamGameAtom, XA_CARDINAL, 32, PropModeReplace,
+                           (unsigned char*)&appId, 1);
+            OverlayLog("Set STEAM_GAME atom to %u", appId);
+        }
+        
+        // _NET_WM_PID
+        pid_t pid = getpid();
+        Atom wmPid = XInternAtom(display, "_NET_WM_PID", False);
+        XChangeProperty(display, window, wmPid, XA_CARDINAL, 32, PropModeReplace,
+                       (unsigned char*)&pid, 1);
+        OverlayLog("Set _NET_WM_PID to %d", pid);
         
         // Set window type to utility/overlay for better window manager handling
         Atom windowType = XInternAtom(display, "_NET_WM_WINDOW_TYPE", False);
@@ -203,12 +248,37 @@ public:
         XChangeProperty(display, window, motifHints, motifHints, 32, PropModeReplace,
                        (unsigned char*)&hints, 5);
         
-        // CRITICAL: Set input shape to empty rectangle - this makes clicks pass through!
-        // The window will still be visible but won't receive any input events
-        XRectangle emptyRect = { 0, 0, 0, 0 };
-        XShapeCombineRectangles(display, window, ShapeInput, 0, 0, &emptyRect, 0, ShapeSet, YXBanded);
-        
-        OverlayLog("Set empty input shape for click-through");
+        // Advertise WM_TAKE_FOCUS so KWin knows this window accepts focus
+        Atom wmProtocols = XInternAtom(display, "WM_PROTOCOLS", False);
+        Atom wmTakeFocus = XInternAtom(display, "WM_TAKE_FOCUS", False);
+        XChangeProperty(display, window, wmProtocols, XA_ATOM, 32, PropModeReplace,
+                       (unsigned char*)&wmTakeFocus, 1);
+
+        // Verify gameoverlayrenderer64.so is LD_PRELOADed (hook must be active)
+        {
+            FILE* maps = fopen("/proc/self/maps", "r");
+            if (maps) {
+                char line[512];
+                bool found = false;
+                while (fgets(line, sizeof(line), maps)) {
+                    if (strstr(line, "gameoverlayrenderer64")) {
+                        // Trim newline for clean log
+                        char* nl = strchr(line, '\n'); if (nl) *nl = 0;
+                        printf("[Linux Overlay] gameoverlayrenderer64.so LOADED: %s\n", line);
+                        fflush(stdout);
+                        found = true;
+                        break;
+                    }
+                }
+                fclose(maps);
+                if (!found) {
+                    printf("[Linux Overlay] WARNING: gameoverlayrenderer64.so NOT in /proc/self/maps — overlay hook inactive!\n");
+                    fflush(stdout);
+                }
+            }
+        }
+
+        OverlayLog("Input forwarding mode: all events forwarded to Electron via XSendEvent");
         
         // Create modern OpenGL context using glXCreateContextAttribsARB if available
         glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 
@@ -305,35 +375,38 @@ public:
         
         if (display && window) {
             OverlayLog("Showing overlay window");
+            isMapped = true;
             XMapRaised(display, window);
-            
-            // Re-apply always-on-top after mapping
-            Atom wmState = XInternAtom(display, "_NET_WM_STATE", False);
-            Atom wmStateAbove = XInternAtom(display, "_NET_WM_STATE_ABOVE", False);
-            
-            XEvent event;
-            memset(&event, 0, sizeof(event));
-            event.type = ClientMessage;
-            event.xclient.window = window;
-            event.xclient.message_type = wmState;
-            event.xclient.format = 32;
-            event.xclient.data.l[0] = 1;  // _NET_WM_STATE_ADD
-            event.xclient.data.l[1] = wmStateAbove;
-            event.xclient.data.l[2] = 0;
-            event.xclient.data.l[3] = 1;  // Source: application
-            
-            XSendEvent(display, DefaultRootWindow(display), False,
-                      SubstructureRedirectMask | SubstructureNotifyMask, &event);
-            
-            XFlush(display);
+            // Wait for the X server to process MapRaised before touching the GL drawable.
+            // Without this, glXMakeCurrent may succeed on a not-yet-viewable window
+            // and glXSwapBuffers silently no-ops, preventing Steam's hook from firing.
+            XSync(display, False);
+            // Re-acquire GL context on the now-viewable window
+            if (glContext) {
+                glXMakeCurrent(display, window, glContext);
+            }
+            requestFocus();
         }
     }
-    
+
+    void requestFocus() {
+        // With override_redirect=True, KWin ignores EWMH messages for our window.
+        // XSetInputFocus is the only way to grab keyboard focus.
+        // Guard with isMapped: calling XSetInputFocus on an unmapped window
+        // generates a BadMatch X error and fights the minimize animation.
+        if (!display || !window || !isMapped) return;
+        XSetInputFocus(display, window, RevertToPointerRoot, CurrentTime);
+        XFlush(display);
+    }
+
     void hide() {
         if (isDestroyed) return;
         
         if (display && window) {
             OverlayLog("Hiding overlay window");
+            isMapped = false;
+            // Release GL context before unmapping to prevent stale drawable state
+            glXMakeCurrent(display, None, nullptr);
             XUnmapWindow(display, window);
             XFlush(display);
         }
@@ -349,10 +422,6 @@ public:
         
         if (display && window) {
             XMoveResizeWindow(display, window, x, y, w, h);
-            
-            // Re-apply empty input shape after resize
-            XRectangle emptyRect = { 0, 0, 0, 0 };
-            XShapeCombineRectangles(display, window, ShapeInput, 0, 0, &emptyRect, 0, ShapeSet, YXBanded);
             
             // Update OpenGL viewport
             if (glContext) {
@@ -373,6 +442,7 @@ public:
     
     void renderFrame(const uint8_t* data, int w, int h) {
         if (isDestroyed) return;
+        if (!isMapped) return;  // Don't render/swap when hidden — avoids GL errors on unmapped window
         
         std::lock_guard<std::mutex> lock(renderMutex);
         
@@ -430,15 +500,66 @@ public:
         // Swap buffers
         glXSwapBuffers(display, window);
         
-        // Process any pending X events to keep window responsive
+        // Process any pending X events
         while (XPending(display)) {
             XEvent event;
             XNextEvent(display, &event);
-            
-            // Handle expose events - redraw
-            if (event.type == Expose) {
-                // Window needs redraw, will happen on next frame
+
+            if (event.type == KeyPress || event.type == KeyRelease) {
+                bool isShiftTab = (event.xkey.keycode == 23 && (event.xkey.state & ShiftMask));
+                OverlayLog("%s: keycode=%d state=0x%x%s",
+                    event.type == KeyPress ? "KeyPress" : "KeyRelease",
+                    event.xkey.keycode, event.xkey.state,
+                    isShiftTab ? " [Shift+Tab - overlay opening]" : "");
+
+                // Shift+Tab: do NOT forward to Electron — Steam's hook consumes it.
+                if (!isShiftTab && electronWindow) {
+                    event.xkey.window    = electronWindow;
+                    event.xkey.subwindow = None;
+                    XSendEvent(display, electronWindow, True, NoEventMask, &event);
+                }
+
+            } else if (electronWindow && (
+                    event.type == ButtonPress || event.type == ButtonRelease ||
+                    event.type == MotionNotify)) {
+
+                if (event.type == MotionNotify) {
+                    // Suppress motion during the cursor-restore window after overlay close
+                    if (getMonotonicMs() < suppressMotionUntilMs) {
+                        continue;
+                    }
+                }
+
+                // Forward mouse event to Electron
+                event.xkey.window    = electronWindow;
+                event.xkey.subwindow = None;
+                XSendEvent(display, electronWindow, True, NoEventMask, &event);
+
+                if (event.type == ButtonPress) {
+                    // Real click — cancel any remaining suppression and re-grab focus
+                    suppressMotionUntilMs = 0;
+                    requestFocus();
+                }
+
+            } else if (event.type == FocusOut) {
+                // Steam overlay is stealing focus — it will save cursor position now
+                // and warp back to it when it closes. Mark so FocusIn suppresses that warp.
+                if (isMapped) {
+                    OverlayLog("FocusOut: overlay stealing focus, marking for cursor warp suppression");
+                    overlayWasOpened = true;
+                    requestFocus();
+                }
+            } else if (event.type == FocusIn) {
+                OverlayLog("FocusIn: overlay window has keyboard focus");
+                if (overlayWasOpened) {
+                    // Overlay just closed — Steam is about to warp cursor back to saved position.
+                    // Suppress MotionNotify for 500ms so Electron doesn't snap hover state.
+                    overlayWasOpened = false;
+                    suppressMotionUntilMs = getMonotonicMs() + 500;
+                    OverlayLog("FocusIn after overlay: suppressing cursor warp for 500ms");
+                }
             }
+            // Expose/other events: handled on next renderFrame
         }
         
         // Ensure GL commands are flushed
@@ -645,16 +766,72 @@ static napi_value SetDebugMode(napi_env env, napi_callback_info info) {
     return nullptr;
 }
 
+// setSteamGameAtomOnWindow(xid, appId) — tags an X11 window with STEAM_GAME atom
+// and stores it as the Electron target for input forwarding
+static napi_value SetSteamGameAtomOnWindow(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    
+    int64_t xWindowId = 0, appId = 0;
+    napi_get_value_int64(env, args[0], &xWindowId);
+    napi_get_value_int64(env, args[1], &appId);
+    
+    if (xWindowId == 0 || appId == 0) {
+        napi_value result; napi_get_boolean(env, false, &result); return result;
+    }
+    
+    // Note: linux-overlay.cpp uses per-instance handles, not a global.
+    // Open a temporary display connection for this call.
+    Display* dpy = XOpenDisplay(nullptr);
+    if (!dpy) {
+        napi_value result; napi_get_boolean(env, false, &result); return result;
+    }
+    
+    uint32_t appIdInt = (uint32_t)appId;
+    Atom steamGameAtom = XInternAtom(dpy, "STEAM_GAME", False);
+    XChangeProperty(dpy, (Window)xWindowId, steamGameAtom, XA_CARDINAL, 32,
+                   PropModeReplace, (unsigned char*)&appIdInt, 1);
+    XFlush(dpy);
+    XCloseDisplay(dpy);
+    
+    OverlayLog("Set STEAM_GAME=%u on Electron window 0x%lx", appIdInt, (unsigned long)xWindowId);
+    
+    napi_value result; napi_get_boolean(env, true, &result); return result;
+}
+
+// setElectronWindow(handle, xid) — stores the Electron XID on the overlay for input forwarding
+static napi_value SetElectronWindow(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    
+    LinuxOverlayWindow* window;
+    napi_get_value_external(env, args[0], (void**)&window);
+    
+    int64_t xid = 0;
+    napi_get_value_int64(env, args[1], &xid);
+    
+    if (window && xid) {
+        window->electronWindow = (Window)xid;
+        OverlayLog("Stored Electron window 0x%lx for input forwarding", (unsigned long)xid);
+    }
+    
+    return nullptr;
+}
+
 // Module initialization - use same function names as other platforms for compatibility
 static napi_value Init(napi_env env, napi_value exports) {
     napi_property_descriptor desc[] = {
-        { "createMetalWindow", nullptr, CreateOverlayWindow, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "showMetalWindow", nullptr, ShowOverlayWindow, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "hideMetalWindow", nullptr, HideOverlayWindow, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "setMetalWindowFrame", nullptr, SetOverlayWindowFrame, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "renderFrame", nullptr, RenderFrame, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "destroyMetalWindow", nullptr, DestroyOverlayWindow, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "setDebugMode", nullptr, SetDebugMode, nullptr, nullptr, nullptr, napi_default, nullptr }
+        { "createOverlayWindow",      nullptr, CreateOverlayWindow,      nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "showOverlayWindow",        nullptr, ShowOverlayWindow,        nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "hideOverlayWindow",        nullptr, HideOverlayWindow,        nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "setOverlayFrame",          nullptr, SetOverlayWindowFrame,    nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "renderFrame",              nullptr, RenderFrame,              nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "destroyOverlayWindow",     nullptr, DestroyOverlayWindow,     nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "setDebugMode",             nullptr, SetDebugMode,             nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "setSteamGameAtomOnWindow", nullptr, SetSteamGameAtomOnWindow, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "setElectronWindow",        nullptr, SetElectronWindow,        nullptr, nullptr, nullptr, napi_default, nullptr },
     };
     
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
