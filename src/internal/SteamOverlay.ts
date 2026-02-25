@@ -56,18 +56,18 @@ export class SteamOverlay {
       let loadError: any = null;
 
       try {
-        this.nativeModule = require(prebuildPath);
+        this.nativeModule = require(localBuildPath);
         loaded = true;
-        SteamLogger.debug(`[Steam Overlay] Loaded prebuild from ${prebuildPath}`);
+        SteamLogger.debug(`[Steam Overlay] Loaded local build from ${localBuildPath}`);
       } catch (e) {
         loadError = e;
       }
 
       if (!loaded) {
         try {
-          this.nativeModule = require(localBuildPath);
+          this.nativeModule = require(prebuildPath);
           loaded = true;
-          SteamLogger.debug(`[Steam Overlay] Loaded local build from ${localBuildPath}`);
+          SteamLogger.debug(`[Steam Overlay] Loaded prebuild from ${prebuildPath}`);
         } catch (e) {
           loadError = e;
         }
