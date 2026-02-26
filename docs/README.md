@@ -229,6 +229,19 @@ This design:
   - Voice recording and playback (microphone capture, compress/decompress)
   - Market eligibility and store authentication
 
+### Steam Overlay Integration (Electron)
+
+- **[Steam Overlay Integration](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_OVERLAY_INTEGRATION.md)** 🧪 _Experimental_
+  - Native Steam overlay (Shift+Tab) for Electron applications
+  - **Platform Support:**
+    - ✅ macOS - Metal rendering backend
+    - ✅ Windows - OpenGL rendering backend
+    - ✅ Linux - OpenGL 3.3 with GLX (tested on Steam Deck Desktop Mode/SteamOS)
+  - Complete setup guide for Electron integration
+  - Native module compilation and configuration
+  - System requirements and troubleshooting
+  - **Status:** Working - tested on all three platforms
+
 ## 🚀 Quick Links
 
 ### Getting Started

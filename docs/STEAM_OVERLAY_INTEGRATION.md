@@ -2,7 +2,7 @@
 
 This guide explains how to add Steam overlay support (Shift+Tab) to Electron applications using native rendering across all platforms.
 
-> **Status: Experimental** - This feature is under active development. macOS (Metal) and Windows (OpenGL) are tested, Linux (OpenGL) implementation is available but may require additional testing.
+> **Status: Working** - This feature has been tested on macOS (Metal), Windows (OpenGL), and Linux (OpenGL 3.3 on Steam Deck Desktop Mode/SteamOS).
 
 ## Overview
 
@@ -16,19 +16,20 @@ This enables full Steam overlay functionality (Shift+Tab, friends list, achievem
 
 ## Platform Support
 
-| Platform    | Renderer     | Status    |
-| ----------- | ------------ | --------- |
-| **macOS**   | Metal        | Tested    |
-| **Windows** | OpenGL       | Tested    |
-| **Linux**   | OpenGL + X11 | Available |
+| Platform    | Renderer     | Status                             |
+| ----------- | ------------ | ---------------------------------- |
+| **macOS**   | Metal        | Tested                             |
+| **Windows** | OpenGL       | Tested                             |
+| **Linux**   | OpenGL 3.3 + X11 | Tested (Steam Deck Desktop Mode) |
 
 ### System Requirements
 
-| Platform | Minimum Version      |
-| -------- | -------------------- |
-| macOS    | 10.15+ (Catalina)    |
-| Windows  | Windows 10+          |
-| Linux    | X11 with OpenGL 3.0+ |
+| Platform | Minimum Version         |
+| -------- | ----------------------- |
+| macOS    | 10.15+ (Catalina)       |
+| Windows  | Windows 10+             |
+| Linux    | X11 with OpenGL 3.3+    |
+| SteamOS  | Steam Deck Desktop Mode |
 
 ## Quick Start
 
@@ -187,16 +188,17 @@ The Windows implementation uses OpenGL:
 
 ### Linux (OpenGL)
 
-The Linux implementation uses OpenGL with X11:
+The Linux implementation uses OpenGL 3.3 with X11:
 
 - Creates an X11 window with override redirect
 - Uses GLX for OpenGL context
 - Supports all major distributions (SteamOS, Ubuntu, Arch, Mint, Fedora, etc.)
+- **Tested on**: Steam Deck Desktop Mode (SteamOS)
 
 **Requirements:**
 
 - X11 display server (Wayland not yet supported)
-- OpenGL 3.0+ capable driver
+- OpenGL 3.3+ capable driver
 
 ## electron-builder Configuration
 

@@ -22,43 +22,15 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 ---
 
+## Highlights
+
 > ✅ **No C++ Compilation Required**: Uses Koffi FFI for seamless installation without Visual Studio Build Tools!
 
-> ⚡ **Latest Steamworks SDK**: Built with Steamworks SDK v1.63 - includes Linux ARM64, Android ARM64, and Lenovo Legion Go controller support!
+> ⚡ **Steamworks SDK v1.63**: Latest SDK with Linux ARM64, Android ARM64, and Lenovo Legion Go controller support!
 
-> 🎉 **NEW: 100% Achievement API Coverage** - All 20 Steam achievement functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/ACHIEVEMENT_MANAGER.md)
+> � **16 Complete API Managers**: 100% coverage of achievements, stats, leaderboards, friends, workshop, networking, and more - see [full documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/README.md)!
 
-> 🎉 **NEW: 100% Stats API Coverage** - All 14 Steam statistics functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STATS_MANAGER.md)
-
-> 🎉 **NEW: 100% Leaderboard API Coverage** - All 7 Steam leaderboard functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)
-
-> 🎉 **NEW: Friends API** - 22 complete Steam friends and social functions implemented! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)
-
-> 🎉 **NEW: Rich Presence API** - 6 functions for custom status display and friend join functionality! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/RICH_PRESENCE_MANAGER.md)
-
-> 🎉 **NEW: Overlay API** - 7 functions for complete Steam overlay control! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)
-
-> 🎉 **NEW: Cloud Storage API** - 17 functions for complete Steam Cloud (Remote Storage) integration including batch writes! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)
-
-> 🎉 **NEW: Workshop API** - 33 functions for complete Steam Workshop/UGC integration including item deletion! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)
-
-> 🎉 **NEW: Input API** - 35+ functions for complete Steam Input (controller) support! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/INPUT_MANAGER.md) ⚠️ Tested with virtual gamepad only
-
-> 🎉 **NEW: Screenshots API** - 9 functions for Steam Screenshots integration! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/SCREENSHOT_MANAGER.md)
-
-> 🎉 **NEW: Apps/DLC API** - 28 functions for DLC ownership, app metadata, and beta branches! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/APPS_MANAGER.md)
-
-> 🎉 **NEW: Matchmaking API** - 30+ functions for multiplayer lobby matchmaking! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/MATCHMAKING_MANAGER.md) ⚠️ Requires two Steam accounts for testing
-
-> 🎉 **NEW: Utils API** - 29 functions for system info, Steam Deck detection, image loading, and text filtering! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/UTILS_MANAGER.md)
-
-> 🎉 **NEW: Networking Utils API** - 15 functions for ping location, relay network, and data center information! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_UTILS_MANAGER.md)
-
-> 🎉 **NEW: Networking Sockets API** - 34 functions for P2P connections, reliable messaging, and multi-player networking! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/NETWORKING_SOCKETS_MANAGER.md) ⚠️ Requires two Steam accounts for testing
-
-> 🎉 **NEW: User API** - 28 functions for auth tickets, user info, voice chat, and security! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/USER_MANAGER.md)
-
-> 🧪 **EXPERIMENTAL: Steam Overlay for Electron** - Native overlay integration (Shift+Tab) for Electron apps on macOS (Metal), Windows (OpenGL), and Linux (OpenGL, but Linux one is broken at the moment, need to find solution to fix it)! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_OVERLAY_INTEGRATION.md)
+> 🧪 **EXPERIMENTAL: Native Overlay for Electron** - Metal (macOS), OpenGL (Windows), OpenGL 3.3 (Linux/SteamOS). [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_OVERLAY_INTEGRATION.md)
 
 ## Features
 
@@ -296,7 +268,11 @@ import SteamworksSDK, {
   LeaderboardSortMethod,
   LeaderboardDisplayType,
   LeaderboardUploadScoreMethod,
-  LeaderboardDataRequest
+  LeaderboardDataRequest,
+  EFriendFlags,
+  EUGCQuery,
+  EUGCMatchingUGCType,
+  EItemState,
 } from "steamworks-ffi-node";
 
 // Helper to auto-start callback polling
@@ -345,8 +321,8 @@ if (initialized) {
   // Work with leaderboards
   const leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
     "HighScores",
-    LeaderboardSortMethod.Descending, // Higher is better
-    LeaderboardDisplayType.Numeric // Display as numbers
+    LeaderboardSortMethod.Descending,
+    LeaderboardDisplayType.Numeric
   );
 
   if (leaderboard) {
@@ -354,26 +330,26 @@ if (initialized) {
     await steam.leaderboards.uploadLeaderboardScore(
       leaderboard.handle,
       1000,
-      LeaderboardUploadScoreMethod.KeepBest // Keep best score
+      LeaderboardUploadScoreMethod.KeepBest
     );
 
     // Download top 10 scores
     const topScores = await steam.leaderboards.downloadLeaderboardEntries(
       leaderboard.handle,
-      LeaderboardDataRequest.Global, // Global top scores
-      1, // Start at rank 1
-      10 // End at rank 10
+      LeaderboardDataRequest.Global,
+      1,
+      10
     );
     console.log("Top 10 scores:", topScores);
   }
 
   // Access friends and social features
   const personaName = steam.friends.getPersonaName();
-  const friendCount = steam.friends.getFriendCount(4); // All friends
+  const friendCount = steam.friends.getFriendCount(EFriendFlags.All);
   console.log(`${personaName} has ${friendCount} friends`);
 
   // Get all friends with details
-  const allFriends = steam.friends.getAllFriends(4); // All friends
+  const allFriends = steam.friends.getAllFriends(EFriendFlags.All);
   allFriends.slice(0, 5).forEach((friend) => {
     const name = steam.friends.getFriendPersonaName(friend.steamId);
     const state = steam.friends.getFriendPersonaState(friend.steamId);
@@ -473,8 +449,8 @@ if (initialized) {
 
   // Query Workshop items with text search
   const query = steam.workshop.createQueryAllUGCRequest(
-    11, // RankedByTextSearch - for text search queries
-    0, // Items
+    EUGCQuery.RankedByTextSearch,
+    EUGCMatchingUGCType.Items,
     480, // Creator App ID
     480, // Consumer App ID
     1 // Page 1
@@ -508,14 +484,14 @@ if (initialized) {
   subscribedItems.forEach((itemId) => {
     const state = steam.workshop.getItemState(itemId);
     const stateFlags = [];
-    if (state & 1) stateFlags.push("Subscribed");
-    if (state & 4) stateFlags.push("Needs Update");
-    if (state & 8) stateFlags.push("Installed");
-    if (state & 16) stateFlags.push("Downloading");
+    if (state & EItemState.Subscribed) stateFlags.push("Subscribed");
+    if (state & EItemState.NeedsUpdate) stateFlags.push("Needs Update");
+    if (state & EItemState.Installed) stateFlags.push("Installed");
+    if (state & EItemState.Downloading) stateFlags.push("Downloading");
 
     console.log(`Item ${itemId}: ${stateFlags.join(", ")}`);
 
-    if (state & 16) {
+    if (state & EItemState.Downloading) {
       // If downloading
       const progress = steam.workshop.getItemDownloadInfo(itemId);
       if (progress) {
@@ -528,7 +504,7 @@ if (initialized) {
       }
     }
 
-    if (state & 8) {
+    if (state & EItemState.Installed) {
       // If installed
       const info = steam.workshop.getItemInstallInfo(itemId);
       if (info.success) {
