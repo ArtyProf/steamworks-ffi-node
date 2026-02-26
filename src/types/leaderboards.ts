@@ -6,7 +6,6 @@
  * Leaderboard sort methods
  */
 export enum LeaderboardSortMethod {
-  None = 0,
   Ascending = 1,   // Top score is lowest number
   Descending = 2   // Top score is highest number
 }
@@ -15,7 +14,6 @@ export enum LeaderboardSortMethod {
  * Leaderboard display types
  */
 export enum LeaderboardDisplayType {
-  None = 0,
   Numeric = 1,           // Simple numerical score
   TimeSeconds = 2,       // Score represents time in seconds
   TimeMilliseconds = 3   // Score represents time in milliseconds
@@ -35,7 +33,6 @@ export enum LeaderboardDataRequest {
  * Leaderboard upload score methods
  */
 export enum LeaderboardUploadScoreMethod {
-  None = 0,
   KeepBest = 1,      // Keep user's best score
   ForceUpdate = 2    // Always replace with new score
 }

@@ -35,12 +35,12 @@ Find or create a leaderboard with specified settings.
 **Parameters:**
 - `name: string` - Unique leaderboard name (must match Steamworks Partner configuration)
 - `sortMethod: LeaderboardSortMethod` - How to sort scores
-  - `LeaderboardSortMethod.Descending` (1) - Higher scores are better
-  - `LeaderboardSortMethod.Ascending` (0) - Lower scores are better
+  - `LeaderboardSortMethod.Ascending` - Lower scores are better (e.g., time trials, golf)
+  - `LeaderboardSortMethod.Descending` - Higher scores are better (e.g., high scores, points)
 - `displayType: LeaderboardDisplayType` - How to display scores
-  - `LeaderboardDisplayType.Numeric` (0) - Display as numbers
-  - `LeaderboardDisplayType.TimeSeconds` (1) - Display as time in seconds
-  - `LeaderboardDisplayType.TimeMilliseconds` (2) - Display as time in milliseconds
+  - `LeaderboardDisplayType.Numeric` - Display as numbers
+  - `LeaderboardDisplayType.TimeSeconds` - Display as time in seconds
+  - `LeaderboardDisplayType.TimeMilliseconds` - Display as time in milliseconds
 
 **Returns:** `Promise<LeaderboardInfo | null>` - Leaderboard info object, or null if failed
 
@@ -55,14 +55,14 @@ interface LeaderboardInfo {
 }
 
 enum LeaderboardSortMethod {
-  Ascending = 0,   // Lower is better (time trials)
-  Descending = 1   // Higher is better (high scores)
+  Ascending = 1,   // Lower is better (time trials, golf)
+  Descending = 2   // Higher is better (high scores, points)
 }
 
 enum LeaderboardDisplayType {
-  Numeric = 0,           // Regular number (e.g., 1000)
-  TimeSeconds = 1,       // Time in seconds (e.g., 65.432)
-  TimeMilliseconds = 2   // Time in milliseconds (e.g., 65432)
+  Numeric = 1,           // Regular number (e.g., 1000)
+  TimeSeconds = 2,       // Time in seconds (e.g., 65.432)
+  TimeMilliseconds = 3   // Time in milliseconds (e.g., 65432)
 }
 ```
 
@@ -180,8 +180,8 @@ Upload a score to a leaderboard with optional additional data.
 - `handle: bigint` - Leaderboard handle
 - `score: number` - The score value (integer)
 - `uploadMethod: LeaderboardUploadScoreMethod` - How to handle the upload
-  - `LeaderboardUploadScoreMethod.KeepBest` (1) - Only update if new score is better
-  - `LeaderboardUploadScoreMethod.ForceUpdate` (0) - Always update regardless
+  - `LeaderboardUploadScoreMethod.KeepBest` - Only update if new score is better
+  - `LeaderboardUploadScoreMethod.ForceUpdate` - Always update regardless
 - `scoreDetails?: number[]` - Optional array of up to 64 int32 values for additional data
 
 **Returns:** `Promise<LeaderboardScoreUploadResult | null>` - Upload result, or null if failed
@@ -198,8 +198,8 @@ interface LeaderboardScoreUploadResult {
 }
 
 enum LeaderboardUploadScoreMethod {
-  ForceUpdate = 0,  // Always update
-  KeepBest = 1      // Only update if better
+  KeepBest = 1,     // Only update if better
+  ForceUpdate = 2   // Always update
 }
 ```
 
@@ -263,10 +263,11 @@ Download leaderboard entries based on various criteria.
 **Parameters:**
 - `handle: bigint` - Leaderboard handle
 - `dataRequest: LeaderboardDataRequest` - Type of entries to download
-  - `LeaderboardDataRequest.Global` (0) - Get global entries by rank
-  - `LeaderboardDataRequest.GlobalAroundUser` (1) - Get entries around current user
-  - `LeaderboardDataRequest.Friends` (2) - Get entries for friends only
-- `rangeStart: number` - Starting index/offset (0-based for Global, offset for AroundUser)
+  - `LeaderboardDataRequest.Global` - Get global entries by rank
+  - `LeaderboardDataRequest.GlobalAroundUser` - Get entries around current user
+  - `LeaderboardDataRequest.Friends` - Get entries for friends only
+  - `LeaderboardDataRequest.Users` - Get entries for specific users (use `downloadLeaderboardEntriesForUsers` instead)
+- `rangeStart: number` - Starting index/offset (1-based for Global, offset for AroundUser)
 - `rangeEnd: number` - Ending index/offset
 
 **Returns:** `Promise<LeaderboardEntry[]>` - Array of leaderboard entries
@@ -284,7 +285,8 @@ interface LeaderboardEntry {
 enum LeaderboardDataRequest {
   Global = 0,            // Get top scores globally
   GlobalAroundUser = 1,  // Get scores around current user
-  Friends = 2            // Get friend scores only
+  Friends = 2,           // Get friend scores only
+  Users = 3              // For specific users (internal use)
 }
 ```
 
@@ -298,8 +300,8 @@ const leaderboard = await steam.leaderboards.findLeaderboard('HighScores');
 const top10 = await steam.leaderboards.downloadLeaderboardEntries(
   leaderboard.handle,
   LeaderboardDataRequest.Global,
-  0,  // Start at rank 1 (0-indexed)
-  9   // End at rank 10
+  1,   // Start at rank 1 (1-indexed)
+  10   // End at rank 10
 );
 
 console.log('Top 10 Players:');
@@ -335,7 +337,7 @@ console.log(`${friends.length} friends on leaderboard`);
 ```
 
 **Notes:**
-- Global request: rangeStart and rangeEnd are 0-based ranks
+- Global request: rangeStart and rangeEnd are 1-based ranks (1 = first place)
 - GlobalAroundUser: negative values for entries above, positive for below
 - Friends: rangeStart and rangeEnd are ignored
 - Maximum 100 entries per request
@@ -475,25 +477,26 @@ Complete type definitions for leaderboard functionality.
 ```typescript
 // Enums
 enum LeaderboardSortMethod {
-  Ascending = 0,   // Lower scores are better (time trials)
-  Descending = 1   // Higher scores are better (high scores)
+  Ascending = 1,   // Lower scores are better (time trials)
+  Descending = 2   // Higher scores are better (high scores)
 }
 
 enum LeaderboardDisplayType {
-  Numeric = 0,           // Display as number (1000)
-  TimeSeconds = 1,       // Display as seconds (65.432)
-  TimeMilliseconds = 2   // Display as milliseconds (65432)
+  Numeric = 1,           // Display as number (1000)
+  TimeSeconds = 2,       // Display as seconds (65.432)
+  TimeMilliseconds = 3   // Display as milliseconds (65432)
 }
 
 enum LeaderboardDataRequest {
   Global = 0,            // Get global top scores
   GlobalAroundUser = 1,  // Get scores around current user
-  Friends = 2            // Get friend scores only
+  Friends = 2,           // Get friend scores only
+  Users = 3              // For specific users (internal use)
 }
 
 enum LeaderboardUploadScoreMethod {
-  ForceUpdate = 0,  // Always update the score
-  KeepBest = 1      // Only update if new score is better
+  KeepBest = 1,     // Only update if new score is better
+  ForceUpdate = 2   // Always update the score
 }
 
 // Interfaces
@@ -583,8 +586,8 @@ async function highScoreExample() {
   const topScores = await steam.leaderboards.downloadLeaderboardEntries(
     leaderboard.handle,
     LeaderboardDataRequest.Global,
-    0,
-    9
+    1,
+    10
   );
 
   console.log('\nTop 10 High Scores:');
@@ -658,8 +661,8 @@ async function speedRunExample() {
   const topRuns = await steam.leaderboards.downloadLeaderboardEntries(
     leaderboard.handle,
     LeaderboardDataRequest.Global,
-    0,
-    9
+    1,
+    10
   );
 
   console.log('\nTop 10 Speed Runs:');
