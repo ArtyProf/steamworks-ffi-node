@@ -5,6 +5,74 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-02-26
+
+### Added
+- **Linux Steam Overlay Support** - Complete Steam overlay (Shift+Tab) implementation for Linux
+  - OpenGL 3.3 with GLX integration
+  - Input forwarding for proper overlay interaction
+  - Tested on Steam Deck Desktop Mode (SteamOS)
+  - Added `libxfixes-dev` and `libxcomposite-dev` to CI/CD Linux dependencies
+
+### Changed
+- **Steam Overlay Integration Status** - Updated from "Experimental/Broken" to "Working"
+  - macOS (Metal) - Working ✅
+  - Windows (OpenGL) - Working ✅
+  - Linux (OpenGL 3.3) - Working ✅ (tested on Steam Deck Desktop Mode)
+- **Documentation Improvements**
+  - Updated README highlights section for better clarity and removed redundant "NEW" labels
+  - Fixed all code examples to use proper enum names instead of hardcoded numbers (Fixes #41)
+  - Added Steam Overlay Integration documentation to docs README
+  - Updated CI/CD workflow to specify OpenGL 3.3 for Linux
+  - Enhanced Steam Overlay Integration guide with real testing validation
+
+### Fixed
+- **Leaderboard API Enum Consistency** (Fixes #41)
+  - Removed `None = 0` from `LeaderboardSortMethod`, `LeaderboardDisplayType`, and `LeaderboardUploadScoreMethod`
+  - Updated all documentation examples to use enum names instead of numbers
+  - Fixed leaderboard download range from 0-based to 1-based indexing (1-10 instead of 0-9)
+  - All enum values now match official Steamworks SDK documentation
+- **Security Vulnerabilities**
+  - Updated `node-gyp` from 12.1.0 to 12.2.0
+  - Fixed 3 high severity npm audit vulnerabilities (@isaacs/brace-expansion, minimatch, tar)
+- **CI/CD Linux Build**
+  - Added missing X11 extension development packages
+  - Fixed compilation errors for linux-overlay.cpp
+
+### Technical Details
+- Renamed overlay source files for clarity:
+  - `metal-overlay.mm` → macOS Metal overlay
+  - `opengl-overlay.cpp` → Windows OpenGL overlay  
+  - `linux-overlay.cpp` → Linux OpenGL 3.3 with GLX overlay
+- Updated binding.gyp to reference correct platform-specific overlay implementations
+- Fixed module loading order in SteamOverlay (prebuild first, then local build)
+
+## [0.8.8] - 2026-01-15
+
+### Added
+- **🧪 EXPERIMENTAL: Steam Overlay for Electron** - Native Steam overlay (Shift+Tab) integration
+  - **macOS**: Metal rendering backend (x64 and Apple Silicon arm64)
+  - **Windows**: OpenGL rendering backend (x64)
+  - **Linux**: OpenGL rendering backend (x64) - Initial implementation
+  - Complete setup guide and documentation
+  - Pre-built native binaries for all platforms
+  - New `isOverlayEnabled()` function to check Steam overlay availability
+- **User Authentication Documentation**
+  - Enhanced User Manager documentation with license verification examples
+  - Added authentication remarks and complete code samples
+
+### Changed
+- Switched Windows overlay implementation from DirectX 11 to OpenGL for consistency
+- Removed deprecated `isMetalOverlayAvailable()` method (use `isOverlayEnabled()` instead)
+- Updated CI/CD workflow:
+  - Removed pull_request trigger
+  - Changed TypeScript build to use `npx tsc` for consistency
+
+### Technical Details
+- Native module compilation with node-gyp for Metal (macOS) and OpenGL (Windows/Linux)
+- Platform-specific overlay window creation and Steam integration
+- Multi-platform pre-build artifacts in CI/CD pipeline
+
 ## [0.8.7] - 2026-01-09
 
 ### Added
@@ -376,6 +444,8 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.9.0 | 2026-02-26 | Linux overlay working, Enum consistency fixes, Security updates |
+| 0.8.8 | 2026-01-15 | Steam Overlay for Electron (Metal/OpenGL), Pre-built binaries |
 | 0.8.7 | 2026-01-09 | Debug mode with SteamLogger, Custom SDK path API fix (BREAKING) |
 | 0.8.6 | 2026-01-07 | Custom SDK path support (deprecated immediately) |
 | 0.8.5 | 2026-01-07 | restartAppIfNecessary(), No steam_appid.txt file required |
@@ -393,6 +463,8 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.9.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.0
+[0.8.8]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.8
 [0.8.7]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.7
 [0.8.6]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.6
 [0.8.5]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.5
