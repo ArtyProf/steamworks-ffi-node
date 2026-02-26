@@ -339,7 +339,7 @@ jobs:
         | macOS | x64 | Metal |
         | macOS | arm64 (Apple Silicon) | Metal |
         | Windows | x64 | OpenGL |
-        | Linux | x64 | OpenGL |
+        | Linux | x64 | OpenGL 3.3 |
         
         ## 📚 Links
         
@@ -397,7 +397,7 @@ jobs:
         echo "| macOS | x64 | Metal |" >> $GITHUB_STEP_SUMMARY
         echo "| macOS | arm64 | Metal |" >> $GITHUB_STEP_SUMMARY
         echo "| Windows | x64 | OpenGL |" >> $GITHUB_STEP_SUMMARY
-        echo "| Linux | x64 | OpenGL |" >> $GITHUB_STEP_SUMMARY
+        echo "| Linux | x64 | OpenGL 3.3 |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "## 🏷️ GitHub Release Created" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -413,5 +413,5 @@ jobs:
       run: |
         curl -H "Content-Type: application/json" \
           -X POST \
-          -d "{\"content\": \"🚀 steamworks-ffi-node v${{ needs.check-version.outputs.version }} published to npm!\\n\\n🖥️ **Platform Support:**\\n- macOS (x64, arm64) - Metal\\n- Windows (x64) - OpenGL\\n- Linux (x64) - OpenGL\\n\\nhttps://www.npmjs.com/package/steamworks-ffi-node\\nRelease notes: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v${{ needs.check-version.outputs.version }}\"}" \
+          -d "{\"content\": \"🚀 steamworks-ffi-node v${{ needs.check-version.outputs.version }} published to npm!\\n\\nhttps://www.npmjs.com/package/steamworks-ffi-node\\nRelease notes: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v${{ needs.check-version.outputs.version }}\"}" \
           ${{ secrets.DISCORD_WEBHOOK_URL }}
