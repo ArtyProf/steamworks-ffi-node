@@ -58,7 +58,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > 🎉 **NEW: User API** - 28 functions for auth tickets, user info, voice chat, and security! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/USER_MANAGER.md)
 
-> 🧪 **EXPERIMENTAL: Steam Overlay for Electron** - Native overlay integration (Shift+Tab) for Electron apps on macOS (Metal), Windows (OpenGL), and Linux (OpenGL, but Linux one is broken at the moment, need to find solution to fix it)! [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_OVERLAY_INTEGRATION.md)
+> 🧪 **EXPERIMENTAL: Steam Overlay for Electron** - Native overlay integration (Shift+Tab) for Electron apps on macOS (Metal), Windows (OpenGL), and Linux (OpenGL 3.3)! Tested on Steam Deck Desktop Mode (SteamOS). [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_OVERLAY_INTEGRATION.md)
 
 ## Features
 
@@ -292,7 +292,16 @@ npm install steamworks-ffi-node
 ### Basic Usage
 
 ```typescript
-import SteamworksSDK from "steamworks-ffi-node";
+import SteamworksSDK, {
+  LeaderboardSortMethod,
+  LeaderboardDisplayType,
+  LeaderboardUploadScoreMethod,
+  LeaderboardDataRequest,
+  EFriendFlags,
+  EUGCQuery,
+  EUGCMatchingUGCType,
+  EItemState,
+} from "steamworks-ffi-node";
 
 // Helper to auto-start callback polling
 function startCallbackPolling(steam: SteamworksSDK, interval: number = 1000) {
@@ -340,8 +349,8 @@ if (initialized) {
   // Work with leaderboards
   const leaderboard = await steam.leaderboards.findOrCreateLeaderboard(
     "HighScores",
-    1, // Descending (higher is better)
-    0 // Numeric display
+    LeaderboardSortMethod.Descending,
+    LeaderboardDisplayType.Numeric
   );
 
   if (leaderboard) {
@@ -349,26 +358,26 @@ if (initialized) {
     await steam.leaderboards.uploadLeaderboardScore(
       leaderboard.handle,
       1000,
-      1 // Keep best score
+      LeaderboardUploadScoreMethod.KeepBest
     );
 
     // Download top 10 scores
     const topScores = await steam.leaderboards.downloadLeaderboardEntries(
       leaderboard.handle,
-      0, // Global
-      0,
-      9
+      LeaderboardDataRequest.Global,
+      1,
+      10
     );
     console.log("Top 10 scores:", topScores);
   }
 
   // Access friends and social features
   const personaName = steam.friends.getPersonaName();
-  const friendCount = steam.friends.getFriendCount(4); // All friends
+  const friendCount = steam.friends.getFriendCount(EFriendFlags.All);
   console.log(`${personaName} has ${friendCount} friends`);
 
   // Get all friends with details
-  const allFriends = steam.friends.getAllFriends(4); // All friends
+  const allFriends = steam.friends.getAllFriends(EFriendFlags.All);
   allFriends.slice(0, 5).forEach((friend) => {
     const name = steam.friends.getFriendPersonaName(friend.steamId);
     const state = steam.friends.getFriendPersonaState(friend.steamId);
@@ -468,8 +477,8 @@ if (initialized) {
 
   // Query Workshop items with text search
   const query = steam.workshop.createQueryAllUGCRequest(
-    11, // RankedByTextSearch - for text search queries
-    0, // Items
+    EUGCQuery.RankedByTextSearch,
+    EUGCMatchingUGCType.Items,
     480, // Creator App ID
     480, // Consumer App ID
     1 // Page 1
@@ -503,14 +512,14 @@ if (initialized) {
   subscribedItems.forEach((itemId) => {
     const state = steam.workshop.getItemState(itemId);
     const stateFlags = [];
-    if (state & 1) stateFlags.push("Subscribed");
-    if (state & 4) stateFlags.push("Needs Update");
-    if (state & 8) stateFlags.push("Installed");
-    if (state & 16) stateFlags.push("Downloading");
+    if (state & EItemState.Subscribed) stateFlags.push("Subscribed");
+    if (state & EItemState.NeedsUpdate) stateFlags.push("Needs Update");
+    if (state & EItemState.Installed) stateFlags.push("Installed");
+    if (state & EItemState.Downloading) stateFlags.push("Downloading");
 
     console.log(`Item ${itemId}: ${stateFlags.join(", ")}`);
 
-    if (state & 16) {
+    if (state & EItemState.Downloading) {
       // If downloading
       const progress = steam.workshop.getItemDownloadInfo(itemId);
       if (progress) {
@@ -523,7 +532,7 @@ if (initialized) {
       }
     }
 
-    if (state & 8) {
+    if (state & EItemState.Installed) {
       // If installed
       const info = steam.workshop.getItemInstallInfo(itemId);
       if (info.success) {
