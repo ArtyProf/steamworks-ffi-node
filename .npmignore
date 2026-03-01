@@ -22,6 +22,12 @@ assets/
 # SDK files - users must install their own SDK
 steamworks_sdk/
 
+# Native overlay source files (prebuilds ship instead)
+native/binding.gyp
+native/*.mm
+native/*.cpp
+native/build/
+
 # Node modules
 node_modules/
 

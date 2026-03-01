@@ -70,10 +70,6 @@
   "files": [
     "dist/**/*",
     "prebuilds/**/*.node",
-    "native/build/Release/*.node",
-    "native/binding.gyp",
-    "native/*.mm",
-    "native/*.cpp",
     "README.md",
     "LICENSE",
     "docs/STEAMWORKS_SDK_SETUP.md",
