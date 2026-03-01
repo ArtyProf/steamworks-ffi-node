@@ -767,9 +767,21 @@ class SteamworksSDK {
    * Shutdown Steam API
    */
   shutdown(): void {
-    // Cleanup managers before shutdown
+    // 1. Destroy overlay first — before V8 teardown begins — to prevent
+    //    SIGSEGV in v8::api_internal::DisposeGlobal during Electron shutdown.
+    this.nativeOverlay.destroyOverlayWindow();
+
+    // 2. Close all P2P connections/sockets and unregister the Koffi connection
+    //    status callback (koffi.register'd — must be freed before SteamAPI_Shutdown).
+    this.networkingSockets.closeAll();
+
+    // 3. Shutdown Steam Input before SteamAPI_Shutdown() (Steamworks requirement).
+    this.input.shutdown();
+
+    // 4. Unregister Koffi callbacks and cancel active auth tickets.
     this.user.cleanup();
-    
+
+    // 5. Call SteamAPI_Shutdown().
     this.apiCore.shutdown();
   }
 

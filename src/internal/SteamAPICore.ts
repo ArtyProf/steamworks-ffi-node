@@ -276,14 +276,13 @@ export class SteamAPICore {
   /**
    * Shutdown the Steam API
    * 
-   * Cleanly shuts down the Steam API connection and releases all interfaces.
-   * Should be called when the application is closing or Steam features are no longer needed.
+   * Cleanly shuts down the Steam API connection, releases all interfaces,
+   * and unloads the native Steam shared library (`.dll` / `.dylib` / `.so`).
    * 
    * @example
    * ```typescript
    * process.on('SIGINT', () => {
-   *   apiCore.shutdown();
-   *   process.exit(0);
+   *   apiCore.shutdown(); // also unloads the native library
    * });
    * ```
    * 
@@ -291,6 +290,7 @@ export class SteamAPICore {
    * - Safe to call multiple times (only shuts down if initialized)
    * - Clears all interface pointers
    * - Sets initialized state to false
+   * - Calls `lib.unload()` to release the native library handle
    * 
    * Steamworks SDK Functions:
    * - `SteamAPI_Shutdown()` - Shutdown the Steam API
@@ -304,6 +304,7 @@ export class SteamAPICore {
       this.userInterface = null;
       this.utilsInterface = null;
       this.appsInterface = null;
+      this.libraryLoader.unload();
       SteamLogger.debug('[Steamworks] Steam API shutdown complete');
     }
   }

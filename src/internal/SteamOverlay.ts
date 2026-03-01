@@ -369,25 +369,15 @@ export class SteamOverlay {
         });
       }
 
-      // Cleanup function
+      // Cleanup function — stops frame capture.
       const cleanup = () => {
-        SteamLogger.debug("[Steam Overlay] Cleaning up...");
+        SteamLogger.debug("[Steam Overlay] Cleaning up capture loop...");
         captureActive = false;
-        this.destroyOverlayWindow();
       };
 
-      // Handle window close - hide immediately then cleanup
+      // Handle window close - hide immediately then stop capture
       browserWindow.on("close", () => hideOverlay("close"));
       browserWindow.on("closed", cleanup);
-
-      // IMPORTANT: Also clean up on app quit to prevent crash
-      // The crash happens when GC runs after app is shutting down
-      const { app } = require("electron");
-      app.on("before-quit", () => {
-        SteamLogger.debug("[Steam Overlay] App quitting, cleaning up...");
-        hideOverlay("before-quit");
-        cleanup();
-      });
 
       // Position overlay window over Electron window initially
       syncOverlayFrame();

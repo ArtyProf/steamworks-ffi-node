@@ -1457,6 +1457,25 @@ export class SteamLibraryLoader {
   }
 
   /**
+   * Unload the native Steam library
+   * 
+   * Releases the koffi FFI handle to the Steam shared library (.dll/.dylib/.so).
+   * Must be called **after** `SteamAPI_Shutdown()` to avoid using freed memory.
+   */
+  unload(): void {
+    if (this.steamLib) {
+      try {
+        this.steamLib.unload();
+        SteamLogger.debug('[Steamworks] Native library unloaded');
+      } catch (e) {
+        SteamLogger.warn('[Steamworks] Failed to unload native library:', e);
+      } finally {
+        this.steamLib = null;
+      }
+    }
+  }
+
+  /**
    * Get the loaded library instance
    */
   getLibrary(): koffi.IKoffiLib | null {
