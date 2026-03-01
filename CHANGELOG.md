@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-03-01
+
+### Fixed
+- **Shutdown Process** - Improved shutdown and library unloading in Steam API for cleaner exits
+- **npm Package** - Updated `.npmignore` to correctly include native overlay source files in published package
+
 ## [0.9.0] - 2026-02-26
 
 ### Added
@@ -444,6 +450,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.9.1 | 2026-03-01 | Linux overlay prebuilds, Shutdown fix, npm package fix |
 | 0.9.0 | 2026-02-26 | Linux overlay working, Enum consistency fixes, Security updates |
 | 0.8.8 | 2026-01-15 | Steam Overlay for Electron (Metal/OpenGL), Pre-built binaries |
 | 0.8.7 | 2026-01-09 | Debug mode with SteamLogger, Custom SDK path API fix (BREAKING) |
@@ -463,6 +470,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.9.1]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.1
 [0.9.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.0
 [0.8.8]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.8
 [0.8.7]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.7
