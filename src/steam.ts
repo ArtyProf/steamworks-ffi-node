@@ -1,5 +1,5 @@
 import { 
-  SteamInitOptions, 
+  SteamInitOptions,
   SteamStatus
 } from './types';
 import { SteamLibraryLoader } from './internal/SteamLibraryLoader';
@@ -765,6 +765,10 @@ class SteamworksSDK {
 
   /**
    * Shutdown Steam API
+   *
+   * Performs a full, ordered cleanup of all Koffi-registered callbacks, active
+   * auth tickets, P2P connections, and the native Steam library, then calls
+   * `SteamAPI_Shutdown()`.
    */
   shutdown(): void {
     // 1. Destroy overlay first — before V8 teardown begins — to prevent
@@ -779,9 +783,11 @@ class SteamworksSDK {
     this.input.shutdown();
 
     // 4. Unregister Koffi callbacks and cancel active auth tickets.
+    //    MUST happen before SteamAPI_Shutdown() so Steam doesn't fire callbacks
+    //    into freed Koffi function pointers.
     this.user.cleanup();
 
-    // 5. Call SteamAPI_Shutdown().
+    // 5. Call SteamAPI_Shutdown() + lib.unload() (dlclose).
     this.apiCore.shutdown();
   }
 

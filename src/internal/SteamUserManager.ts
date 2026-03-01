@@ -144,7 +144,7 @@ export class SteamUserManager {
     ticketData: Buffer | null;
     ticketSize: number;
   }> = new Map();
-  
+
   // Registered callback for GetTicketForWebApiResponse
   private webApiTicketCallback: any = null;
   private webApiCallbackObject: any = null;
@@ -291,6 +291,20 @@ export class SteamUserManager {
     // Cancel all active tickets
     for (const ticket of this.activeTickets.keys()) {
       this.cancelAuthTicket(ticket);
+    }
+
+    // Release Koffi's internal async broker.
+    // koffi.register() creates a module-level threadsafe function ("broker") on
+    // first use.  On Node.js env teardown Koffi's InstanceData finalizer calls
+    // napi_release_threadsafe_function() — but by that point CleanupHandles()
+    // already holds the libuv mutex, and napi_release_threadsafe_function() tries
+    // to acquire the same mutex → deadlock (the hang seen in Electron 39+).
+    // koffi.reset() releases the broker right here, before the mutex is held,
+    // so the finalizer has nothing left to do and the deadlock cannot occur.
+    try {
+      koffi.reset();
+    } catch (_) {
+      // reset() may throw if koffi was never fully initialised; safe to ignore.
     }
   }
 
