@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2026-03-01
+
+### Fixed
+- **Process hang after `shutdown()` on Electron 39+** (Fixes #45) - Calling `getAuthTicketForWebApi()` followed by `steam.shutdown()` no longer causes the process to hang indefinitely on Electron 39+
+  - Root cause: Koffi's internal async broker (`napi_threadsafe_function`) was being released by the NAPI `InstanceData` finalizer during Node.js env teardown, at which point `CleanupHandles()` already holds the libuv mutex — causing a deadlock
+  - Fix: `SteamUserManager.cleanup()` now calls `koffi.reset()` explicitly before env teardown, releasing the broker while the mutex is not yet held so the finalizer has nothing left to do
+
 ## [0.9.1] - 2026-03-01
 
 ### Fixed
@@ -450,6 +457,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.9.2 | 2026-03-01 | Fix process hang after `shutdown()` on Electron 39+ (Fixes #45) |
 | 0.9.1 | 2026-03-01 | Linux overlay prebuilds, Shutdown fix, npm package fix |
 | 0.9.0 | 2026-02-26 | Linux overlay working, Enum consistency fixes, Security updates |
 | 0.8.8 | 2026-01-15 | Steam Overlay for Electron (Metal/OpenGL), Pre-built binaries |
@@ -470,6 +478,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.9.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.2
 [0.9.1]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.1
 [0.9.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.0
 [0.8.8]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.8.8
