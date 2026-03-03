@@ -475,6 +475,23 @@ async function testSteamInput() {
         const actionName = steam.input.getStringForDigitalActionName(dummyHandle);
         console.log(`getStringForDigitalActionName: "${actionName}"`);
       }
+
+      // Test getDigitalActionOrigins (Issue #46 + #47 regression check)
+      console.log('\n📍 Testing getDigitalActionOrigins:');
+      const currentActionSet = steam.input.getCurrentActionSet(controllers[0]);
+      if (discoveredDigitalActions.size > 0 && currentActionSet !== BigInt(0)) {
+        for (const [actionName, actionHandle] of discoveredDigitalActions.entries()) {
+          const origins = steam.input.getDigitalActionOrigins(controllers[0], currentActionSet, actionHandle);
+          console.log(`  "${actionName}": ${origins.length} origin(s) → [${origins.join(', ')}]`);
+          if (origins.length > 0) {
+            const label = steam.input.getStringForActionOrigin(origins[0]);
+            console.log(`    → string: "${label}"`);
+          }
+        }
+      } else {
+        const origins = steam.input.getDigitalActionOrigins(controllers[0], BigInt(0), BigInt(0));
+        console.log(`  (dummy handle) returned ${origins.length} origins — no crash ✓`);
+      }
       
       console.log('\n✅ Digital action input tested\n');
     }
@@ -524,6 +541,23 @@ async function testSteamInput() {
       // Reset stick
       console.log('Resetting stick to neutral...');
       virtualGamepad.setLeftStick(0, 0);
+
+      // Test getAnalogActionOrigins (Issue #46 + #47 regression check)
+      console.log('\n📍 Testing getAnalogActionOrigins:');
+      const currentSet = steam.input.getCurrentActionSet(controllers[0]);
+      if (discoveredAnalogActions.size > 0 && currentSet !== BigInt(0)) {
+        for (const [actionName, actionHandle] of discoveredAnalogActions.entries()) {
+          const origins = steam.input.getAnalogActionOrigins(controllers[0], currentSet, actionHandle);
+          console.log(`  "${actionName}": ${origins.length} origin(s) → [${origins.join(', ')}]`);
+          if (origins.length > 0) {
+            const label = steam.input.getStringForActionOrigin(origins[0]);
+            console.log(`    → string: "${label}"`);
+          }
+        }
+      } else {
+        const origins = steam.input.getAnalogActionOrigins(controllers[0], BigInt(0), BigInt(0));
+        console.log(`  (dummy handle) returned ${origins.length} origins — no crash ✓`);
+      }
       
       console.log('\n✅ Analog action input tested\n');
     }

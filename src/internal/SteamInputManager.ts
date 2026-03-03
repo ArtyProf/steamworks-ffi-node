@@ -549,14 +549,11 @@ export class SteamInputManager {
     }
 
     try {
-      // Allocate buffer for InputDigitalActionData_t struct (bool state + bool active)
-      const buffer = Buffer.alloc(2);
-      
-      this.libraryLoader.SteamAPI_ISteamInput_GetDigitalActionData(iface, inputHandle, digitalActionHandle, buffer);
+      const data = this.libraryLoader.SteamAPI_ISteamInput_GetDigitalActionData(iface, inputHandle, digitalActionHandle);
       
       return {
-        state: buffer.readUInt8(0) !== 0,
-        active: buffer.readUInt8(1) !== 0,
+        state: !!data.bState,
+        active: !!data.bActive,
       };
     } catch (error) {
       SteamLogger.error('[Steamworks] GetDigitalActionData error:', error);
@@ -635,17 +632,13 @@ export class SteamInputManager {
     }
 
     try {
-      // Allocate buffer for InputAnalogActionData_t struct
-      // EInputSourceMode (4 bytes), float x, float y, bool active
-      const buffer = Buffer.alloc(13);
-      
-      this.libraryLoader.SteamAPI_ISteamInput_GetAnalogActionData(iface, inputHandle, analogActionHandle, buffer);
+      const data = this.libraryLoader.SteamAPI_ISteamInput_GetAnalogActionData(iface, inputHandle, analogActionHandle);
       
       return {
-        mode: buffer.readInt32LE(0),
-        x: buffer.readFloatLE(4),
-        y: buffer.readFloatLE(8),
-        active: buffer.readUInt8(12) !== 0,
+        mode: data.eMode,
+        x: data.x,
+        y: data.y,
+        active: !!data.bActive,
       };
     } catch (error) {
       SteamLogger.error('[Steamworks] GetAnalogActionData error:', error);
@@ -717,23 +710,19 @@ export class SteamInputManager {
     if (!iface) return null;
 
     try {
-      // Allocate buffer for InputMotionData_t struct
-      // 4 floats (quat) + 3 floats (posAccel) + 3 floats (rotVel) = 10 floats = 40 bytes
-      const buffer = Buffer.alloc(40);
-      
-      this.libraryLoader.SteamAPI_ISteamInput_GetMotionData(iface, inputHandle, buffer);
+      const data = this.libraryLoader.SteamAPI_ISteamInput_GetMotionData(iface, inputHandle);
       
       return {
-        rotQuatX: buffer.readFloatLE(0),
-        rotQuatY: buffer.readFloatLE(4),
-        rotQuatZ: buffer.readFloatLE(8),
-        rotQuatW: buffer.readFloatLE(12),
-        posAccelX: buffer.readFloatLE(16),
-        posAccelY: buffer.readFloatLE(20),
-        posAccelZ: buffer.readFloatLE(24),
-        rotVelX: buffer.readFloatLE(28),
-        rotVelY: buffer.readFloatLE(32),
-        rotVelZ: buffer.readFloatLE(36),
+        rotQuatX: data.rotQuatX,
+        rotQuatY: data.rotQuatY,
+        rotQuatZ: data.rotQuatZ,
+        rotQuatW: data.rotQuatW,
+        posAccelX: data.posAccelX,
+        posAccelY: data.posAccelY,
+        posAccelZ: data.posAccelZ,
+        rotVelX: data.rotVelX,
+        rotVelY: data.rotVelY,
+        rotVelZ: data.rotVelZ,
       };
     } catch (error) {
       SteamLogger.error('[Steamworks] GetMotionData error:', error);

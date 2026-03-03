@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Uses the existing `SteamAPI_ISteamInput_GetDigitalActionOrigins` / `SteamAPI_ISteamInput_GetAnalogActionOrigins` FFI bindings that were already present in `SteamLibraryLoader`
   - Results feed directly into `getGlyphPNGForActionOrigin()`, `getGlyphSVGForActionOrigin()`, and `getStringForActionOrigin()` for controller-specific button prompts
 
+### Fixed
+- **`getDigitalActionData()`, `getAnalogActionData()`, and `getMotionData()` always returning zero values on Linux / Steam Deck** (Fixes #47)
+  - Root cause: The FFI bindings used a `void` return + output buffer (`void*`) pattern, which accidentally worked on Windows MSVC x64 ABI (hidden pointer lands in RCX) but silently discarded the return value on Linux SysV x86_64 ABI (small structs returned in RAX/RDX registers, no hidden pointer)
+  - For `GetMotionData` (`InputMotionData_t` = 40 bytes, > 16 bytes), the broken pattern caused the C function to write 40 bytes of motion data into the `ISteamInput*` vtable pointer → memory corruption and segfault on Linux
+  - Fix: Defined `InputDigitalActionData_t`, `InputAnalogActionData_t`, and `InputMotionData_t` as koffi structs; changed all three FFI bindings to use struct return types with the correct parameter count (3 params for digital/analog, 2 for motion); koffi now handles both register return (small structs) and hidden pointer (large structs) automatically and correctly on all platforms
+
 ## [0.9.2] - 2026-03-01
 
 ### Fixed
