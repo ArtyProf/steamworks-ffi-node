@@ -723,6 +723,19 @@ Snake-meets-bullet-hell roguelike where your tail is your ammo. Eat bullets to g
 
 ---
 
+### Falling Face Fragments
+**[Steam Store Page](https://store.steampowered.com/app/3905510/Falling_Face_Fragments/)**
+
+<p align="center">
+  <a href="https://store.steampowered.com/app/3905510/Falling_Face_Fragments/">
+    <img src="assets/3905510.jpg" alt="Falling Face Fragments" width="600">
+  </a>
+</p>
+
+Falling Face Fragments is a falling block puzzle game where you must assemble faces correctly and clear them on a button press. The more faces you have on screen when you choose to clear them, the higher you will score! Three fun modes of play; arcade mode, mission mode, and local 2-player! 
+
+---
+
 ### Add Your Project
 
 Using `steamworks-ffi-node` in your project? We'd love to showcase it here!
