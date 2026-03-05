@@ -155,9 +155,32 @@ async function testSteamInput() {
     console.log("✅ Steam API initialized\n");
 
     // ========================================
-    // Test 2: Initialize Steam Input
+    // Test 2: Load Action Manifest (must be before Steam Input init)
     // ========================================
-    console.log("Test 2: Initializing Steam Input...");
+    console.log("Test 2: Loading Action Manifest...");
+    console.log("----------------------------------------");
+    const manifestPath = require("path").resolve(
+      __dirname,
+      "../input_actions.vdf"
+    );
+    console.log(`Loading action manifest from: ${manifestPath}`);
+
+    const fs = require("fs");
+    if (!fs.existsSync(manifestPath)) {
+      console.log("⚠️  Action manifest file not found!\n");
+    } else {
+      console.log("✓ Action manifest file exists");
+      const manifestLoaded =
+        steam.input.setInputActionManifestFilePath(manifestPath);
+      console.log(
+        `   setInputActionManifestFilePath returned: ${manifestLoaded}\n`
+      );
+    }
+
+    // ========================================
+    // Test 3: Initialize Steam Input
+    // ========================================
+    console.log("Test 3: Initializing Steam Input...");
     console.log("----------------------------------------");
 
     // Initialize with false (like Spacewar example) so Steam handles RunFrame automatically
@@ -173,40 +196,8 @@ async function testSteamInput() {
 
     console.log("✅ Steam Input initialized\n");
 
-    // Load action manifest file
-    console.log("Test 2.5: Loading Action Manifest...");
-    console.log("----------------------------------------");
-    const manifestPath = require("path").resolve(
-      __dirname,
-      "../input_actions.vdf"
-    );
-    console.log(`Loading action manifest from: ${manifestPath}`);
-
-    const fs = require("fs");
-    if (!fs.existsSync(manifestPath)) {
-      console.log("⚠️  Action manifest file not found!\n");
-    } else {
-      console.log("✓ Action manifest file exists\n");
-
-      const manifestLoaded =
-        steam.input.setInputActionManifestFilePath(manifestPath);
-
-      console.log(
-        `📋 Note: Spacewar (AppID 480) has Steam-configured input actions.`
-      );
-      console.log(
-        `   Custom manifests may be ignored in favor of Steam's configuration.`
-      );
-      console.log(
-        `   setInputActionManifestFilePath returned: ${manifestLoaded}`
-      );
-      console.log(
-        `   (false is normal for apps with existing Steam Input configs)\n`
-      );
-    }
-
     // Discover Spacewar's actual action sets and actions
-    console.log("Test 2.6: Discovering Spacewar Configuration...");
+    console.log("Test 3.5: Discovering Spacewar Configuration...");
     console.log("----------------------------------------");
     console.log(
       "Scanning for Spacewar's built-in action sets and actions...\n"
