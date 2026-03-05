@@ -538,7 +538,7 @@ async function testSteamInput() {
     // ========================================
     // Test 6: Digital Action Input
     // ========================================
-    if (controllers.length > 0 && virtualGamepad) {
+    if (controllers.length > 0) {
       console.log("Test 6: Digital Action Input");
       console.log("----------------------------------------");
       console.log(
@@ -639,30 +639,57 @@ async function testSteamInput() {
 
         console.log("\n⏺️  Scenario 2: Button A pressed\n");
 
-        // Press A button
-        await virtualGamepad.pressButton("A", 1500);
+        if (virtualGamepad) {
+          // Press A button on virtual controller
+          await virtualGamepad.pressButton("A", 1500);
 
-        steam.runCallbacks();
-        steam.input.runFrame();
-        await delay(100);
+          steam.runCallbacks();
+          steam.input.runFrame();
+          await delay(100);
 
-        for (const [
-          actionName,
-          actionHandle,
-        ] of discoveredDigitalActions.entries()) {
-          const actionData = steam.input.getDigitalActionData(
-            testHandle,
-            actionHandle
-          );
+          for (const [
+            actionName,
+            actionHandle,
+          ] of discoveredDigitalActions.entries()) {
+            const actionData = steam.input.getDigitalActionData(
+              testHandle,
+              actionHandle
+            );
 
-          console.log(`"${actionName}" (handle: ${actionHandle})`);
-          console.log(
-            `  state: ${actionData.state ? "🔴 PRESSED" : "⚪ NOT PRESSED"}`
-          );
-          console.log(
-            `  active: ${actionData.active ? "✅ ACTIVE" : "❌ INACTIVE"}`
-          );
-          console.log("");
+            console.log(`"${actionName}" (handle: ${actionHandle})`);
+            console.log(
+              `  state: ${actionData.state ? "🔴 PRESSED" : "⚪ NOT PRESSED"}`
+            );
+            console.log(
+              `  active: ${actionData.active ? "✅ ACTIVE" : "❌ INACTIVE"}`
+            );
+            console.log("");
+          }
+        } else {
+          console.log("🎮 Reading current button states from physical controller...\n");
+
+          steam.runCallbacks();
+          steam.input.runFrame();
+          await delay(100);
+
+          for (const [
+            actionName,
+            actionHandle,
+          ] of discoveredDigitalActions.entries()) {
+            const actionData = steam.input.getDigitalActionData(
+              testHandle,
+              actionHandle
+            );
+
+            console.log(`"${actionName}" (handle: ${actionHandle})`);
+            console.log(
+              `  state: ${actionData.state ? "🔴 PRESSED" : "⚪ NOT PRESSED"}`
+            );
+            console.log(
+              `  active: ${actionData.active ? "✅ ACTIVE" : "❌ INACTIVE"}`
+            );
+            console.log("");
+          }
         }
 
         console.log("\n⚠️  IMPORTANT LIMITATION:");
@@ -721,7 +748,7 @@ async function testSteamInput() {
     // ========================================
     // Test 7: Analog Action Input
     // ========================================
-    if (controllers.length > 0 && virtualGamepad) {
+    if (controllers.length > 0) {
       console.log("Test 7: Analog Action Input");
       console.log("----------------------------------------");
       console.log(
@@ -736,15 +763,23 @@ async function testSteamInput() {
         steam.input.activateActionSet(testHandle, firstSetHandle);
       }
 
-      // Simulate analog stick movement
-      console.log(
-        "Moving left stick on virtual controller (X: 0.7, Y: 0.5)..."
-      );
-      virtualGamepad.setLeftStick(0.7, 0.5);
-      await delay(200);
-      steam.runCallbacks();
-      steam.input.runFrame();
-      await delay(200);
+      if (virtualGamepad) {
+        // Simulate analog stick movement on virtual controller
+        console.log(
+          "Moving left stick on virtual controller (X: 0.7, Y: 0.5)..."
+        );
+        virtualGamepad.setLeftStick(0.7, 0.5);
+        await delay(200);
+        steam.runCallbacks();
+        steam.input.runFrame();
+        await delay(200);
+      } else {
+        // Read current real stick state from the physical controller
+        console.log("🎮 Reading current analog state from physical controller...");
+        steam.runCallbacks();
+        steam.input.runFrame();
+        await delay(200);
+      }
 
       if (discoveredAnalogActions.size > 0) {
         console.log(
@@ -781,9 +816,11 @@ async function testSteamInput() {
         console.log("   (Spacewar appears to use digital actions only)\n");
       }
 
-      // Reset stick
-      console.log("Resetting stick to neutral...");
-      virtualGamepad.setLeftStick(0, 0);
+      if (virtualGamepad) {
+        // Reset stick to neutral
+        console.log("Resetting stick to neutral...");
+        virtualGamepad.setLeftStick(0, 0);
+      }
 
       // Test getAnalogActionOrigins (Issue #46 + #47 regression check)
       console.log("\n📍 Testing getAnalogActionOrigins:");
