@@ -107,6 +107,14 @@ fi
 
 # ── Run the test ──────────────────────────────────────────────────────────────
 echo ""
+echo "ℹ️  Steam Deck controller detection note:"
+echo "   In Desktop Mode the Deck controls are in 'Lizard Mode' (mouse/keyboard)."
+echo "   For getConnectedControllers() to return the Deck as SteamDeckController,"
+echo "   one of the following must be true:"
+echo "   1. Run this script from Game Mode (switch to Game Mode, add as Non-Steam game)"
+echo "   2. OR: Steam → Settings → Controller → Desktop Layout → set a Gamepad template"
+echo "      This forces the Deck hardware into gamepad mode even in Desktop Mode."
+echo ""
 if $USE_TS; then
   echo "▶  Running TypeScript input test..."
   echo "   Command: npx ts-node tests/ts/test-input.ts ${EXTRA_ARGS[*]}"
