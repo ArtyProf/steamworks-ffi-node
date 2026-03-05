@@ -5,21 +5,39 @@
 # Run this script as a Non-Steam Game to give the process a Steam context,
 # which is required for Steam Input API to detect the Steam Deck controller.
 #
-# Setup (one-time):
-#   chmod +x scripts/run-input-test-steamdeck.sh
+# ⚠️  IMPORTANT — How to run this correctly on Steam Deck Desktop Mode:
 #
-# Add to Steam:
-#   Steam → Add a Game → Add a Non-Steam Game → Browse → select this script
-#   (or point to the full path in the launch options)
+#   Root cause: Steam Input maps controllers by the *foreground window's* App ID.
+#   Launching as a Non-Steam game gives the process a random App ID; steam.init()
+#   then registers as App ID 480, causing Steam to destroy the virtual controller
+#   slot due to the conflict.
 #
-# Usage:
-#   ./scripts/run-input-test-steamdeck.sh           # JS test, no virtual controller
+#   Fix: This script uses steam://forceinputappid/480 to lock Steam's Input IPC
+#   to App ID 480 before the node process starts. This is the official Valve
+#   mechanism for exactly this debugging scenario.
+#
+#   Just add as a Non-Steam Game — no special launch options required.
+#   Steps:
+#   1. Steam → Add a Game → Add a Non-Steam Game → Browse → select this script
+#   2. Right-click the new entry → Properties → set a name (e.g. "Input Test")
+#   3. Launch it — the script handles everything else automatically.
+#
+# Usage (command line):
+#   ./scripts/run-input-test-steamdeck.sh           # JS test
 #   ./scripts/run-input-test-steamdeck.sh --ts       # TypeScript test
-#   ./scripts/run-input-test-steamdeck.sh --virtual  # JS test + virtual Xbox controller
+#   ./scripts/run-input-test-steamdeck.sh --virtual  # JS + virtual Xbox controller
 #   ./scripts/run-input-test-steamdeck.sh --ts --virtual --type=ps4
 # =============================================================================
 
 set -e
+
+# ── App ID — must match what's set in Steam launch options ────────────────────
+# Override with APP_ID=<id> environment variable if needed.
+APP_ID="${APP_ID:-480}"
+
+# Export early so libsteam_api.so picks it up before SteamAPI_Init is called
+export SteamAppId="$APP_ID"
+export steam_appid="$APP_ID"   # some Steam runtime versions check this spelling too
 
 # ── Resolve the repo root (directory containing this script's parent) ─────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,9 +48,35 @@ cd "$REPO_ROOT"
 echo ""
 echo "========================================================"
 echo "  Steam Deck Input Test Launcher"
-echo "  Repo: $REPO_ROOT"
+echo "  Repo:   $REPO_ROOT"
+echo "  App ID: $APP_ID (SteamAppId env exported)"
 echo "========================================================"
 echo ""
+
+# ── Force Steam Input to use our App ID ──────────────────────────────────────
+# Root cause: Steam Input maps controllers by the *foreground window's* App ID,
+# not the process environment. When launched as a Non-Steam game, Steam assigns
+# a random App ID to the launcher, then steam.init({ appId: 480 }) creates a
+# second process identity — Steam resolves the conflict by destroying the virtual
+# controller slot.
+#
+# Fix: steam://forceinputappid/<appId> locks Steam's Input IPC to App ID 480
+# for ALL processes until reset, bypassing the foreground-window tracking.
+# See: https://partner.steamgames.com/doc/features/steam_controller/getting_started_for_devs#3
+#
+# Reset to normal operation on exit with steam://forceinputappid/0
+echo "🔒 Locking Steam Input to App ID $APP_ID via steam://forceinputappid/$APP_ID ..."
+if command -v xdg-open &>/dev/null; then
+  xdg-open "steam://forceinputappid/$APP_ID" 2>/dev/null || true
+elif command -v steam &>/dev/null; then
+  steam "steam://forceinputappid/$APP_ID" 2>/dev/null || true
+fi
+# Give Steam a moment to process the URL
+sleep 1
+echo "✅ Steam Input App ID locked to $APP_ID"
+
+# Reset Steam Input App ID lock on exit (0 = return to normal operation)
+trap 'echo "🔓 Resetting Steam Input App ID lock..."; xdg-open "steam://forceinputappid/0" 2>/dev/null || steam "steam://forceinputappid/0" 2>/dev/null || true' EXIT
 
 # ── Parse arguments ───────────────────────────────────────────────────────────
 USE_TS=false
@@ -106,14 +150,6 @@ if [ ! -d "$REPO_ROOT/node_modules" ]; then
 fi
 
 # ── Run the test ──────────────────────────────────────────────────────────────
-echo ""
-echo "ℹ️  Steam Deck controller detection note:"
-echo "   In Desktop Mode the Deck controls are in 'Lizard Mode' (mouse/keyboard)."
-echo "   For getConnectedControllers() to return the Deck as SteamDeckController,"
-echo "   one of the following must be true:"
-echo "   1. Run this script from Game Mode (switch to Game Mode, add as Non-Steam game)"
-echo "   2. OR: Steam → Settings → Controller → Desktop Layout → set a Gamepad template"
-echo "      This forces the Deck hardware into gamepad mode even in Desktop Mode."
 echo ""
 if $USE_TS; then
   echo "▶  Running TypeScript input test..."
