@@ -14,6 +14,9 @@ docs/
 # Assets (images for README, not needed in package)
 assets/
 
+# Development/helper scripts (Steam Deck launchers, etc.)
+scripts/
+
 # Development files
 .github/
 .git/

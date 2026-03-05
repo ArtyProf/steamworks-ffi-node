@@ -2,46 +2,37 @@
 {
 	"actions"
 	{
-		"MenuControls"
+		"ship_controls"
+		{
+			"title"		"Ship Controls"
+			"Button"
+			{
+				"fire"			"Fire"
+				"thrust"		"Thrust"
+				"reverse_thrust"	"Reverse Thrust"
+				"turn_left"		"Turn Left"
+				"turn_right"		"Turn Right"
+				"pause_menu"		"Pause Menu"
+			}
+			"StickPadGyro"
+			{
+				"ship_steering"
+				{
+					"title"			"Ship Steering"
+					"input_mode"	"joystick_move"
+				}
+			}
+		}
+		"menu_controls"
 		{
 			"title"		"Menu Controls"
 			"Button"
 			{
-				"Jump"		"Jump"
-				"Fire"		"Fire"
-			}
-		}
-		"GameplayControls"
-		{
-			"title"		"Gameplay Controls"
-			"Button"
-			{
-				"Jump"		"Jump"
-				"Fire"		"Fire"
-			}
-			"StickPadGyro"
-			{
-				"Move"
-				{
-					"title"			"Move"
-					"input_mode"	"joystick_move"
-				}
-				"Camera"
-				{
-					"title"			"Camera"
-					"input_mode"	"joystick_camera"
-				}
-			}
-		}
-	}
-	"action_layers"
-	{
-		"MenuLayer"
-		{
-			"title"		"Menu Layer"
-			"Button"
-			{
-				"Jump"		"Jump"
+				"menu_up"		"Menu Up"
+				"menu_down"		"Menu Down"
+				"menu_select"	"Menu Select"
+				"menu_cancel"	"Menu Cancel"
+				"pause_menu"	"Pause Menu"
 			}
 		}
 	}
@@ -50,7 +41,7 @@
 		"english"
 		{
 			"title"			"Steam Input Test - Spacewar"
-			"description"	"Action sets for testing Steam Input API"
+			"description"	"Action sets matching Spacewar (AppID 480) for Steam Input API testing"
 		}
 	}
 }

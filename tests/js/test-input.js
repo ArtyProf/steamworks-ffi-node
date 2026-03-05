@@ -113,14 +113,29 @@ async function testSteamInput() {
 
     console.log('✅ Steam API initialized\n');
 
-    // Test 2: Initialize Steam Input
-    console.log('Test 2: Initializing Steam Input...');
+    // Test 2: Load Action Manifest (must be before Steam Input init)
+    console.log('Test 2: Loading Action Manifest...');
     console.log('----------------------------------------');
-    
+    const manifestPath = require('path').resolve(__dirname, '../input_actions.vdf');
+    console.log(`Loading action manifest from: ${manifestPath}`);
+
+    const fs = require('fs');
+    if (!fs.existsSync(manifestPath)) {
+      console.log('⚠️  Action manifest file not found!\n');
+    } else {
+      console.log('✓ Action manifest file exists');
+      const manifestLoaded = steam.input.setInputActionManifestFilePath(manifestPath);
+      console.log(`   setInputActionManifestFilePath returned: ${manifestLoaded}\n`);
+    }
+
+    // Test 3: Initialize Steam Input
+    console.log('Test 3: Initializing Steam Input...');
+    console.log('----------------------------------------');
+
     // Initialize with false (like Spacewar example) so Steam handles RunFrame automatically
     console.log('Initializing Steam Input with automatic frame updates (Init(false))...');
     const inputInitialized = steam.input.init(false);
-    
+
     if (!inputInitialized) {
       console.error('❌ Failed to initialize Steam Input');
       throw new Error('Steam Input initialization failed');
@@ -128,28 +143,8 @@ async function testSteamInput() {
 
     console.log('✅ Steam Input initialized\n');
 
-    // Load action manifest file
-    console.log('Test 2.5: Loading Action Manifest...');
-    console.log('----------------------------------------');
-    const manifestPath = require('path').resolve(__dirname, '../input_actions.vdf');
-    console.log(`Loading action manifest from: ${manifestPath}`);
-    
-    const fs = require('fs');
-    if (!fs.existsSync(manifestPath)) {
-      console.log('⚠️  Action manifest file not found!\n');
-    } else {
-      console.log('✓ Action manifest file exists\n');
-      
-      const manifestLoaded = steam.input.setInputActionManifestFilePath(manifestPath);
-      
-      console.log(`📋 Note: Spacewar (AppID 480) has Steam-configured input actions.`);
-      console.log(`   Custom manifests may be ignored in favor of Steam's configuration.`);
-      console.log(`   setInputActionManifestFilePath returned: ${manifestLoaded}`);
-      console.log(`   (false is normal for apps with existing Steam Input configs)\n`);
-    }
-
     // Discover Spacewar's actual action sets and actions
-    console.log('Test 2.6: Discovering Spacewar Configuration...');
+    console.log('Test 3.5: Discovering Spacewar Configuration...');
     console.log('----------------------------------------');
     console.log('Scanning for Spacewar\'s built-in action sets and actions...\n');
     
@@ -374,7 +369,7 @@ async function testSteamInput() {
     }
 
     // Test 6: Digital Action Input
-    if (controllers.length > 0 && virtualGamepad) {
+    if (controllers.length > 0) {
       console.log('Test 6: Digital Action Input');
       console.log('----------------------------------------');
       console.log('Testing: getDigitalActionHandle, getDigitalActionData, getStringForDigitalActionName\n');
@@ -440,20 +435,37 @@ async function testSteamInput() {
         
         console.log('\n⏺️  Scenario 2: Button A pressed\n');
         
-        // Press A button
-        await virtualGamepad.pressButton('A', 1500);
-        
-        steam.runCallbacks();
-        steam.input.runFrame();
-        await delay(100);
-        
-        for (const [actionName, actionHandle] of discoveredDigitalActions.entries()) {
-          const actionData = steam.input.getDigitalActionData(testHandle, actionHandle);
+        if (virtualGamepad) {
+          // Press A button on virtual controller
+          await virtualGamepad.pressButton('A', 1500);
           
-          console.log(`"${actionName}" (handle: ${actionHandle})`);
-          console.log(`  state: ${actionData.state ? '🔴 PRESSED' : '⚪ NOT PRESSED'}`);
-          console.log(`  active: ${actionData.active ? '✅ ACTIVE' : '❌ INACTIVE'}`);
-          console.log('');
+          steam.runCallbacks();
+          steam.input.runFrame();
+          await delay(100);
+          
+          for (const [actionName, actionHandle] of discoveredDigitalActions.entries()) {
+            const actionData = steam.input.getDigitalActionData(testHandle, actionHandle);
+            
+            console.log(`"${actionName}" (handle: ${actionHandle})`);
+            console.log(`  state: ${actionData.state ? '🔴 PRESSED' : '⚪ NOT PRESSED'}`);
+            console.log(`  active: ${actionData.active ? '✅ ACTIVE' : '❌ INACTIVE'}`);
+            console.log('');
+          }
+        } else {
+          console.log('🎮 Reading current button states from physical controller...\n');
+          
+          steam.runCallbacks();
+          steam.input.runFrame();
+          await delay(100);
+          
+          for (const [actionName, actionHandle] of discoveredDigitalActions.entries()) {
+            const actionData = steam.input.getDigitalActionData(testHandle, actionHandle);
+            
+            console.log(`"${actionName}" (handle: ${actionHandle})`);
+            console.log(`  state: ${actionData.state ? '🔴 PRESSED' : '⚪ NOT PRESSED'}`);
+            console.log(`  active: ${actionData.active ? '✅ ACTIVE' : '❌ INACTIVE'}`);
+            console.log('');
+          }
         }
         
         console.log('\n⚠️  IMPORTANT LIMITATION:');
@@ -475,12 +487,29 @@ async function testSteamInput() {
         const actionName = steam.input.getStringForDigitalActionName(dummyHandle);
         console.log(`getStringForDigitalActionName: "${actionName}"`);
       }
+
+      // Test getDigitalActionOrigins (Issue #46 + #47 regression check)
+      console.log('\n📍 Testing getDigitalActionOrigins:');
+      const currentActionSet = steam.input.getCurrentActionSet(controllers[0]);
+      if (discoveredDigitalActions.size > 0 && currentActionSet !== BigInt(0)) {
+        for (const [actionName, actionHandle] of discoveredDigitalActions.entries()) {
+          const origins = steam.input.getDigitalActionOrigins(controllers[0], currentActionSet, actionHandle);
+          console.log(`  "${actionName}": ${origins.length} origin(s) → [${origins.join(', ')}]`);
+          if (origins.length > 0) {
+            const label = steam.input.getStringForActionOrigin(origins[0]);
+            console.log(`    → string: "${label}"`);
+          }
+        }
+      } else {
+        const origins = steam.input.getDigitalActionOrigins(controllers[0], BigInt(0), BigInt(0));
+        console.log(`  (dummy handle) returned ${origins.length} origins — no crash ✓`);
+      }
       
       console.log('\n✅ Digital action input tested\n');
     }
 
     // Test 7: Analog Action Input
-    if (controllers.length > 0 && virtualGamepad) {
+    if (controllers.length > 0) {
       console.log('Test 7: Analog Action Input');
       console.log('----------------------------------------');
       console.log('Testing: getAnalogActionHandle, getAnalogActionData, getStringForAnalogActionName\n');
@@ -493,13 +522,21 @@ async function testSteamInput() {
         steam.input.activateActionSet(testHandle, firstSetHandle);
       }
       
-      // Simulate analog stick movement
-      console.log('Moving left stick on virtual controller (X: 0.7, Y: 0.5)...');
-      virtualGamepad.setLeftStick(0.7, 0.5);
-      await delay(200);
-      steam.runCallbacks();
-      steam.input.runFrame();
-      await delay(200);
+      if (virtualGamepad) {
+        // Simulate analog stick movement on virtual controller
+        console.log('Moving left stick on virtual controller (X: 0.7, Y: 0.5)...');
+        virtualGamepad.setLeftStick(0.7, 0.5);
+        await delay(200);
+        steam.runCallbacks();
+        steam.input.runFrame();
+        await delay(200);
+      } else {
+        // Read current real stick state from the physical controller
+        console.log('🎮 Reading current analog state from physical controller...');
+        steam.runCallbacks();
+        steam.input.runFrame();
+        await delay(200);
+      }
       
       if (discoveredAnalogActions.size > 0) {
         console.log(`📊 Testing with ${discoveredAnalogActions.size} discovered analog action(s):\n`);
@@ -521,9 +558,28 @@ async function testSteamInput() {
         console.log('ℹ️  No analog actions discovered in Spacewar (digital-only controls)\n');
       }
       
-      // Reset stick
-      console.log('Resetting stick to neutral...');
-      virtualGamepad.setLeftStick(0, 0);
+      if (virtualGamepad) {
+        // Reset stick to neutral
+        console.log('Resetting stick to neutral...');
+        virtualGamepad.setLeftStick(0, 0);
+      }
+
+      // Test getAnalogActionOrigins (Issue #46 + #47 regression check)
+      console.log('\n📍 Testing getAnalogActionOrigins:');
+      const currentSet = steam.input.getCurrentActionSet(controllers[0]);
+      if (discoveredAnalogActions.size > 0 && currentSet !== BigInt(0)) {
+        for (const [actionName, actionHandle] of discoveredAnalogActions.entries()) {
+          const origins = steam.input.getAnalogActionOrigins(controllers[0], currentSet, actionHandle);
+          console.log(`  "${actionName}": ${origins.length} origin(s) → [${origins.join(', ')}]`);
+          if (origins.length > 0) {
+            const label = steam.input.getStringForActionOrigin(origins[0]);
+            console.log(`    → string: "${label}"`);
+          }
+        }
+      } else {
+        const origins = steam.input.getAnalogActionOrigins(controllers[0], BigInt(0), BigInt(0));
+        console.log(`  (dummy handle) returned ${origins.length} origins — no crash ✓`);
+      }
       
       console.log('\n✅ Analog action input tested\n');
     }

@@ -14,8 +14,8 @@ The `SteamInputManager` provides **100% coverage** of the Steamworks Input API w
 | [Controller Detection](#controller-detection) | 5 | Find and identify connected controllers |
 | [Action Sets](#action-sets) | 6 | Manage action sets and layers |
 | [Action Handles](#action-handles) | 4 | Get handles for digital/analog actions |
-| [Digital Actions](#digital-actions) | 2 | Read button/digital input states |
-| [Analog Actions](#analog-actions) | 3 | Read stick/trigger analog values |
+| [Digital Actions](#digital-actions) | 3 | Read button/digital input states |
+| [Analog Actions](#analog-actions) | 4 | Read stick/trigger analog values |
 | [Motion Data](#motion-data) | 1 | Read gyro and accelerometer data |
 | [Haptics](#haptics) | 4 | Trigger vibration and LED control |
 | [Configuration](#configuration) | 4 | Binding UI, device info, remote play |
@@ -745,10 +745,12 @@ Get the physical inputs (origins) bound to a digital action.
 - `actionSetHandle: bigint` - Action set handle
 - `digitalActionHandle: bigint` - Digital action handle
 
-**Returns:** `number[]` - Array of origin IDs
+**Returns:** `EInputActionOrigin[]` - Array of origin enum values (empty array if none bound)
 
 **Example:**
 ```typescript
+import { EInputActionOrigin } from 'steamworks-ffi-node';
+
 const jumpHandle = steam.input.getDigitalActionHandle('Jump');
 const actionSet = steam.input.getCurrentActionSet(controllerHandle);
 
@@ -759,6 +761,13 @@ const origins = steam.input.getDigitalActionOrigins(
 );
 
 console.log(`Jump is bound to ${origins.length} input(s)`);
+
+// Feed origins into glyph methods for UI display
+origins.forEach((origin: EInputActionOrigin) => {
+  const glyph = steam.input.getGlyphPNGForActionOrigin(origin, 1, 0);
+  const label = steam.input.getStringForActionOrigin(origin);
+  console.log(`Bind: ${label} → glyph: ${glyph}`);
+});
 ```
 
 ---
@@ -834,10 +843,12 @@ Get the physical inputs (origins) bound to an analog action.
 - `actionSetHandle: bigint` - Action set handle
 - `analogActionHandle: bigint` - Analog action handle
 
-**Returns:** `number[]` - Array of origin IDs
+**Returns:** `EInputActionOrigin[]` - Array of origin enum values (empty array if none bound)
 
 **Example:**
 ```typescript
+import { EInputActionOrigin } from 'steamworks-ffi-node';
+
 const moveHandle = steam.input.getAnalogActionHandle('Move');
 const actionSet = steam.input.getCurrentActionSet(controllerHandle);
 
@@ -848,6 +859,13 @@ const origins = steam.input.getAnalogActionOrigins(
 );
 
 console.log(`Move is bound to ${origins.length} input(s)`);
+
+// Feed origins into glyph methods for UI display
+origins.forEach((origin: EInputActionOrigin) => {
+  const glyph = steam.input.getGlyphPNGForActionOrigin(origin, 1, 0);
+  const label = steam.input.getStringForActionOrigin(origin);
+  console.log(`Bind: ${label} → glyph: ${glyph}`);
+});
 ```
 
 ---

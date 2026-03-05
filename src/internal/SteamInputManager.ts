@@ -549,14 +549,11 @@ export class SteamInputManager {
     }
 
     try {
-      // Allocate buffer for InputDigitalActionData_t struct (bool state + bool active)
-      const buffer = Buffer.alloc(2);
-      
-      this.libraryLoader.SteamAPI_ISteamInput_GetDigitalActionData(iface, inputHandle, digitalActionHandle, buffer);
+      const data = this.libraryLoader.SteamAPI_ISteamInput_GetDigitalActionData(iface, inputHandle, digitalActionHandle);
       
       return {
-        state: buffer.readUInt8(0) !== 0,
-        active: buffer.readUInt8(1) !== 0,
+        state: !!data.bState,
+        active: !!data.bActive,
       };
     } catch (error) {
       SteamLogger.error('[Steamworks] GetDigitalActionData error:', error);
@@ -635,17 +632,13 @@ export class SteamInputManager {
     }
 
     try {
-      // Allocate buffer for InputAnalogActionData_t struct
-      // EInputSourceMode (4 bytes), float x, float y, bool active
-      const buffer = Buffer.alloc(13);
-      
-      this.libraryLoader.SteamAPI_ISteamInput_GetAnalogActionData(iface, inputHandle, analogActionHandle, buffer);
+      const data = this.libraryLoader.SteamAPI_ISteamInput_GetAnalogActionData(iface, inputHandle, analogActionHandle);
       
       return {
-        mode: buffer.readInt32LE(0),
-        x: buffer.readFloatLE(4),
-        y: buffer.readFloatLE(8),
-        active: buffer.readUInt8(12) !== 0,
+        mode: data.eMode,
+        x: data.x,
+        y: data.y,
+        active: !!data.bActive,
       };
     } catch (error) {
       SteamLogger.error('[Steamworks] GetAnalogActionData error:', error);
@@ -717,23 +710,19 @@ export class SteamInputManager {
     if (!iface) return null;
 
     try {
-      // Allocate buffer for InputMotionData_t struct
-      // 4 floats (quat) + 3 floats (posAccel) + 3 floats (rotVel) = 10 floats = 40 bytes
-      const buffer = Buffer.alloc(40);
-      
-      this.libraryLoader.SteamAPI_ISteamInput_GetMotionData(iface, inputHandle, buffer);
+      const data = this.libraryLoader.SteamAPI_ISteamInput_GetMotionData(iface, inputHandle);
       
       return {
-        rotQuatX: buffer.readFloatLE(0),
-        rotQuatY: buffer.readFloatLE(4),
-        rotQuatZ: buffer.readFloatLE(8),
-        rotQuatW: buffer.readFloatLE(12),
-        posAccelX: buffer.readFloatLE(16),
-        posAccelY: buffer.readFloatLE(20),
-        posAccelZ: buffer.readFloatLE(24),
-        rotVelX: buffer.readFloatLE(28),
-        rotVelY: buffer.readFloatLE(32),
-        rotVelZ: buffer.readFloatLE(36),
+        rotQuatX: data.rotQuatX,
+        rotQuatY: data.rotQuatY,
+        rotQuatZ: data.rotQuatZ,
+        rotQuatW: data.rotQuatW,
+        posAccelX: data.posAccelX,
+        posAccelY: data.posAccelY,
+        posAccelZ: data.posAccelZ,
+        rotVelX: data.rotVelX,
+        rotVelY: data.rotVelY,
+        rotVelZ: data.rotVelZ,
       };
     } catch (error) {
       SteamLogger.error('[Steamworks] GetMotionData error:', error);
@@ -895,6 +884,134 @@ export class SteamInputManager {
   }
 
   // ========================================
+  // Action Origins
+  // ========================================
+
+  /**
+   * Get the physical button(s) bound to a digital action for a specific controller
+   *
+   * Returns the `EInputActionOrigin` values that are currently mapped to the given
+   * digital action on the given controller. Use these values to look up controller-
+   * specific button glyphs and localized button names.
+   *
+   * @param inputHandle - Controller handle
+   * @param actionSetHandle - Action set handle
+   * @param digitalActionHandle - Digital action handle
+   * @returns Array of up to 8 `EInputActionOrigin` values (empty if no bindings or error)
+   *
+   * @example
+   * ```typescript
+   * const actionSet  = inputManager.getActionSetHandle('GameplayControls');
+   * const jumpHandle = inputManager.getDigitalActionHandle('Jump');
+   *
+   * const origins = inputManager.getDigitalActionOrigins(
+   *   controllerHandle,
+   *   actionSet,
+   *   jumpHandle
+   * );
+   *
+   * if (origins.length > 0) {
+   *   const glyphPath = inputManager.getGlyphPNGForActionOrigin(
+   *     origins[0],
+   *     SteamInputGlyphSize.Medium,
+   *     0
+   *   );
+   *   console.log('Button glyph:', glyphPath);
+   * }
+   * ```
+   *
+   * @see {@link https://partner.steamgames.com/doc/api/ISteamInput#GetDigitalActionOrigins}
+   */
+  getDigitalActionOrigins(
+    inputHandle: InputHandle,
+    actionSetHandle: InputActionSetHandle,
+    digitalActionHandle: InputDigitalActionHandle
+  ): EInputActionOrigin[] {
+    const iface = this.getSteamInputInterface();
+    if (!iface) return [];
+
+    try {
+      const originsBuffer = Buffer.alloc(STEAM_INPUT.MAX_ORIGINS * 4); // int32 per origin
+      const count = this.libraryLoader.SteamAPI_ISteamInput_GetDigitalActionOrigins(
+        iface,
+        inputHandle,
+        actionSetHandle,
+        digitalActionHandle,
+        originsBuffer
+      );
+
+      const origins: EInputActionOrigin[] = [];
+      for (let i = 0; i < count; i++) {
+        origins.push(originsBuffer.readInt32LE(i * 4) as EInputActionOrigin);
+      }
+      return origins;
+    } catch (error) {
+      SteamLogger.error('[Steamworks] GetDigitalActionOrigins error:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get the physical input(s) bound to an analog action for a specific controller
+   *
+   * Returns the `EInputActionOrigin` values that are currently mapped to the given
+   * analog action on the given controller. Use these values to look up controller-
+   * specific input glyphs and localized input names.
+   *
+   * @param inputHandle - Controller handle
+   * @param actionSetHandle - Action set handle
+   * @param analogActionHandle - Analog action handle
+   * @returns Array of up to 8 `EInputActionOrigin` values (empty if no bindings or error)
+   *
+   * @example
+   * ```typescript
+   * const actionSet   = inputManager.getActionSetHandle('GameplayControls');
+   * const moveHandle  = inputManager.getAnalogActionHandle('Move');
+   *
+   * const origins = inputManager.getAnalogActionOrigins(
+   *   controllerHandle,
+   *   actionSet,
+   *   moveHandle
+   * );
+   *
+   * if (origins.length > 0) {
+   *   const label = inputManager.getStringForActionOrigin(origins[0]);
+   *   console.log('Input label:', label);
+   * }
+   * ```
+   *
+   * @see {@link https://partner.steamgames.com/doc/api/ISteamInput#GetAnalogActionOrigins}
+   */
+  getAnalogActionOrigins(
+    inputHandle: InputHandle,
+    actionSetHandle: InputActionSetHandle,
+    analogActionHandle: InputAnalogActionHandle
+  ): EInputActionOrigin[] {
+    const iface = this.getSteamInputInterface();
+    if (!iface) return [];
+
+    try {
+      const originsBuffer = Buffer.alloc(STEAM_INPUT.MAX_ORIGINS * 4); // int32 per origin
+      const count = this.libraryLoader.SteamAPI_ISteamInput_GetAnalogActionOrigins(
+        iface,
+        inputHandle,
+        actionSetHandle,
+        analogActionHandle,
+        originsBuffer
+      );
+
+      const origins: EInputActionOrigin[] = [];
+      for (let i = 0; i < count; i++) {
+        origins.push(originsBuffer.readInt32LE(i * 4) as EInputActionOrigin);
+      }
+      return origins;
+    } catch (error) {
+      SteamLogger.error('[Steamworks] GetAnalogActionOrigins error:', error);
+      return [];
+    }
+  }
+
+  // ========================================
   // Glyphs and Localization
   // ========================================
 
@@ -910,20 +1027,15 @@ export class SteamInputManager {
    * 
    * @example
    * ```typescript
-   * // Using enum for known origins
-   * const glyphPath = inputManager.getGlyphPNGForActionOrigin(
-   *   EInputActionOrigin.LenovoLegionGo_A,
-   *   SteamInputGlyphSize.Medium,
-   *   SteamInputGlyphStyle.Dark
-   * );
-   * 
-   * // Using origins returned from detection
-   * const origins = inputManager.getDigitalActionOrigins(handle, actionSet, jumpHandle);
+   * const actionSet  = inputManager.getActionSetHandle('GameplayControls');
+   * const jumpHandle = inputManager.getDigitalActionHandle('Jump');
+   * const origins    = inputManager.getDigitalActionOrigins(handle, actionSet, jumpHandle);
+   *
    * if (origins.length > 0) {
    *   const glyphPath = inputManager.getGlyphPNGForActionOrigin(
    *     origins[0],
    *     SteamInputGlyphSize.Medium,
-   *     SteamInputGlyphStyle.Dark
+   *     0
    *   );
    *   // Display glyph image in UI
    * }

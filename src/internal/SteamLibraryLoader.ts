@@ -37,6 +37,39 @@ export const FnCallbackRunResultPtr = koffi.pointer(FnCallbackRunResult);
 export const FnGetCallbackSizeBytes = koffi.proto('int FnGetCallbackSizeBytes(void *self)');
 export const FnGetCallbackSizeBytesPtr = koffi.pointer(FnGetCallbackSizeBytes);
 
+// InputDigitalActionData_t: 2 booleans (bState, bActive) = 2 bytes
+// Returned by value in registers on all platforms — must use struct return type
+// (not void + output buffer) so SysV x86_64 ABI reads the result from RAX/RDX
+export const InputDigitalActionData_t = koffi.struct('InputDigitalActionData_t', {
+  bState: 'bool',
+  bActive: 'bool',
+});
+
+// InputAnalogActionData_t: int eMode + float x + float y + bool bActive = 13 bytes
+// Returned by value in registers on all platforms — same ABI fix required
+export const InputAnalogActionData_t = koffi.struct('InputAnalogActionData_t', {
+  eMode: 'int',
+  x: 'float',
+  y: 'float',
+  bActive: 'bool',
+});
+
+// InputMotionData_t: 10 floats = 40 bytes
+// Exceeds 16-byte SysV register limit → hidden pointer return convention on Linux x86_64
+// koffi automatically handles the hidden pointer when the return type is a struct > 16 bytes
+export const InputMotionData_t = koffi.struct('InputMotionData_t', {
+  rotQuatX: 'float',
+  rotQuatY: 'float',
+  rotQuatZ: 'float',
+  rotQuatW: 'float',
+  posAccelX: 'float',
+  posAccelY: 'float',
+  posAccelZ: 'float',
+  rotVelX: 'float',
+  rotVelY: 'float',
+  rotVelZ: 'float',
+});
+
 /**
  * Handles loading the Steamworks native library and FFI function declarations
  */
@@ -1215,19 +1248,19 @@ export class SteamLibraryLoader {
     
     // Digital actions
     this.SteamAPI_ISteamInput_GetDigitalActionHandle = this.steamLib.func('SteamAPI_ISteamInput_GetDigitalActionHandle', 'uint64', ['void*', 'str']);
-    this.SteamAPI_ISteamInput_GetDigitalActionData = this.steamLib.func('SteamAPI_ISteamInput_GetDigitalActionData', 'void', ['void*', 'uint64', 'uint64', 'void*']);
+    this.SteamAPI_ISteamInput_GetDigitalActionData = this.steamLib.func('SteamAPI_ISteamInput_GetDigitalActionData', InputDigitalActionData_t, ['void*', 'uint64', 'uint64']);
     this.SteamAPI_ISteamInput_GetDigitalActionOrigins = this.steamLib.func('SteamAPI_ISteamInput_GetDigitalActionOrigins', 'int', ['void*', 'uint64', 'uint64', 'uint64', 'int*']);
     this.SteamAPI_ISteamInput_GetStringForDigitalActionName = this.steamLib.func('SteamAPI_ISteamInput_GetStringForDigitalActionName', 'str', ['void*', 'uint64']);
     
     // Analog actions
     this.SteamAPI_ISteamInput_GetAnalogActionHandle = this.steamLib.func('SteamAPI_ISteamInput_GetAnalogActionHandle', 'uint64', ['void*', 'str']);
-    this.SteamAPI_ISteamInput_GetAnalogActionData = this.steamLib.func('SteamAPI_ISteamInput_GetAnalogActionData', 'void', ['void*', 'uint64', 'uint64', 'void*']);
+    this.SteamAPI_ISteamInput_GetAnalogActionData = this.steamLib.func('SteamAPI_ISteamInput_GetAnalogActionData', InputAnalogActionData_t, ['void*', 'uint64', 'uint64']);
     this.SteamAPI_ISteamInput_GetAnalogActionOrigins = this.steamLib.func('SteamAPI_ISteamInput_GetAnalogActionOrigins', 'int', ['void*', 'uint64', 'uint64', 'uint64', 'int*']);
     this.SteamAPI_ISteamInput_GetStringForAnalogActionName = this.steamLib.func('SteamAPI_ISteamInput_GetStringForAnalogActionName', 'str', ['void*', 'uint64']);
     this.SteamAPI_ISteamInput_StopAnalogActionMomentum = this.steamLib.func('SteamAPI_ISteamInput_StopAnalogActionMomentum', 'void', ['void*', 'uint64', 'uint64']);
     
     // Motion data
-    this.SteamAPI_ISteamInput_GetMotionData = this.steamLib.func('SteamAPI_ISteamInput_GetMotionData', 'void', ['void*', 'uint64', 'void*']);
+    this.SteamAPI_ISteamInput_GetMotionData = this.steamLib.func('SteamAPI_ISteamInput_GetMotionData', InputMotionData_t, ['void*', 'uint64']);
     
     // Haptics and rumble
     this.SteamAPI_ISteamInput_TriggerVibration = this.steamLib.func('SteamAPI_ISteamInput_TriggerVibration', 'void', ['void*', 'uint64', 'uint16', 'uint16']);
