@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.3] - 2026-03-06
 
 ### Added
 - **`getDigitalActionOrigins()` and `getAnalogActionOrigins()` in `SteamInputManager`** (Fixes #46)
@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Root cause: The FFI bindings used a `void` return + output buffer (`void*`) pattern, which accidentally worked on Windows MSVC x64 ABI (hidden pointer lands in RCX) but silently discarded the return value on Linux SysV x86_64 ABI (small structs returned in RAX/RDX registers, no hidden pointer)
   - For `GetMotionData` (`InputMotionData_t` = 40 bytes, > 16 bytes), the broken pattern caused the C function to write 40 bytes of motion data into the `ISteamInput*` vtable pointer → memory corruption and segfault on Linux
   - Fix: Defined `InputDigitalActionData_t`, `InputAnalogActionData_t`, and `InputMotionData_t` as koffi structs; changed all three FFI bindings to use struct return types with the correct parameter count (3 params for digital/analog, 2 for motion); koffi now handles both register return (small structs) and hidden pointer (large structs) automatically and correctly on all platforms
+  - Updated input tests
 
 ## [0.9.2] - 2026-03-01
 
@@ -471,6 +472,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.9.3 | 2026-03-06 | `getDigitalActionOrigins()` / `getAnalogActionOrigins()`, fix #46 & #47 (struct return ABI) |
 | 0.9.2 | 2026-03-01 | Fix process hang after `shutdown()` on Electron 39+ (Fixes #45) |
 | 0.9.1 | 2026-03-01 | Linux overlay prebuilds, Shutdown fix, npm package fix |
 | 0.9.0 | 2026-02-26 | Linux overlay working, Enum consistency fixes, Security updates |
@@ -492,6 +494,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.9.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.3
 [0.9.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.2
 [0.9.1]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.1
 [0.9.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.0
