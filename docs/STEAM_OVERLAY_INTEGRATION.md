@@ -8,7 +8,7 @@ This guide explains how to add Steam overlay support (Shift+Tab) to Electron app
 
 The Steam overlay integration allows Electron applications to display the Steam overlay by:
 
-1. Creating a native graphics window (Metal on macOS, DirectX 11 on Windows, OpenGL on Linux)
+1. Creating a native graphics window (Metal on macOS, OpenGL on Windows and Linux)
 2. Capturing Electron's content and rendering it to the native surface
 3. Allowing Steam to inject its overlay renderer
 
