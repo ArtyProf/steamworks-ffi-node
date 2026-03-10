@@ -749,6 +749,19 @@ Falling Face Fragments is a falling block puzzle game where you must assemble fa
 
 ---
 
+### Maldhalla
+**[Steam Store Page](https://store.steampowered.com/app/4385780/)** 
+
+<p align="center">
+  <a href="https://store.steampowered.com/app/4385780/">
+    <img src="assets/4385780.jpg" alt="Maldhalla" width="600">
+  </a>
+</p>
+
+Crush endless waves of creatures and become absurdly overpowered! Grab loot, level up, unlock characters, and upgrade weapons to craft insane builds that obliterate everything on screen.
+
+---
+
 ### Add Your Project
 
 Using `steamworks-ffi-node` in your project? We'd love to showcase it here!
