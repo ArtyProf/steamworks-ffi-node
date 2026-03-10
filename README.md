@@ -791,7 +791,9 @@ Your project helps demonstrate the library's capabilities and inspires other dev
 
 ## How to Support This Project
 
-You can support the development of this library by wishlisting, subscribing, and purchasing the app **AFK Companion** on Steam:
+- ⭐ **[Star this repository](https://github.com/ArtyProf/steamworks-ffi-node)** — it helps others discover the library and motivates further development!
+
+You can also support by wishlisting, subscribing, and purchasing the app **AFK Companion** on Steam:
 
 <p align="center">
   <a href="https://store.steampowered.com/app/2609100/AFK_Companion/">
