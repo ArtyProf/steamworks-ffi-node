@@ -711,10 +711,10 @@ _Note: You must download and install the SDK redistributables separately as desc
 Here are some projects and applications built with `steamworks-ffi-node`:
 
 ### Bulletail
-**[Steam Store Page](https://store.steampowered.com/app/4087020/Bulletail/)**
+**[Steam Store Page](https://store.steampowered.com/app/4087020/)**
 
 <p align="center">
-  <a href="https://store.steampowered.com/app/4087020/Bulletail/">
+  <a href="https://store.steampowered.com/app/4087020/">
     <img src="assets/4087020.jpg" alt="Bulletail Game" width="600">
   </a>
 </p>
@@ -723,11 +723,24 @@ Snake-meets-bullet-hell roguelike where your tail is your ammo. Eat bullets to g
 
 ---
 
+### DekaDuck
+**[Steam Store Page](https://store.steampowered.com/app/3715040/)**
+
+<p align="center">
+  <a href="https://store.steampowered.com/app/3715040/">
+    <img src="assets/3715040.jpg" alt="DekaDuck" width="600">
+  </a>
+</p>
+
+DekaDuck is a 2D action platformer, featuring fully hand-drawn art and animation. Fight enemies using their own abilities and quirks to solve puzzles and defeat bosses, in a sci-fi world full of conspiracies!
+
+---
+
 ### Falling Face Fragments
 **[Steam Store Page](https://store.steampowered.com/app/3905510/Falling_Face_Fragments/)**
 
 <p align="center">
-  <a href="https://store.steampowered.com/app/3905510/Falling_Face_Fragments/">
+  <a href="https://store.steampowered.com/app/3905510/">
     <img src="assets/3905510.jpg" alt="Falling Face Fragments" width="600">
   </a>
 </p>
