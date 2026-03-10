@@ -749,6 +749,19 @@ Falling Face Fragments is a falling block puzzle game where you must assemble fa
 
 ---
 
+### Idle Looter
+**[Steam Store Page](https://store.steampowered.com/app/4118640/)**
+
+<p align="center">
+  <a href="https://store.steampowered.com/app/4118640/">
+    <img src="assets/4118640.jpg" alt="Idle Looter" width="600">
+  </a>
+</p>
+
+Slay endless monsters for legendary loot. Master deep crafting and prestige systems to grow infinitely. Collect an army of companions and conquer the unknown. Do you have what it takes to become a hero?
+
+---
+
 ### Maldhalla
 **[Steam Store Page](https://store.steampowered.com/app/4385780/)** 
 
