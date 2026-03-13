@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.4] - 2026-03-13
+
+### Added
+- **`setItemTags()` in `SteamWorkshopManager`** (Fixes #49)
+  - Sets the tags for a Workshop item being updated via `SteamAPI_ISteamUGC_SetItemTags`
+  - Full documentation added to `docs/WORKSHOP_MANAGER.md`
+  - Integration tests updated in both `tests/js/test-workshop.js` and `tests/ts/test-workshop.ts` with a round-trip scenario: set → replace → clear → restore
+
 ## [0.9.3] - 2026-03-06
 
 ### Added
@@ -472,6 +480,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.9.4 | 2026-03-13 | `setItemTags()` for Workshop Manager, fix #49 |
 | 0.9.3 | 2026-03-06 | `getDigitalActionOrigins()` / `getAnalogActionOrigins()`, fix #46 & #47 (struct return ABI) |
 | 0.9.2 | 2026-03-01 | Fix process hang after `shutdown()` on Electron 39+ (Fixes #45) |
 | 0.9.1 | 2026-03-01 | Linux overlay prebuilds, Shutdown fix, npm package fix |
@@ -494,6 +503,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.9.4]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.4
 [0.9.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.3
 [0.9.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.2
 [0.9.1]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.1

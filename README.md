@@ -28,7 +28,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
 
 > ⚡ **Steamworks SDK v1.63**: Latest SDK with Linux ARM64, Android ARM64, and Lenovo Legion Go controller support!
 
-> � **16 Complete API Managers**: 100% coverage of achievements, stats, leaderboards, friends, workshop, networking, and more - see [full documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/README.md)!
+> 📦 **16 Complete API Managers**: 100% coverage of achievements, stats, leaderboards, friends, workshop, networking, and more - see [full documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/README.md)!
 
 > 🧪 **EXPERIMENTAL: Native Overlay for Electron** - Metal (macOS), OpenGL (Windows), OpenGL 3.3 (Linux/SteamOS). [See Documentation](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/STEAM_OVERLAY_INTEGRATION.md)
 
@@ -39,7 +39,7 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Steam status monitoring
   - ✅ Callback processing
   - ✅ Ensure app launches through Steam
-  - ✅ **Debug Mode** - Toggle detailed logging for troubleshooting **across all 16 managers**
+  - ✅ **Debug Mode** - Toggle detailed logging for troubleshooting **across all managers**
   - ✅ **Centralized Logger** - `SteamLogger` utility for consistent logging across all modules
 - **Complete Achievement API**: 100% coverage of Steam Achievement functionality (20/20 functions)
   - ✅ Core operations (get, unlock, clear, check status)
