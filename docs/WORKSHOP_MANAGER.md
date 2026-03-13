@@ -13,11 +13,11 @@ The `SteamWorkshopManager` provides comprehensive access to the Steam Workshop A
 | [Subscription Management](#subscription-management) | 4 | Subscribe, unsubscribe, and list Workshop items |
 | [Item State & Information](#item-state--information) | 4 | Get item state, installation info, and download progress |
 | [Query Operations](#query-operations) | 11 | Search and browse Workshop content |
-| [Item Creation & Update](#item-creation--update) | 9 | Create and update your own Workshop items |
+| [Item Creation & Update](#item-creation--update) | 10 | Create and update your own Workshop items |
 | [Voting & Favorites](#voting--favorites) | 4 | Vote on items and manage favorites |
 | [Item Deletion](#item-deletion) | 1 | Delete Workshop items you created |
 
-**Total: 33 Functions**
+**Total: 34 Functions**
 
 ---
 
@@ -1163,6 +1163,43 @@ steam.workshop.setItemVisibility(
   ERemoteStoragePublishedFileVisibility.Private
 );
 ```
+
+---
+
+### `setItemTags(updateHandle, tags, allowAdminTags?)`
+
+Set the tags for a Workshop item being updated.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_SetItemTags()` - Set item tags
+
+**Parameters:**
+- `updateHandle: UGCUpdateHandle` - Handle from `startItemUpdate()`
+- `tags: string[]` - Array of tag strings (replaces all existing tags)
+- `allowAdminTags?: boolean` - Allow admin-only tags (default: `false`)
+
+**Returns:** `boolean` - `true` if set successfully
+
+**Example:**
+```typescript
+const updateHandle = steam.workshop.startItemUpdate(480, itemId);
+
+// Set tags for the item
+const success = steam.workshop.setItemTags(updateHandle, ['multiplayer', 'map', 'competitive']);
+
+if (success) {
+  console.log('Tags updated');
+}
+
+// Clear all tags
+steam.workshop.setItemTags(updateHandle, []);
+```
+
+**Notes:**
+- Tags **replace** any previously set tags — always pass the full desired list
+- Tag strings longer than 255 characters are truncated by Steam
+- An empty array clears all tags from the item
+- Call `submitItemUpdate()` after setting tags to apply the changes
 
 ---
 

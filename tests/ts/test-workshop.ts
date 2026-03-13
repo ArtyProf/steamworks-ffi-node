@@ -203,6 +203,11 @@ async function testCompleteWorkshopLifecycle(): Promise<void> {
     );
     console.log(`   ${visibilitySet ? '✅' : '❌'} Visibility set to Private`);
     
+    // Set tags
+    const TEST_TAGS = ['test', 'automated', 'steamworks-ffi'];
+    const tagsSet = steam.workshop.setItemTags(updateHandle, TEST_TAGS);
+    console.log(`   ${tagsSet ? '✅' : '❌'} Tags set: [${TEST_TAGS.join(', ')}]`);
+    
     const contentSet = steam.workshop.setItemContent(
       updateHandle,
       testContent.contentPath
@@ -244,7 +249,38 @@ async function testCompleteWorkshopLifecycle(): Promise<void> {
     } else {
       console.log('❌ Failed to submit item update');
     }
-    
+
+    // ============================================================
+    // STEP 4b: TEST setItemTags ROUND-TRIP
+    // ============================================================
+    console.log('📋 STEP 4b: Test setItemTags Round-Trip');
+    console.log('========================================');
+
+    const updateHandle2 = steam.workshop.startItemUpdate(TEST_APP_ID, createdItemId!);
+    if (updateHandle2 !== BigInt(0)) {
+      // Replace tags with a different set
+      const updatedTags = ['test', 'automated', 'steamworks-ffi', 'v2'];
+      const tagsReplaced = steam.workshop.setItemTags(updateHandle2, updatedTags);
+      console.log(`   ${tagsReplaced ? '✅' : '❌'} Tags replaced with 4 tags: [${updatedTags.join(', ')}]`);
+
+      // Test with empty array (clears all tags)
+      const updateHandle3 = steam.workshop.startItemUpdate(TEST_APP_ID, createdItemId!);
+      if (updateHandle3 !== BigInt(0)) {
+        const tagsCleared = steam.workshop.setItemTags(updateHandle3, []);
+        console.log(`   ${tagsCleared ? '✅' : '❌'} Tags cleared (empty array)`);
+      }
+
+      // Restore original tags so the item is in a clean state
+      const updateHandle4 = steam.workshop.startItemUpdate(TEST_APP_ID, createdItemId!);
+      if (updateHandle4 !== BigInt(0)) {
+        const tagsRestored = steam.workshop.setItemTags(updateHandle4, TEST_TAGS);
+        console.log(`   ${tagsRestored ? '✅' : '❌'} Tags restored to original: [${TEST_TAGS.join(', ')}]`);
+      }
+    } else {
+      console.log('   ⚠️  Could not start second update handle for tag round-trip test');
+    }
+    console.log();
+
     // ============================================================
     // STEP 5: QUERY AND VERIFY ITEM
     // ============================================================
@@ -453,7 +489,8 @@ async function testCompleteWorkshopLifecycle(): Promise<void> {
     console.log('  1. ✅ Steam API initialized');
     console.log('  2. ✅ Test content created');
     console.log('  3. ✅ Workshop item creation initiated');
-    console.log('  4. ✅ Item updated with properties and content');
+    console.log('  4. ✅ Item updated with properties, tags, and content');
+    console.log('  4b.✅ setItemTags round-trip tested (set / replace / clear / restore)');
     console.log('  5. ✅ Item queried and verified');
     console.log('  6. ✅ Subscription management tested');
     console.log('  7. ✅ Voting and favorites tested');

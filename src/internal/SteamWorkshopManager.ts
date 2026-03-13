@@ -111,6 +111,17 @@ const DeleteItemResult_t = koffi.struct('DeleteItemResult_t', {
   rawBytes: koffi.array('uint8', 12)
 });
 
+// SteamParamStringArray_t (from isteamremotestorage.h):
+//   struct SteamParamStringArray_t { const char** m_ppStrings; int32 m_nNumStrings; }
+// Koffi handles the char** field by accepting an array of Buffers at encoding time,
+// letting it resolve pointer sizes and struct padding per platform automatically.
+const CharPtr = koffi.pointer('char');
+const CharPtrPtr = koffi.pointer(CharPtr);
+const SteamParamStringArray_t = koffi.struct('SteamParamStringArray_t', {
+  m_ppStrings: CharPtrPtr,    // const char** — Koffi accepts Buffer[] here
+  m_nNumStrings: 'int32'
+});
+
 // Manual buffer parsing for SteamUGCDetails_t
 // Steam uses different struct packing on Windows vs Mac/Linux:
 // - Windows (MSVC): #pragma pack(push, 8) - 8-byte alignment for uint64
@@ -1583,6 +1594,58 @@ export class SteamWorkshopManager {
       return this.libraryLoader.SteamAPI_ISteamUGC_SetItemVisibility(ugc, updateHandle, visibility);
     } catch (error) {
       SteamLogger.error('[Steamworks] Error setting item visibility:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Sets the tags for a Workshop item being updated
+   * 
+   * @param updateHandle - Handle from startItemUpdate
+   * @param tags - Array of tag strings to set on the item (replaces all existing tags)
+   * @param allowAdminTags - Whether to allow admin-only tags (default: false)
+   * @returns True if set successfully
+   * 
+   * @remarks
+   * Tags fully replace any previously set tags — pass the complete desired tag list.
+   * Tag strings are truncated to 255 characters by Steam. An empty array clears all tags.
+   * 
+   * @example
+   * ```typescript
+   * const updateHandle = steam.workshop.startItemUpdate(480, itemId);
+   * const success = steam.workshop.setItemTags(updateHandle, ['multiplayer', 'map', 'competitive']);
+   * 
+   * if (success) {
+   *   console.log('Tags updated');
+   * }
+   * ```
+   */
+  setItemTags(updateHandle: UGCUpdateHandle, tags: string[], allowAdminTags = false): boolean {
+    if (!this.apiCore.isInitialized()) {
+      return false;
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return false;
+    }
+
+    try {
+      // Encode each tag as a null-terminated UTF-8 Buffer.
+      // Koffi accepts Buffer[] for a char** field, keeping all memory alive for the call.
+      const tagBuffers = tags.map(tag => Buffer.from(tag + '\0', 'utf8'));
+
+      // Build the SteamParamStringArray_t struct via the Koffi struct definition —
+      // Koffi resolves pointer sizes and padding correctly for each platform.
+      const structBuf = Buffer.alloc(koffi.sizeof(SteamParamStringArray_t));
+      koffi.encode(structBuf, SteamParamStringArray_t, {
+        m_ppStrings: tagBuffers,
+        m_nNumStrings: tags.length,
+      });
+
+      return this.libraryLoader.SteamAPI_ISteamUGC_SetItemTags(ugc, updateHandle, structBuf, allowAdminTags);
+    } catch (error) {
+      SteamLogger.error('[Steamworks] Error setting item tags:', error);
       return false;
     }
   }

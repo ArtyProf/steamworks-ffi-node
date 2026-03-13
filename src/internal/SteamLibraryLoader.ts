@@ -434,6 +434,7 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUGC_SetItemTitle!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_SetItemDescription!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_SetItemVisibility!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemTags!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_SetItemContent!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_SetItemPreview!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_SubmitItemUpdate!: koffi.KoffiFunction;
@@ -1200,6 +1201,8 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUGC_SetItemTitle = this.steamLib.func('SteamAPI_ISteamUGC_SetItemTitle', 'bool', ['void*', 'uint64', 'str']);
     this.SteamAPI_ISteamUGC_SetItemDescription = this.steamLib.func('SteamAPI_ISteamUGC_SetItemDescription', 'bool', ['void*', 'uint64', 'str']);
     this.SteamAPI_ISteamUGC_SetItemVisibility = this.steamLib.func('SteamAPI_ISteamUGC_SetItemVisibility', 'bool', ['void*', 'uint64', 'int']);
+    // SteamParamStringArray_t* is passed as a raw void* (manually built buffer)
+    this.SteamAPI_ISteamUGC_SetItemTags = this.steamLib.func('SteamAPI_ISteamUGC_SetItemTags', 'bool', ['void*', 'uint64', 'void*', 'bool']);
     this.SteamAPI_ISteamUGC_SetItemContent = this.steamLib.func('SteamAPI_ISteamUGC_SetItemContent', 'bool', ['void*', 'uint64', 'str']);
     this.SteamAPI_ISteamUGC_SetItemPreview = this.steamLib.func('SteamAPI_ISteamUGC_SetItemPreview', 'bool', ['void*', 'uint64', 'str']);
     this.SteamAPI_ISteamUGC_SubmitItemUpdate = this.steamLib.func('SteamAPI_ISteamUGC_SubmitItemUpdate', 'uint64', ['void*', 'uint64', 'str']);
