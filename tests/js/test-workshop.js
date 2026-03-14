@@ -10,7 +10,7 @@
  * This test creates a real Workshop item, so use with caution!
  */
 
-const { SteamworksSDK, EWorkshopFileType, ERemoteStoragePublishedFileVisibility, EUGCQuery, EUGCMatchingUGCType, EItemState, EItemUpdateStatus } = require('../../dist/index.js');
+const { SteamworksSDK, EWorkshopFileType, ERemoteStoragePublishedFileVisibility, EUGCMatchingUGCType, EUGCQuery, EUserUGCList, EUserUGCListSortOrder, EItemState, EItemUpdateStatus, EUGCContentDescriptorID } = require('../../dist/index.js');
 const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = require('fs');
 const { join } = require('path');
 const { tmpdir } = require('os');
@@ -272,6 +272,39 @@ async function testCompleteWorkshopLifecycle() {
     console.log();
 
     // ============================================================
+    // STEP 4c: CONTENT DESCRIPTORS ROUND-TRIP
+    // ============================================================
+    console.log('📋 STEP 4c: Content Descriptors Round-Trip');
+    console.log('===========================================');
+
+    // Handle 1: add FrequentViolenceOrGore + AnyMatureContent, then submit
+    const cdHandle1 = steam.workshop.startItemUpdate(TEST_APP_ID, createdItemId);
+    if (cdHandle1 !== BigInt(0)) {
+      const added1 = steam.workshop.addContentDescriptor(cdHandle1, EUGCContentDescriptorID.FrequentViolenceOrGore);
+      const added2 = steam.workshop.addContentDescriptor(cdHandle1, EUGCContentDescriptorID.AnyMatureContent);
+      console.log(`   ${added1 ? '✅' : '❌'} addContentDescriptor(FrequentViolenceOrGore)`);
+      console.log(`   ${added2 ? '✅' : '❌'} addContentDescriptor(AnyMatureContent)`);
+      console.log('   📤 Submitting add update...');
+      const submitted1 = await steam.workshop.submitItemUpdate(cdHandle1, 'Test: added content descriptors');
+      console.log(`   ${submitted1 ? '✅' : '❌'} Add update submitted`);
+    } else {
+      console.log('   ⚠️  Could not start update handle for add test');
+    }
+
+    // Handle 2: remove AnyMatureContent on a fresh handle, then submit
+    const cdHandle2 = steam.workshop.startItemUpdate(TEST_APP_ID, createdItemId);
+    if (cdHandle2 !== BigInt(0)) {
+      const removed = steam.workshop.removeContentDescriptor(cdHandle2, EUGCContentDescriptorID.AnyMatureContent);
+      console.log(`   ${removed ? '✅' : '❌'} removeContentDescriptor(AnyMatureContent)`);
+      console.log('   📤 Submitting remove update...');
+      const submitted2 = await steam.workshop.submitItemUpdate(cdHandle2, 'Test: removed AnyMatureContent descriptor');
+      console.log(`   ${submitted2 ? '✅' : '❌'} Remove update submitted → expected result: [FrequentViolenceOrGore]`);
+    } else {
+      console.log('   ⚠️  Could not start update handle for remove test');
+    }
+    console.log();
+
+    // ============================================================
     // STEP 5: QUERY AND VERIFY ITEM
     // ============================================================
     console.log('📋 STEP 5: Query and Verify Item');
@@ -295,10 +328,14 @@ async function testCompleteWorkshopLifecycle() {
     }
     
     // Query the item
-    console.log('\n🔍 Querying Workshop items...');
-    const query = steam.workshop.createQueryAllUGCRequest(
-      EUGCQuery.RankedByPublicationDate,
+    console.log('\n🔍 Querying user\'s published Workshop items to find our item...');
+    const status = steam.getStatus();
+    const accountId = Number(BigInt(status.steamId) & BigInt(0xFFFFFFFF));
+    const query = steam.workshop.createQueryUserUGCRequest(
+      accountId,
+      EUserUGCList.Published,
       EUGCMatchingUGCType.Items,
+      EUserUGCListSortOrder.CreationOrderDesc,
       TEST_APP_ID,
       TEST_APP_ID,
       1
@@ -312,16 +349,39 @@ async function testCompleteWorkshopLifecycle() {
         console.log(`   Found ${queryResult.numResults} results (${queryResult.totalResults} total)`);
         console.log(`   Cached data: ${queryResult.cachedData}`);
         
-        console.log('\n📄 Query Results (first 5 items):');
-        for (let i = 0; i < Math.min(5, queryResult.numResults); i++) {
+        console.log('\n📄 Query Results (user\'s published items):');
+        let foundOurItem = false;
+        for (let i = 0; i < queryResult.numResults; i++) {
           const item = steam.workshop.getQueryUGCResult(query, i);
           if (item) {
-            console.log(`\n   Item ${i + 1}:`);
+            const isOurItem = item.publishedFileId === createdItemId;
+            if (isOurItem) foundOurItem = true;
+            console.log(`\n   Item ${i + 1}: ${isOurItem ? '⭐ (our test item)' : ''}`);
             console.log(`   ID: ${item.publishedFileId}`);
             console.log(`   Title: ${item.title}`);
             console.log(`   Votes: 👍 ${item.votesUp} | Score: ${item.score.toFixed(2)}`);
             console.log(`   Owner: ${item.steamIDOwner}`);
+
+            const descriptors = steam.workshop.getQueryUGCContentDescriptors(query, i);
+            if (descriptors.length > 0) {
+              console.log(`   🔞 Content descriptors: [${descriptors.join(', ')}]`);
+            } else {
+              console.log(`   ✅ No mature content descriptors`);
+            }
           }
+        }
+        if (foundOurItem) {
+          console.log(`\n✅ Our test item (${createdItemId}) found in query results`);
+        } else {
+          console.log(`\n⚠️  Our test item (${createdItemId}) not found on this page (may still be processing)`);
+        }
+
+        console.log('\n👤 User content descriptor preferences:');
+        const userPrefs = steam.workshop.getUserContentDescriptorPreferences();
+        if (userPrefs.length > 0) {
+          console.log(`   Enabled: [${userPrefs.join(', ')}]`);
+        } else {
+          console.log(`   ✅ No mature content enabled`);
         }
       } else {
         console.log('❌ Query failed');
@@ -331,6 +391,55 @@ async function testCompleteWorkshopLifecycle() {
       console.log('\n✅ Query handle released');
     }
     
+    // ============================================================
+    // STEP 5b: QUERY ALL UGC (createQueryAllUGCRequest)
+    // ============================================================
+    console.log('\n📋 STEP 5b: Query All UGC (createQueryAllUGCRequest)');
+    console.log('=====================================================');
+
+    console.log('\n🔍 Querying all public Workshop items (RankedByVote, page 1)...');
+    const allQuery = steam.workshop.createQueryAllUGCRequest(
+      EUGCQuery.RankedByVote,
+      EUGCMatchingUGCType.Items,
+      TEST_APP_ID,
+      TEST_APP_ID,
+      1
+    );
+
+    if (allQuery !== BigInt(0)) {
+      const allQueryResult = await steam.workshop.sendQueryUGCRequest(allQuery);
+
+      if (allQueryResult) {
+        console.log(`✅ Query completed successfully!`);
+        console.log(`   Found ${allQueryResult.numResults} results (${allQueryResult.totalResults} total)`);
+        console.log(`   Cached data: ${allQueryResult.cachedData}`);
+
+        console.log('\n📄 Top results (all public Workshop items):');
+        for (let i = 0; i < Math.min(3, allQueryResult.numResults); i++) {
+          const item = steam.workshop.getQueryUGCResult(allQuery, i);
+          if (item) {
+            console.log(`\n   Item ${i + 1}:`);
+            console.log(`   ID: ${item.publishedFileId}`);
+            console.log(`   Title: ${item.title}`);
+            console.log(`   Votes: 👍 ${item.votesUp} | Score: ${item.score.toFixed(2)}`);
+            const descriptors = steam.workshop.getQueryUGCContentDescriptors(allQuery, i);
+            if (descriptors.length > 0) {
+              console.log(`   🔞 Content descriptors: [${descriptors.join(', ')}]`);
+            } else {
+              console.log(`   ✅ No mature content descriptors`);
+            }
+          }
+        }
+      } else {
+        console.log('❌ All-UGC query failed');
+      }
+
+      steam.workshop.releaseQueryUGCRequest(allQuery);
+      console.log('\n✅ All-UGC query handle released');
+    } else {
+      console.log('❌ Failed to create all-UGC query handle');
+    }
+
     // ============================================================
     // STEP 6: SUBSCRIPTION MANAGEMENT
     // ============================================================
@@ -481,7 +590,10 @@ async function testCompleteWorkshopLifecycle() {
     console.log('  3. ✅ Workshop item creation initiated');
     console.log('  4. ✅ Item updated with properties, tags, and content');
     console.log('  4b.✅ setItemTags round-trip tested (set / replace / clear / restore)');
-    console.log('  5. ✅ Item queried and verified');
+    console.log('  4c.✅ Content descriptors round-trip tested (add / remove)');
+    console.log('  5. ✅ Item queried and verified (incl. content descriptors per result)');
+    console.log('  5b.✅ getUserContentDescriptorPreferences() called');
+    console.log('  5c.✅ createQueryAllUGCRequest() tested (top public items, RankedByVote)');
     console.log('  6. ✅ Subscription management tested');
     console.log('  7. ✅ Voting and favorites tested');
     console.log('  8. ✅ Cleanup completed');

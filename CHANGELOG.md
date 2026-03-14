@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.5] - 2026-03-14
+
+### Added
+- **ContentDescriptors API in `SteamWorkshopManager`** — 4 new functions for mature content labeling on Workshop items
+  - **`addContentDescriptor(updateHandle, descriptor)`** — labels a Workshop item with a mature content descriptor via `SteamAPI_ISteamUGC_AddContentDescriptor`
+  - **`removeContentDescriptor(updateHandle, descriptor)`** — removes a previously set content descriptor via `SteamAPI_ISteamUGC_RemoveContentDescriptor`
+  - **`getQueryUGCContentDescriptors(queryHandle, index)`** — returns `EUGCContentDescriptorID[]` for a specific query result via `SteamAPI_ISteamUGC_GetQueryUGCContentDescriptors`
+  - **`getUserContentDescriptorPreferences()`** — returns the current user's mature content preferences via `SteamAPI_ISteamUGC_GetUserContentDescriptorPreferences`
+- **`EUGCContentDescriptorID` enum** added to `src/types/workshop.ts` and exported from the package root
+
 ## [0.9.4] - 2026-03-13
 
 ### Added
@@ -480,6 +490,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.9.5 | 2026-03-14 | ContentDescriptors API for Workshop (4 functions), `EUGCContentDescriptorID` enum, resolves #50 |
 | 0.9.4 | 2026-03-13 | `setItemTags()` for Workshop Manager, fix #49 |
 | 0.9.3 | 2026-03-06 | `getDigitalActionOrigins()` / `getAnalogActionOrigins()`, fix #46 & #47 (struct return ABI) |
 | 0.9.2 | 2026-03-01 | Fix process hang after `shutdown()` on Electron 39+ (Fixes #45) |
@@ -503,6 +514,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.9.5]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.5
 [0.9.4]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.4
 [0.9.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.3
 [0.9.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.2

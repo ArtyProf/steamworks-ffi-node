@@ -15,9 +15,10 @@ import {
   EUGCQuery,
   EItemState,
   EItemUpdateStatus,
-  EItemStatistic,
+  WorkshopConstants,
   EWorkshopFileType,
   ERemoteStoragePublishedFileVisibility,
+  EUGCContentDescriptorID,
   K_UGC_QUERY_HANDLE_INVALID,
   K_UGC_UPDATE_HANDLE_INVALID
 } from '../types';
@@ -1700,6 +1701,175 @@ export class SteamWorkshopManager {
     } catch (error) {
       SteamLogger.error('[Steamworks] Error setting item preview:', error);
       return false;
+    }
+  }
+
+  /**
+   * Adds a content descriptor to a Workshop item being updated
+   *
+   * Content descriptors are used to label mature content for age-gating
+   * purposes on the Steam store.
+   *
+   * @param updateHandle - Handle from `startItemUpdate()`
+   * @param descriptor - Content descriptor to add
+   * @returns `true` if the descriptor was added successfully
+   *
+   * @example
+   * ```typescript
+   * const updateHandle = steam.workshop.startItemUpdate(480, itemId);
+   * const ok = steam.workshop.addContentDescriptor(
+   *   updateHandle,
+   *   EUGCContentDescriptorID.FrequentViolenceOrGore
+   * );
+   * await steam.workshop.submitItemUpdate(updateHandle, 'Added mature content label');
+   * ```
+   */
+  addContentDescriptor(updateHandle: UGCUpdateHandle, descriptor: EUGCContentDescriptorID): boolean {
+    if (!this.apiCore.isInitialized()) {
+      return false;
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return false;
+    }
+
+    try {
+      return this.libraryLoader.SteamAPI_ISteamUGC_AddContentDescriptor(ugc, updateHandle, descriptor);
+    } catch (error) {
+      SteamLogger.error('[Steamworks] Error adding content descriptor:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Removes a content descriptor from a Workshop item being updated
+   *
+   * @param updateHandle - Handle from `startItemUpdate()`
+   * @param descriptor - Content descriptor to remove
+   * @returns `true` if the descriptor was removed successfully
+   *
+   * @example
+   * ```typescript
+   * const updateHandle = steam.workshop.startItemUpdate(480, itemId);
+   * const ok = steam.workshop.removeContentDescriptor(
+   *   updateHandle,
+   *   EUGCContentDescriptorID.FrequentViolenceOrGore
+   * );
+   * await steam.workshop.submitItemUpdate(updateHandle, 'Removed mature content label');
+   * ```
+   */
+  removeContentDescriptor(updateHandle: UGCUpdateHandle, descriptor: EUGCContentDescriptorID): boolean {
+    if (!this.apiCore.isInitialized()) {
+      return false;
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return false;
+    }
+
+    try {
+      return this.libraryLoader.SteamAPI_ISteamUGC_RemoveContentDescriptor(ugc, updateHandle, descriptor);
+    } catch (error) {
+      SteamLogger.error('[Steamworks] Error removing content descriptor:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Gets the content descriptors attached to a specific query result
+   *
+   * @param queryHandle - Query handle from a completed query
+   * @param index - Index of the result (0-based)
+   * @returns Array of `EUGCContentDescriptorID` values, or empty array if none
+   *
+   * @example
+   * ```typescript
+   * const query = steam.workshop.createQueryAllUGCRequest(
+   *   EUGCQuery.RankedByVote,
+   *   EUGCMatchingUGCType.Items,
+   *   480, 480, 1
+   * );
+   * const result = await steam.workshop.sendQueryUGCRequest(query);
+   *
+   * if (result) {
+   *   for (let i = 0; i < result.numResults; i++) {
+   *     const descriptors = steam.workshop.getQueryUGCContentDescriptors(query, i);
+   *     if (descriptors.length > 0) {
+   *       console.log(`Item ${i} has mature content:`, descriptors);
+   *     }
+   *   }
+   *   steam.workshop.releaseQueryUGCRequest(query);
+   * }
+   * ```
+   */
+  getQueryUGCContentDescriptors(queryHandle: UGCQueryHandle, index: number): EUGCContentDescriptorID[] {
+    if (!this.apiCore.isInitialized()) {
+      return [];
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return [];
+    }
+
+    try {
+      const descriptors = new Int32Array(WorkshopConstants.MAX_CONTENT_DESCRIPTORS);
+      const count: number = this.libraryLoader.SteamAPI_ISteamUGC_GetQueryUGCContentDescriptors(
+        ugc,
+        queryHandle,
+        index,
+        descriptors,
+        WorkshopConstants.MAX_CONTENT_DESCRIPTORS
+      );
+
+      return Array.from(descriptors.subarray(0, count)) as EUGCContentDescriptorID[];
+    } catch (error) {
+      SteamLogger.error('[Steamworks] Error getting query UGC content descriptors:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Gets the content descriptor preferences set by the current user
+   *
+   * These reflect the mature content filters the user has configured
+   * in their Steam settings.
+   *
+   * @returns Array of `EUGCContentDescriptorID` values the user has enabled,
+   *          or empty array if none / on error
+   *
+   * @example
+   * ```typescript
+   * const prefs = steam.workshop.getUserContentDescriptorPreferences();
+   * if (prefs.includes(EUGCContentDescriptorID.AdultOnlySexualContent)) {
+   *   console.log('User allows adult-only content');
+   * }
+   * ```
+   */
+  getUserContentDescriptorPreferences(): EUGCContentDescriptorID[] {
+    if (!this.apiCore.isInitialized()) {
+      return [];
+    }
+
+    const ugc = this.apiCore.getUGCInterface();
+    if (!ugc) {
+      return [];
+    }
+
+    try {
+      const descriptors = new Int32Array(WorkshopConstants.MAX_CONTENT_DESCRIPTORS);
+      const count: number = this.libraryLoader.SteamAPI_ISteamUGC_GetUserContentDescriptorPreferences(
+        ugc,
+        descriptors,
+        WorkshopConstants.MAX_CONTENT_DESCRIPTORS
+      );
+
+      return Array.from(descriptors.subarray(0, count)) as EUGCContentDescriptorID[];
+    } catch (error) {
+      SteamLogger.error('[Steamworks] Error getting user content descriptor preferences:', error);
+      return [];
     }
   }
 
