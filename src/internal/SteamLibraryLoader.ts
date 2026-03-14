@@ -437,6 +437,10 @@ export class SteamLibraryLoader {
   public SteamAPI_ISteamUGC_SetItemTags!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_SetItemContent!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_SetItemPreview!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_AddContentDescriptor!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_RemoveContentDescriptor!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCContentDescriptors!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetUserContentDescriptorPreferences!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_SubmitItemUpdate!: koffi.KoffiFunction;
   public SteamAPI_ISteamUGC_GetItemUpdateProgress!: koffi.KoffiFunction;
   
@@ -1205,6 +1209,10 @@ export class SteamLibraryLoader {
     this.SteamAPI_ISteamUGC_SetItemTags = this.steamLib.func('SteamAPI_ISteamUGC_SetItemTags', 'bool', ['void*', 'uint64', 'void*', 'bool']);
     this.SteamAPI_ISteamUGC_SetItemContent = this.steamLib.func('SteamAPI_ISteamUGC_SetItemContent', 'bool', ['void*', 'uint64', 'str']);
     this.SteamAPI_ISteamUGC_SetItemPreview = this.steamLib.func('SteamAPI_ISteamUGC_SetItemPreview', 'bool', ['void*', 'uint64', 'str']);
+    this.SteamAPI_ISteamUGC_AddContentDescriptor = this.steamLib.func('SteamAPI_ISteamUGC_AddContentDescriptor', 'bool', ['void*', 'uint64', 'int']);
+    this.SteamAPI_ISteamUGC_RemoveContentDescriptor = this.steamLib.func('SteamAPI_ISteamUGC_RemoveContentDescriptor', 'bool', ['void*', 'uint64', 'int']);
+    this.SteamAPI_ISteamUGC_GetQueryUGCContentDescriptors = this.steamLib.func('SteamAPI_ISteamUGC_GetQueryUGCContentDescriptors', 'uint32', ['void*', 'uint64', 'uint32', 'int32*', 'uint32']);
+    this.SteamAPI_ISteamUGC_GetUserContentDescriptorPreferences = this.steamLib.func('SteamAPI_ISteamUGC_GetUserContentDescriptorPreferences', 'uint32', ['void*', 'int32*', 'uint32']);
     this.SteamAPI_ISteamUGC_SubmitItemUpdate = this.steamLib.func('SteamAPI_ISteamUGC_SubmitItemUpdate', 'uint64', ['void*', 'uint64', 'str']);
     this.SteamAPI_ISteamUGC_GetItemUpdateProgress = this.steamLib.func('SteamAPI_ISteamUGC_GetItemUpdateProgress', 'int', ['void*', 'uint64', 'uint64*', 'uint64*']);
     

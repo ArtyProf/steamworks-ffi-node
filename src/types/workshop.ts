@@ -322,6 +322,17 @@ export interface DeleteItemResult {
 }
 
 /**
+ * Content descriptor IDs for Workshop items (mature content labeling)
+ */
+export enum EUGCContentDescriptorID {
+  NudityOrSexualContent   = 1,
+  FrequentViolenceOrGore  = 2,
+  AdultOnlySexualContent  = 3,
+  GratuitousSexualContent = 4,
+  AnyMatureContent        = 5,
+}
+
+/**
  * Workshop constants
  */
 export const WorkshopConstants = {
@@ -331,5 +342,6 @@ export const WorkshopConstants = {
   MAX_DESCRIPTION_LENGTH: K_CCH_PUBLISHED_DOCUMENT_DESCRIPTION_MAX,
   MAX_TAG_LIST_LENGTH: K_CCH_TAG_LIST_MAX,
   MAX_FILENAME_LENGTH: K_CCH_FILENAME_MAX,
-  MAX_URL_LENGTH: K_CCH_PUBLISHED_FILE_URL_MAX
+  MAX_URL_LENGTH: K_CCH_PUBLISHED_FILE_URL_MAX,
+  MAX_CONTENT_DESCRIPTORS: 8
 } as const;
