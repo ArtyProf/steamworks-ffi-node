@@ -12,12 +12,13 @@ The `SteamWorkshopManager` provides comprehensive access to the Steam Workshop A
 |----------|-----------|-------------|
 | [Subscription Management](#subscription-management) | 4 | Subscribe, unsubscribe, and list Workshop items |
 | [Item State & Information](#item-state--information) | 4 | Get item state, installation info, and download progress |
-| [Query Operations](#query-operations) | 11 | Search and browse Workshop content |
-| [Item Creation & Update](#item-creation--update) | 10 | Create and update your own Workshop items |
+| [Query Operations](#query-operations) | 12 | Search and browse Workshop content |
+| [Item Creation & Update](#item-creation--update) | 12 | Create and update your own Workshop items |
 | [Voting & Favorites](#voting--favorites) | 4 | Vote on items and manage favorites |
 | [Item Deletion](#item-deletion) | 1 | Delete Workshop items you created |
+| [Content Descriptors](#content-descriptors) | 1 | Mature content labeling for Workshop items |
 
-**Total: 34 Functions**
+**Total: 38 Functions**
 
 ---
 
@@ -963,6 +964,59 @@ steam.workshop.releaseQueryUGCRequest(query);
 
 ---
 
+### `getQueryUGCContentDescriptors(queryHandle, index)`
+
+Get the content descriptors (mature content labels) attached to a specific query result.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_GetQueryUGCContentDescriptors()` - Get content descriptors for a result
+
+**Parameters:**
+- `queryHandle: UGCQueryHandle` - Query handle from a completed query
+- `index: number` - Index of result (0-based)
+
+**Returns:** `EUGCContentDescriptorID[]` - Array of content descriptor IDs (empty if none)
+
+**Type:**
+```typescript
+enum EUGCContentDescriptorID {
+  NudityOrSexualContent   = 1,
+  FrequentViolenceOrGore  = 2,
+  AdultOnlySexualContent  = 3,
+  GratuitousSexualContent = 4,
+  AnyMatureContent        = 5,
+}
+```
+
+**Example:**
+```typescript
+const query = steam.workshop.createQueryAllUGCRequest(
+  EUGCQuery.RankedByVote,
+  EUGCMatchingUGCType.Items,
+  480, 480, 1
+);
+const result = await steam.workshop.sendQueryUGCRequest(query);
+
+if (result) {
+  for (let i = 0; i < result.numResults; i++) {
+    const descriptors = steam.workshop.getQueryUGCContentDescriptors(query, i);
+    if (descriptors.length > 0) {
+      console.log(`Item ${i} has mature content labels:`, descriptors);
+      if (descriptors.includes(EUGCContentDescriptorID.FrequentViolenceOrGore)) {
+        console.log('  - Contains frequent violence or gore');
+      }
+    }
+  }
+  steam.workshop.releaseQueryUGCRequest(query);
+}
+```
+
+**Notes:**
+- Returns an empty array if the item has no content descriptors
+- Use in combination with `getUserContentDescriptorPreferences()` to filter items
+
+---
+
 ## Item Creation & Update
 
 Functions for creating and updating your own Workshop items.
@@ -1266,6 +1320,65 @@ if (success) {
 
 ---
 
+### `addContentDescriptor(updateHandle, descriptor)`
+
+Add a mature content descriptor to a Workshop item being updated.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_AddContentDescriptor()` - Add content descriptor
+
+**Parameters:**
+- `updateHandle: UGCUpdateHandle` - Handle from `startItemUpdate()`
+- `descriptor: EUGCContentDescriptorID` - Content descriptor to add
+
+**Returns:** `boolean` - `true` if added successfully
+
+**Example:**
+```typescript
+const updateHandle = steam.workshop.startItemUpdate(480, itemId);
+steam.workshop.addContentDescriptor(
+  updateHandle,
+  EUGCContentDescriptorID.FrequentViolenceOrGore
+);
+await steam.workshop.submitItemUpdate(updateHandle, 'Added mature content label');
+```
+
+**Notes:**
+- Call `submitItemUpdate()` to apply the change
+- Multiple descriptors can be added per item
+- See `EUGCContentDescriptorID` for all available values
+
+---
+
+### `removeContentDescriptor(updateHandle, descriptor)`
+
+Remove a mature content descriptor from a Workshop item being updated.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_RemoveContentDescriptor()` - Remove content descriptor
+
+**Parameters:**
+- `updateHandle: UGCUpdateHandle` - Handle from `startItemUpdate()`
+- `descriptor: EUGCContentDescriptorID` - Content descriptor to remove
+
+**Returns:** `boolean` - `true` if removed successfully
+
+**Example:**
+```typescript
+const updateHandle = steam.workshop.startItemUpdate(480, itemId);
+steam.workshop.removeContentDescriptor(
+  updateHandle,
+  EUGCContentDescriptorID.FrequentViolenceOrGore
+);
+await steam.workshop.submitItemUpdate(updateHandle, 'Removed mature content label');
+```
+
+**Notes:**
+- Call `submitItemUpdate()` to apply the change
+- Has no effect if the descriptor was not previously set
+
+---
+
 ### `submitItemUpdate(updateHandle, changeNote)`
 
 Submit an item update to Steam Workshop and wait for completion.
@@ -1549,6 +1662,69 @@ if (success) {
 
 ---
 
+## Content Descriptors
+
+Functions for managing and reading mature content labels on Workshop items.
+
+### `getUserContentDescriptorPreferences()`
+
+Gets the mature content descriptor preferences configured by the current user in their Steam account settings.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamUGC_GetUserContentDescriptorPreferences()` - Get user's content preferences
+
+**Parameters:** None
+
+**Returns:** `EUGCContentDescriptorID[]` - Array of descriptor IDs the user has enabled (empty if none)
+
+**Type:**
+```typescript
+enum EUGCContentDescriptorID {
+  NudityOrSexualContent   = 1,
+  FrequentViolenceOrGore  = 2,
+  AdultOnlySexualContent  = 3,
+  GratuitousSexualContent = 4,
+  AnyMatureContent        = 5,
+}
+```
+
+**Example:**
+```typescript
+const prefs = steam.workshop.getUserContentDescriptorPreferences();
+
+if (prefs.length === 0) {
+  console.log('User has no mature content enabled');
+} else {
+  console.log('User content preferences:');
+  for (const pref of prefs) {
+    switch (pref) {
+      case EUGCContentDescriptorID.NudityOrSexualContent:
+        console.log('  - Nudity or sexual content');
+        break;
+      case EUGCContentDescriptorID.FrequentViolenceOrGore:
+        console.log('  - Frequent violence or gore');
+        break;
+      case EUGCContentDescriptorID.AdultOnlySexualContent:
+        console.log('  - Adult-only sexual content');
+        break;
+      case EUGCContentDescriptorID.GratuitousSexualContent:
+        console.log('  - Gratuitous sexual content');
+        break;
+      case EUGCContentDescriptorID.AnyMatureContent:
+        console.log('  - Any mature content');
+        break;
+    }
+  }
+}
+```
+
+**Notes:**
+- Reflects the user's Steam account privacy/content settings
+- Use to decide whether to display mature Workshop items
+- Combine with `getQueryUGCContentDescriptors()` to filter query results
+
+---
+
 ## Configuration
 
 ### Steamworks Partner Setup
@@ -1664,6 +1840,14 @@ enum EItemUpdateStatus {
   UploadingContent = 3,
   UploadingPreviewFile = 4,
   CommittingChanges = 5
+}
+
+enum EUGCContentDescriptorID {
+  NudityOrSexualContent   = 1,
+  FrequentViolenceOrGore  = 2,
+  AdultOnlySexualContent  = 3,
+  GratuitousSexualContent = 4,
+  AnyMatureContent        = 5,
 }
 
 // Interfaces
