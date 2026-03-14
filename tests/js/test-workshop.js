@@ -10,7 +10,7 @@
  * This test creates a real Workshop item, so use with caution!
  */
 
-const { SteamworksSDK, EWorkshopFileType, ERemoteStoragePublishedFileVisibility, EUGCMatchingUGCType, EUserUGCList, EUserUGCListSortOrder, EItemState, EItemUpdateStatus, EUGCContentDescriptorID } = require('../../dist/index.js');
+const { SteamworksSDK, EWorkshopFileType, ERemoteStoragePublishedFileVisibility, EUGCMatchingUGCType, EUGCQuery, EUserUGCList, EUserUGCListSortOrder, EItemState, EItemUpdateStatus, EUGCContentDescriptorID } = require('../../dist/index.js');
 const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = require('fs');
 const { join } = require('path');
 const { tmpdir } = require('os');
@@ -392,6 +392,55 @@ async function testCompleteWorkshopLifecycle() {
     }
     
     // ============================================================
+    // STEP 5b: QUERY ALL UGC (createQueryAllUGCRequest)
+    // ============================================================
+    console.log('\n📋 STEP 5b: Query All UGC (createQueryAllUGCRequest)');
+    console.log('=====================================================');
+
+    console.log('\n🔍 Querying all public Workshop items (RankedByVote, page 1)...');
+    const allQuery = steam.workshop.createQueryAllUGCRequest(
+      EUGCQuery.RankedByVote,
+      EUGCMatchingUGCType.Items,
+      TEST_APP_ID,
+      TEST_APP_ID,
+      1
+    );
+
+    if (allQuery !== BigInt(0)) {
+      const allQueryResult = await steam.workshop.sendQueryUGCRequest(allQuery);
+
+      if (allQueryResult) {
+        console.log(`✅ Query completed successfully!`);
+        console.log(`   Found ${allQueryResult.numResults} results (${allQueryResult.totalResults} total)`);
+        console.log(`   Cached data: ${allQueryResult.cachedData}`);
+
+        console.log('\n📄 Top results (all public Workshop items):');
+        for (let i = 0; i < Math.min(3, allQueryResult.numResults); i++) {
+          const item = steam.workshop.getQueryUGCResult(allQuery, i);
+          if (item) {
+            console.log(`\n   Item ${i + 1}:`);
+            console.log(`   ID: ${item.publishedFileId}`);
+            console.log(`   Title: ${item.title}`);
+            console.log(`   Votes: 👍 ${item.votesUp} | Score: ${item.score.toFixed(2)}`);
+            const descriptors = steam.workshop.getQueryUGCContentDescriptors(allQuery, i);
+            if (descriptors.length > 0) {
+              console.log(`   🔞 Content descriptors: [${descriptors.join(', ')}]`);
+            } else {
+              console.log(`   ✅ No mature content descriptors`);
+            }
+          }
+        }
+      } else {
+        console.log('❌ All-UGC query failed');
+      }
+
+      steam.workshop.releaseQueryUGCRequest(allQuery);
+      console.log('\n✅ All-UGC query handle released');
+    } else {
+      console.log('❌ Failed to create all-UGC query handle');
+    }
+
+    // ============================================================
     // STEP 6: SUBSCRIPTION MANAGEMENT
     // ============================================================
     console.log('\n📋 STEP 6: Subscription Management');
@@ -544,6 +593,7 @@ async function testCompleteWorkshopLifecycle() {
     console.log('  4c.✅ Content descriptors round-trip tested (add / remove)');
     console.log('  5. ✅ Item queried and verified (incl. content descriptors per result)');
     console.log('  5b.✅ getUserContentDescriptorPreferences() called');
+    console.log('  5c.✅ createQueryAllUGCRequest() tested (top public items, RankedByVote)');
     console.log('  6. ✅ Subscription management tested');
     console.log('  7. ✅ Voting and favorites tested');
     console.log('  8. ✅ Cleanup completed');
