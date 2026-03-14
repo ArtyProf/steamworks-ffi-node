@@ -1,6 +1,6 @@
 {
   "name": "steamworks-ffi-node",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Steamworks SDK wrapper using FFI for Node.js/Electron - Full Steam Integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -78,10 +78,18 @@
   ],
   "keywords": [
     "steam",
+    "steam-sdk",
     "steamworks",
+    "steamworks-sdk",
     "ffi",
     "typescript",
     "achievements",
+    "steam-achievements",
+    "steam-cloud",
+    "steam-workshop",
+    "steam-ugc",
+    "steam-stats",
+    "steam-overlay",
     "gaming",
     "electron",
     "cross-platform"
