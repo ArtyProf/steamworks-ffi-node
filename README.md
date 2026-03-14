@@ -1,5 +1,7 @@
 [![npm](https://img.shields.io/npm/v/steamworks-ffi-node.svg)](https://www.npmjs.com/package/steamworks-ffi-node)
-[![Chat](https://img.shields.io/discord/1426518243077656699?label=chat&logo=discord)](https://discord.gg/Ruzx4Z7cKr)
+[![NPM Downloads](https://img.shields.io/npm/dm/steamworks-ffi-node?color=orange)](https://www.npmjs.com/package/steamworks-ffi-node)
+[![Chat](https://img.shields.io/discord/1426518243077656699?label=Discord%20chat&logo=discord)](https://discord.gg/Ruzx4Z7cKr)
+[![license](https://img.shields.io/github/license/ArtyProf/steamworks-ffi-node?color=blue)](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/LICENSE)
 
 # Steamworks FFI - Steamworks SDK Integration for Node.js applications
 
