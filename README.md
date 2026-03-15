@@ -778,6 +778,19 @@ Crush endless waves of creatures and become absurdly overpowered! Grab loot, lev
 
 ---
 
+### Realms of Conflict
+**[Steam Store Page](https://store.steampowered.com/app/4072610/)** 
+
+<p align="center">
+  <a href="https://store.steampowered.com/app/4072610/">
+    <img src="assets/4072610.jpg" alt="Realms of Conflict" width="600">
+  </a>
+</p>
+
+Prepare for adventure in Realms of Conflict, the ultimate top down, open world indie role playing adventure game!
+
+---
+
 ### Add Your Project
 
 Using `steamworks-ffi-node` in your project? We'd love to showcase it here!
