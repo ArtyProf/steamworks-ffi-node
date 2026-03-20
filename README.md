@@ -3,7 +3,11 @@
 [![Chat](https://img.shields.io/discord/1426518243077656699?label=Discord%20chat&logo=discord)](https://discord.gg/Ruzx4Z7cKr)
 [![license](https://img.shields.io/github/license/ArtyProf/steamworks-ffi-node?color=blue)](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/LICENSE)
 
-# Steamworks FFI - Steamworks SDK Integration for Node.js applications
+<p align="center">
+  <img src="assets/logo.jpeg" alt="Steamworks FFI Node" width="400">
+</p>
+
+# steamworks-ffi-node - Steamworks SDK Integration for Node.js applications
 
 A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed for Node.js and Electron applications with **Steamworks SDK v1.63 integration**.
 
