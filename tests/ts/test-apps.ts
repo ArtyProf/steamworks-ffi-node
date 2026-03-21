@@ -8,7 +8,7 @@
 import SteamworksSDK from '../../src';
 
 // Test configuration
-const APP_ID = 2609100; // Spacewar (Valve's test app)
+const APP_ID = 480; // Spacewar (Valve's test app)
 
 console.log('='.repeat(60));
 console.log('Steam Apps/DLC Manager Test');
