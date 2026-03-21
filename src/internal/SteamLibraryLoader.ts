@@ -555,7 +555,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamApps_v008!: koffi.KoffiFunction;
+  public SteamAPI_SteamApps_v009!: koffi.KoffiFunction;
   
   // Ownership checks
   public SteamAPI_ISteamApps_BIsSubscribed!: koffi.KoffiFunction;
@@ -1324,7 +1324,7 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamApps_v008 = this.steamLib.func('SteamAPI_SteamApps_v008', 'void*', []);
+    this.SteamAPI_SteamApps_v009 = this.steamLib.func('SteamAPI_SteamApps_v009', 'void*', []);
     
     // Ownership checks
     this.SteamAPI_ISteamApps_BIsSubscribed = this.steamLib.func('SteamAPI_ISteamApps_BIsSubscribed', 'bool', ['void*']);
@@ -1358,7 +1358,7 @@ export class SteamLibraryLoader {
     // Beta branches
     this.SteamAPI_ISteamApps_GetCurrentBetaName = this.steamLib.func('SteamAPI_ISteamApps_GetCurrentBetaName', 'bool', ['void*', 'char*', 'int']);
     this.SteamAPI_ISteamApps_GetNumBetas = this.steamLib.func('SteamAPI_ISteamApps_GetNumBetas', 'int', ['void*', 'int*', 'int*']);
-    this.SteamAPI_ISteamApps_GetBetaInfo = this.steamLib.func('SteamAPI_ISteamApps_GetBetaInfo', 'bool', ['void*', 'int', 'uint32*', 'uint32*', 'char*', 'int', 'char*', 'int']);
+    this.SteamAPI_ISteamApps_GetBetaInfo = this.steamLib.func('SteamAPI_ISteamApps_GetBetaInfo', 'bool', ['void*', 'int', 'uint32*', 'uint32*', 'char*', 'int', 'char*', 'int', 'uint32*']);
     this.SteamAPI_ISteamApps_SetActiveBeta = this.steamLib.func('SteamAPI_ISteamApps_SetActiveBeta', 'bool', ['void*', 'str']);
     
     // Launch parameters

@@ -217,7 +217,7 @@ export class SteamAPICore {
       }
       
       // Get Apps interface
-      this.appsInterface = this.libraryLoader.SteamAPI_SteamApps_v008();
+      this.appsInterface = this.libraryLoader.SteamAPI_SteamApps_v009();
       if (!this.appsInterface || this.appsInterface === null) {
         SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamApps interface');
       }

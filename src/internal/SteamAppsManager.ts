@@ -43,7 +43,7 @@ export class SteamAppsManager {
    * Get the ISteamApps interface pointer
    */
   private getSteamApps(): any {
-    return this.libraryLoader.SteamAPI_SteamApps_v008();
+    return this.libraryLoader.SteamAPI_SteamApps_v009();
   }
 
   // ========================================
@@ -886,6 +886,7 @@ export class SteamAppsManager {
       const buildIdOut = [0];
       const nameBuffer = Buffer.alloc(256);
       const descBuffer = Buffer.alloc(256);
+      const lastUpdatedOut = [0];
 
       const success = this.libraryLoader.SteamAPI_ISteamApps_GetBetaInfo(
         apps,
@@ -895,7 +896,8 @@ export class SteamAppsManager {
         nameBuffer,
         256,
         descBuffer,
-        256
+        256,
+        lastUpdatedOut
       );
 
       if (!success) return null;
@@ -904,7 +906,8 @@ export class SteamAppsManager {
         name: nameBuffer.toString('utf8').replace(/\0/g, '').trim(),
         description: descBuffer.toString('utf8').replace(/\0/g, '').trim(),
         buildId: buildIdOut[0],
-        flags: flagsOut[0]
+        flags: flagsOut[0],
+        lastUpdated: lastUpdatedOut[0]
       };
     } catch (error) {
       SteamLogger.error('[Steamworks] Error getting beta info:', error);

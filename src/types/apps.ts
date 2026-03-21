@@ -51,6 +51,8 @@ export interface BetaInfo {
   buildId: number;
   /** Beta branch flags (EBetaBranchFlags) */
   flags: number;
+  /** Unix timestamp of the last update for this beta branch (SDK 1.64+) */
+  lastUpdated: number;
 }
 
 /**
