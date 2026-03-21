@@ -673,7 +673,8 @@ interface BetaInfo {
   name: string;
   description: string;
   buildId: number;
-  flags: number;  // EBetaBranchFlags
+  flags: number;        // EBetaBranchFlags
+  lastUpdated: number;  // Unix timestamp of last build update (SDK 1.64+)
 }
 ```
 
@@ -683,6 +684,7 @@ const beta = steam.apps.getBetaInfo(0);
 if (beta) {
   console.log(`${beta.name}: ${beta.description}`);
   console.log(`Build: ${beta.buildId}`);
+  console.log(`Last updated: ${new Date(beta.lastUpdated * 1000).toLocaleString()}`);
 }
 ```
 
@@ -703,6 +705,7 @@ Gets all beta branch information.
 const betas = steam.apps.getAllBetas();
 betas.forEach(beta => {
   console.log(`${beta.name}: ${beta.description}`);
+  console.log(`Build: ${beta.buildId}, Last updated: ${new Date(beta.lastUpdated * 1000).toLocaleString()}`);
 });
 ```
 

@@ -15,7 +15,7 @@ This guide explains how to properly set up the Steamworks SDK redistributables f
 3. Download the latest Steamworks SDK
 4. Extract the downloaded archive
 
-> **Note**: This package was built and tested with Steamworks SDK v1.63. While newer versions should be compatible, v1.63 or later is recommended for optimal compatibility.
+> **Note**: This package was built and tested with Steamworks SDK v1.64. While newer versions should be compatible, v1.64 or later is recommended for optimal compatibility.
 
 ### 2. Install SDK Redistributables
 

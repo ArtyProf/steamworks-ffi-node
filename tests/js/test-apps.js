@@ -187,6 +187,10 @@ if (betaCounts.total > 0) {
     console.log(`      Description: ${beta.description || 'N/A'}`);
     console.log(`      Build ID: ${beta.buildId}`);
     console.log(`      Flags: ${beta.flags}`);
+    const lastUpdatedStr = beta.lastUpdated > 0
+      ? new Date(beta.lastUpdated * 1000).toLocaleString()
+      : 'N/A (not set by Steam)';
+    console.log(`      Last Updated: ${lastUpdatedStr}`);
   });
 }
 
