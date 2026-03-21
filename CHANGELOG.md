@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-03-21
+
+### ⚠️ BREAKING CHANGE
+
+- **`ISteamApps` interface updated to `v009` (Steamworks SDK 1.64)** — This release requires **Steamworks SDK 1.64 or newer**. Applications using an older SDK will crash at startup with a null pointer when accessing the Apps interface.
+  - If you are pinned to SDK ≤ 1.63, do **not** upgrade to this version
+
+### Added
+- **`getBetaInfo()` now returns `lastUpdated`** — new `lastUpdated: number` field (Unix timestamp) on `BetaInfo` reflecting when the beta branch build was last updated, exposed via the new `lastUpdated` parameter added in SDK 1.64's `ISteamApps::GetBetaInfo()`
+
+> **SDK requirement:** Update your `steamworks_sdk` folder to SDK 1.64 before using this version.
+
 ## [0.9.5] - 2026-03-14
 
 ### Added
@@ -490,6 +502,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.10.0 | 2026-03-21 | **BREAKING**: `ISteamApps v008→v009` (SDK 1.64+), `getBetaInfo` return `lastUpdated` |
 | 0.9.5 | 2026-03-14 | ContentDescriptors API for Workshop (4 functions), `EUGCContentDescriptorID` enum, resolves #50 |
 | 0.9.4 | 2026-03-13 | `setItemTags()` for Workshop Manager, fix #49 |
 | 0.9.3 | 2026-03-06 | `getDigitalActionOrigins()` / `getAnalogActionOrigins()`, fix #46 & #47 (struct return ABI) |
@@ -514,6 +527,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.10.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.0
 [0.9.5]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.5
 [0.9.4]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.4
 [0.9.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.3
