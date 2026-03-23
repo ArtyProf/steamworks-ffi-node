@@ -660,9 +660,39 @@ app.on("before-quit", () => {
 
 ### 📦 Electron Packaging
 
-For Electron applications, the library will automatically detect the Steamworks SDK files in your project directory. No special packaging configuration is needed - just ensure your `steamworks_sdk/redistributable_bin` folder is present in your project.
+> ⚠️ **ASAR packaging will break the library.** Two native components must live on the real filesystem — they cannot be loaded from inside an `.asar` archive:
+> - `steamworks_sdk/redistributable_bin/` — loaded by the OS dynamic linker (`dlopen` / `LoadLibrary`)
+> - `prebuilds/<platform>/steam-overlay.node` — a native Node addon (`require()` cannot load `.node` files from `.asar`)
 
-The library searches for the SDK in standard locations within your Electron app bundle.
+You must tell your packager to exclude these paths from the archive using `asarUnpack`.
+
+#### electron-builder
+
+```json
+{
+  "build": {
+    "asarUnpack": [
+      "node_modules/steamworks-ffi-node/prebuilds/**",
+      "steamworks_sdk/redistributable_bin/**"
+    ]
+  }
+}
+```
+
+#### electron-forge
+
+```js
+// forge.config.js
+module.exports = {
+  packagerConfig: {
+    asar: {
+      unpack: "*(steamworks_sdk/**|**/steam-overlay.node)"
+    }
+  }
+};
+```
+
+No code changes are needed in your app — just the packager config above. The `asarUnpack` setting is what physically places the files outside the archive so the OS loader and Node's native addon loader can access them.
 
 ## Requirements
 
