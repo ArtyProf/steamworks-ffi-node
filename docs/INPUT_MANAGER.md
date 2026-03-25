@@ -1870,6 +1870,8 @@ If you prefer the manual approach, place a file named `game_actions_<AppID>.vdf`
 - **macOS:** `~/Library/Application Support/Steam/Steam.AppBundle/Steam/Contents/MacOS/controller_config/`
 - **Linux:** `~/.steam/steam/controller_config/`
 
+> 📁 **The `controller_config` folder may not exist yet** — Steam creates it automatically when needed (e.g. after a controller-configured game is played), but on a fresh install it may be absent. If it's missing, create it manually. Be careful not to confuse it with the similarly-named `controller_base` folder that Steam ships with — they are different.
+
 > ⚠️ The root key **must** be `"In Game Actions"` — this is what Steam recognises. Using any other string (e.g. `"input_actions"`) will cause Steam to reject the file with `Steam rejected input_actions.vdf`.
 
 ```vdf
