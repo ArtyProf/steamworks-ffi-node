@@ -200,13 +200,21 @@ The Linux implementation uses OpenGL 3.3 with X11:
 - X11 display server (Wayland not yet supported)
 - OpenGL 3.3+ capable driver
 
-## electron-builder Configuration
+## Electron Packaging
 
-Add to your `package.json`:
+> ⚠️ The native overlay module (`steam-overlay.node`) **must** be outside the `.asar` archive — `require()` cannot load native addons from inside `.asar`. The recommended approach for games is to unpack the entire library with a single rule.
+
+### electron-builder
+
+Add to your `package.json` (or `electron-builder.json`):
 
 ```json
 {
   "build": {
+    "asarUnpack": [
+      "node_modules/steamworks-ffi-node/**",
+      "steamworks_sdk/redistributable_bin/**"
+    ],
     "mac": {
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -215,6 +223,19 @@ Add to your `package.json`:
     }
   }
 }
+```
+
+### electron-forge
+
+```js
+// forge.config.js
+module.exports = {
+  packagerConfig: {
+    asar: {
+      unpack: "*(steamworks_sdk/**|**/steamworks-ffi-node/**)"
+    }
+  }
+};
 ```
 
 ## Complete Example

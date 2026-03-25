@@ -664,7 +664,7 @@ app.on("before-quit", () => {
 > - `steamworks_sdk/redistributable_bin/` — loaded by the OS dynamic linker (`dlopen` / `LoadLibrary`)
 > - `prebuilds/<platform>/steam-overlay.node` — a native Node addon (`require()` cannot load `.node` files from `.asar`)
 
-You must tell your packager to exclude these paths from the archive using `asarUnpack`.
+The recommended approach for games is to unpack the entire library. This covers all required components with a single rule and keeps configuration simple:
 
 #### electron-builder
 
@@ -672,7 +672,7 @@ You must tell your packager to exclude these paths from the archive using `asarU
 {
   "build": {
     "asarUnpack": [
-      "node_modules/steamworks-ffi-node/prebuilds/**",
+      "node_modules/steamworks-ffi-node/**",
       "steamworks_sdk/redistributable_bin/**"
     ]
   }
@@ -686,7 +686,7 @@ You must tell your packager to exclude these paths from the archive using `asarU
 module.exports = {
   packagerConfig: {
     asar: {
-      unpack: "*(steamworks_sdk/**|**/steam-overlay.node)"
+      unpack: "*(steamworks_sdk/**|**/steamworks-ffi-node/**)"
     }
   }
 };

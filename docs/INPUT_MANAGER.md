@@ -18,7 +18,7 @@ The `SteamInputManager` provides **100% coverage** of the Steamworks Input API w
 | [Analog Actions](#analog-actions) | 4 | Read stick/trigger analog values |
 | [Motion Data](#motion-data) | 1 | Read gyro and accelerometer data |
 | [Haptics](#haptics) | 4 | Trigger vibration and LED control |
-| [Configuration](#configuration) | 4 | Binding UI, device info, remote play |
+| [Configuration](#configuration) | 5 | Binding UI, device info, remote play |
 | [Glyphs](#glyphs) | 3 | Get button icons and labels |
 
 ---
@@ -376,7 +376,7 @@ Get a handle for an action set by name.
 - `SteamAPI_ISteamInput_GetActionSetHandle()` - Get action set handle
 
 **Parameters:**
-- `actionSetName: string` - Name of the action set from your input_actions.vdf file
+- `actionSetName: string` - Name of the action set from your `game_actions_<AppID>.vdf` file
 
 **Returns:** `bigint` - Action set handle (0n if not found)
 
@@ -388,12 +388,12 @@ const gameplaySet = steam.input.getActionSetHandle('GameplayControls');
 const drivingSet = steam.input.getActionSetHandle('DrivingControls');
 
 if (menuSet === 0n) {
-  console.error('MenuControls action set not found in input_actions.vdf');
+  console.error('MenuControls action set not found in game_actions_480.vdf');
 }
 ```
 
 **Notes:**
-- Names must match those in your input_actions.vdf file
+- Names must match those in your `game_actions_<AppID>.vdf` file
 - Cache handles at startup (don't query every frame)
 - Returns 0n if action set doesn't exist
 - Case-sensitive
@@ -583,7 +583,7 @@ Get a handle for a digital action (button) by name.
 - `SteamAPI_ISteamInput_GetDigitalActionHandle()` - Get digital action handle
 
 **Parameters:**
-- `actionName: string` - Name of the digital action from input_actions.vdf
+- `actionName: string` - Name of the digital action from your `game_actions_<AppID>.vdf`
 
 **Returns:** `bigint` - Digital action handle (0n if not found)
 
@@ -595,12 +595,12 @@ const shootHandle = steam.input.getDigitalActionHandle('Fire');
 const interactHandle = steam.input.getDigitalActionHandle('Interact');
 
 if (jumpHandle === 0n) {
-  console.error('Jump action not found in input_actions.vdf');
+  console.error('Jump action not found in game_actions_480.vdf');
 }
 ```
 
 **Notes:**
-- Names must match those in your input_actions.vdf file
+- Names must match those in your `game_actions_<AppID>.vdf` file
 - Cache handles at startup (don't query every frame)
 - Returns 0n if action doesn't exist
 - Case-sensitive
@@ -615,7 +615,7 @@ Get a handle for an analog action (stick/trigger) by name.
 - `SteamAPI_ISteamInput_GetAnalogActionHandle()` - Get analog action handle
 
 **Parameters:**
-- `actionName: string` - Name of the analog action from input_actions.vdf
+- `actionName: string` - Name of the analog action from your `game_actions_<AppID>.vdf`
 
 **Returns:** `bigint` - Analog action handle (0n if not found)
 
@@ -627,7 +627,7 @@ const cameraHandle = steam.input.getAnalogActionHandle('Camera');
 const aimHandle = steam.input.getAnalogActionHandle('Aim');
 
 if (moveHandle === 0n) {
-  console.error('Move action not found in input_actions.vdf');
+  console.error('Move action not found in game_actions_480.vdf');
 }
 ```
 
@@ -1142,6 +1142,80 @@ if (type === SteamInputType.PS4Controller ||
 ## Configuration
 
 Functions for controller configuration and device information.
+
+### `setInputActionManifestFilePath(manifestPath)`
+
+Set the absolute path to your IGA (In-Game Actions) file so Steam loads it directly from your project — no manual copying to Steam's `controller_config` folder required.
+
+**Steamworks SDK Functions:**
+- `SteamAPI_ISteamInput_SetInputActionManifestFilePath()` - Register IGA file path
+
+**Parameters:**
+- `manifestPath: string` - Absolute path to your `game_actions_<AppID>.vdf` file
+
+**Returns:** `boolean` - `true` if Steam accepted the path
+
+> ⚠️ **Must be called before `steam.input.init()`.**
+
+**Example:**
+```typescript
+import path from 'path';
+import SteamworksSDK from 'steamworks-ffi-node';
+
+const steam = SteamworksSDK.getInstance();
+steam.init({ appId: 480 });
+
+// Point Steam at the IGA file bundled with your app
+const manifestPath = path.join(__dirname, 'assets', 'game_actions_480.vdf');
+const ok = steam.input.setInputActionManifestFilePath(manifestPath);
+
+if (!ok) {
+  console.error('Steam rejected the IGA manifest path');
+}
+
+// Now init Steam Input
+steam.input.init();
+```
+
+**Electron example (packaged app):**
+
+`setInputActionManifestFilePath()` passes the path to the Steam C++ API which calls `fopen()` directly — it cannot open paths inside an `.asar` archive. Node.js *can* read files from inside `.asar`, so the simplest approach is to copy the VDF to a temp directory at startup:
+
+```typescript
+import { app } from 'electron';
+import fs from 'fs';
+import path from 'path';
+
+// VDF lives inside asar (no asarUnpack needed for this file)
+const vdfSource = path.join(app.getAppPath(), 'assets', 'game_actions_480.vdf');
+// Write to userData — app-scoped, always writable, avoids os.tmpdir() races
+const vdfDest   = path.join(app.getPath('userData'), 'game_actions_480.vdf');
+
+fs.copyFileSync(vdfSource, vdfDest); // atomic copy to real filesystem so Steam can fopen() it
+steam.input.setInputActionManifestFilePath(vdfDest);
+steam.input.init();
+```
+
+Alternatively, if you already have the file in `asarUnpack` for other reasons:
+
+```typescript
+const manifestPath = path.join(
+  path.dirname(app.getAppPath()),  // directory that contains app.asar
+  'app.asar.unpacked',
+  'assets',
+  'game_actions_480.vdf'
+);
+steam.input.setInputActionManifestFilePath(manifestPath);
+steam.input.init();
+```
+
+**Notes:**
+- The file can live anywhere on disk — inside your project, in `resources/`, etc.
+- The file name must still follow Valve's convention: `game_actions_<AppID>.vdf`
+- The root key inside the file must be `"In Game Actions"` (see [Action Configuration File](#action-configuration-file))
+- If you skip this call, Steam falls back to searching its own `controller_config` folder
+
+---
 
 ### `showBindingPanel(controllerHandle)`
 
@@ -1786,40 +1860,58 @@ npm run test:input:js
 
 ### Action Configuration File
 
-Create `input_actions.vdf` in your game directory:
+> 💡 **Recommended approach:** Use [`setInputActionManifestFilePath()`](#setinputactionmanifestfilepathmanifestpath) to point Steam at your IGA file from code — no manual file copying needed.
+
+**Official Steamworks documentation:** [In-Game Actions File](https://partner.steamgames.com/doc/features/steam_controller/iga_file)
+
+If you prefer the manual approach, place a file named `game_actions_<AppID>.vdf` (e.g. `game_actions_480.vdf`) in Steam's `controller_config` folder:
+
+- **Windows:** `C:\Program Files (x86)\Steam\controller_config\`
+- **macOS:** `~/Library/Application Support/Steam/Steam.AppBundle/Steam/Contents/MacOS/controller_config/`
+- **Linux:** `~/.steam/steam/controller_config/`
+
+> ⚠️ The root key **must** be `"In Game Actions"` — this is what Steam recognises. Using any other string (e.g. `"input_actions"`) will cause Steam to reject the file with `Steam rejected input_actions.vdf`.
 
 ```vdf
-"input_actions"
+"In Game Actions"
 {
-  "actions"
-  {
-    "GameplayControls"
-    {
-      "title" "#Gameplay"
-      "StickPadGyro"
-      {
-        "Move" "#Move"
-        "Camera" "#Look"
-      }
-      "Button"
-      {
-        "Jump" "#Jump"
-        "Fire" "#Fire"
-      }
-    }
-  }
-  
-  "localization"
-  {
-    "english"
-    {
-      "#Gameplay" "Gameplay Controls"
-      "#Move" "Move"
-      "#Look" "Look Around"
-      "#Jump" "Jump"
-      "#Fire" "Fire Weapon"
-    }
-  }
+	"actions"
+	{
+		"GameplayControls"
+		{
+			"title"		"#Gameplay"
+			"StickPadGyro"
+			{
+				"Move"
+				{
+					"title"		"#Move"
+					"input_mode"	"joystick_move"
+				}
+				"Camera"
+				{
+					"title"		"#Look"
+					"input_mode"	"absolute_mouse"
+				}
+			}
+			"Button"
+			{
+				"Jump"		"#Jump"
+				"Fire"		"#Fire"
+			}
+		}
+	}
+
+	"localization"
+	{
+		"english"
+		{
+			"Gameplay"	"Gameplay Controls"
+			"Move"		"Move"
+			"Look"		"Look Around"
+			"Jump"		"Jump"
+			"Fire"		"Fire Weapon"
+		}
+	}
 }
 ```
 
