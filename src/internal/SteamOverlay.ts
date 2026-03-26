@@ -345,29 +345,39 @@ export class SteamOverlay {
       });
       browserWindow.on("hide", () => hideOverlay("hide"));
 
-      // On non-Linux, focus/blur also control visibility
+      // blur/focus control overlay visibility on all platforms including Linux.
+      // On Linux, XSetInputFocus(overlay) causes a spurious X11 FocusOut on the
+      // Electron window within ~50ms.  shouldSuppressNextBlur() consumes this
+      // one-shot stamp so we don't hide the overlay on our own focus grab.
+      // Real alt-tab / click-outside blurs arrive independently of our grabs
+      // and are NOT suppressed.
       let blurTimeout: NodeJS.Timeout | null = null;
       let isBlurred = false;
 
-      if (process.platform !== "linux") {
-        browserWindow.on("blur", () => {
-          isBlurred = true;
-          blurTimeout = setTimeout(() => {
-            if (isBlurred) hideOverlay("app switch");
-          }, 150);
-        });
-        browserWindow.on("focus", () => {
-          isBlurred = false;
-          if (blurTimeout) {
-            clearTimeout(blurTimeout);
-            blurTimeout = null;
-          }
-          if (!browserWindow.isMinimized()) {
-            showOverlay("focus");
-            syncOverlayFrame();
-          }
-        });
-      }
+      browserWindow.on("blur", () => {
+        // Suppress spurious blur caused by our own XSetInputFocus on Linux.
+        if (
+          process.platform === "linux" &&
+          this.nativeModule?.shouldSuppressNextBlur?.(this.overlayWindow)
+        ) {
+          return;
+        }
+        isBlurred = true;
+        blurTimeout = setTimeout(() => {
+          if (isBlurred) hideOverlay("app switch");
+        }, 150);
+      });
+      browserWindow.on("focus", () => {
+        isBlurred = false;
+        if (blurTimeout) {
+          clearTimeout(blurTimeout);
+          blurTimeout = null;
+        }
+        if (!browserWindow.isMinimized()) {
+          showOverlay("focus");
+          syncOverlayFrame();
+        }
+      });
 
       // Cleanup function — stops frame capture.
       const cleanup = () => {

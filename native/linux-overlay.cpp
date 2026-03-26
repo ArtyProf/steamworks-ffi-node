@@ -75,15 +75,17 @@ public:
     // restored position (we receive no MotionNotify while the overlay holds focus).
     bool overlayWasOpened = false;
     long long suppressMotionUntilMs = 0;
-    
-    // For continuous rendering (Steam overlay requirement)
-    std::atomic<bool> renderThreadRunning{false};
-    std::thread renderThread;
-    std::mutex frameMutex;
-    uint8_t* frameBuffer = nullptr;
-    int frameWidth = 0;
-    int frameHeight = 0;
-    std::atomic<bool> hasNewFrame{false};
+
+    // Timestamp of the last event forwarded to Electron.
+    // Used by the idle refocus timer to re-grab X11 focus after Chromium steals it
+    // when the user clicks an input element.
+    long long lastForwardedEventMs = 0;
+
+    // Timestamp of the last XSetInputFocus call. shouldSuppressNextBlur() suppresses
+    // a blur only if it arrives within 200ms of this stamp — that is the spurious
+    // blur caused by our own XSetInputFocus. Any real alt-tab/click-outside blur
+    // arrives independently of our grabs and will not be suppressed.
+    long long lastRequestFocusMs = 0;
     
     static long long getMonotonicMs() {
         struct timespec ts;
@@ -390,13 +392,10 @@ public:
     }
 
     void requestFocus() {
-        // With override_redirect=True, KWin ignores EWMH messages for our window.
-        // XSetInputFocus is the only way to grab keyboard focus.
-        // Guard with isMapped: calling XSetInputFocus on an unmapped window
-        // generates a BadMatch X error and fights the minimize animation.
         if (!display || !window || !isMapped) return;
         XSetInputFocus(display, window, RevertToPointerRoot, CurrentTime);
         XFlush(display);
+        lastRequestFocusMs = getMonotonicMs();
     }
 
     void hide() {
@@ -517,6 +516,7 @@ public:
                     event.xkey.window    = electronWindow;
                     event.xkey.subwindow = None;
                     XSendEvent(display, electronWindow, True, NoEventMask, &event);
+                    lastForwardedEventMs = getMonotonicMs();
                 }
 
             } else if (electronWindow && (
@@ -536,18 +536,18 @@ public:
                 XSendEvent(display, electronWindow, True, NoEventMask, &event);
 
                 if (event.type == ButtonPress) {
-                    // Real click — cancel any remaining suppression and re-grab focus
                     suppressMotionUntilMs = 0;
-                    requestFocus();
+                    // Stamp lastForwardedEventMs so the idle refocus timer knows
+                    // Chromium may have stolen X11 focus to handle this click.
+                    // Do NOT call requestFocus() here — it immediately grabs focus
+                    // back from Chromium before the input/dropdown can receive it.
+                    lastForwardedEventMs = getMonotonicMs();
                 }
 
             } else if (event.type == FocusOut) {
-                // Steam overlay is stealing focus — it will save cursor position now
-                // and warp back to it when it closes. Mark so FocusIn suppresses that warp.
                 if (isMapped) {
-                    OverlayLog("FocusOut: overlay stealing focus, marking for cursor warp suppression");
+                    OverlayLog("FocusOut received");
                     overlayWasOpened = true;
-                    requestFocus();
                 }
             } else if (event.type == FocusIn) {
                 OverlayLog("FocusIn: overlay window has keyboard focus");
@@ -562,26 +562,29 @@ public:
             // Expose/other events: handled on next renderFrame
         }
         
+        // Idle refocus: if Chromium stole X11 focus for an input element and the user
+        // has stopped interacting for 1.5s, re-grab focus so Shift+Tab works again.
+        // XGetInputFocus guard: only stamp lastRequestFocusMs when we actually move
+        // focus — if we already have it, requestFocus() would be a no-op but would
+        // refresh the timestamp, causing the next click-outside blur to be suppressed.
+        if (isMapped && lastForwardedEventMs > 0 &&
+                getMonotonicMs() - lastForwardedEventMs > 1500) {
+            lastForwardedEventMs = 0;
+            Window currentFocus; int revertTo;
+            XGetInputFocus(display, &currentFocus, &revertTo);
+            if (currentFocus != window) {
+                requestFocus();
+            }
+        }
+
         // Ensure GL commands are flushed
         glFlush();
     }
-    
+
     void destroy() {
         if (isDestroyed.exchange(true)) return;
         
         OverlayLog("Destroying Linux overlay window...");
-        
-        // Stop render thread if running
-        renderThreadRunning = false;
-        if (renderThread.joinable()) {
-            renderThread.join();
-        }
-        
-        // Free frame buffer
-        if (frameBuffer) {
-            delete[] frameBuffer;
-            frameBuffer = nullptr;
-        }
         
         // Delete texture
         if (texture && display && glContext) {
@@ -820,6 +823,31 @@ static napi_value SetElectronWindow(napi_env env, napi_callback_info info) {
     return nullptr;
 }
 
+// shouldSuppressNextBlur(handle) — returns true (once) if the last XSetInputFocus
+// fired within the past 200ms.  Used by the TypeScript blur handler to distinguish
+// our own spurious blurs from real alt-tab / click-outside blurs.
+static napi_value ShouldSuppressNextBlur(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    LinuxOverlayWindow* window;
+    napi_get_value_external(env, args[0], (void**)&window);
+
+    bool suppress = false;
+    if (window && window->lastRequestFocusMs > 0) {
+        long long elapsed = LinuxOverlayWindow::getMonotonicMs() - window->lastRequestFocusMs;
+        if (elapsed >= 0 && elapsed < 200) {
+            suppress = true;
+            window->lastRequestFocusMs = 0; // consume — one-shot
+        }
+    }
+
+    napi_value result;
+    napi_get_boolean(env, suppress, &result);
+    return result;
+}
+
 // Module initialization - use same function names as other platforms for compatibility
 static napi_value Init(napi_env env, napi_value exports) {
     napi_property_descriptor desc[] = {
@@ -830,8 +858,9 @@ static napi_value Init(napi_env env, napi_value exports) {
         { "renderFrame",              nullptr, RenderFrame,              nullptr, nullptr, nullptr, napi_default, nullptr },
         { "destroyOverlayWindow",     nullptr, DestroyOverlayWindow,     nullptr, nullptr, nullptr, napi_default, nullptr },
         { "setDebugMode",             nullptr, SetDebugMode,             nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "setSteamGameAtomOnWindow", nullptr, SetSteamGameAtomOnWindow, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "setElectronWindow",        nullptr, SetElectronWindow,        nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "setSteamGameAtomOnWindow",  nullptr, SetSteamGameAtomOnWindow,  nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "setElectronWindow",          nullptr, SetElectronWindow,          nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "shouldSuppressNextBlur",     nullptr, ShouldSuppressNextBlur,     nullptr, nullptr, nullptr, napi_default, nullptr },
     };
     
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
