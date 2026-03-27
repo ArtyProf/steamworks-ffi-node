@@ -13,6 +13,7 @@
  * - App metadata (build ID, languages, purchase time)
  */
 
+import * as koffi from 'koffi';
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamLogger } from './SteamLogger';
@@ -345,8 +346,8 @@ export class SteamAppsManager {
       const apps = this.getSteamApps();
       if (!apps) return null;
 
-      const appIdOut = [0];
-      const availableOut = [false];
+      const appIdOut = koffi.alloc('uint32', 1);
+      const availableOut = koffi.alloc('bool', 1);
       const nameBuffer = Buffer.alloc(256);
 
       const success = this.libraryLoader.SteamAPI_ISteamApps_BGetDLCDataByIndex(
@@ -361,8 +362,8 @@ export class SteamAppsManager {
       if (!success) return null;
 
       return {
-        appId: appIdOut[0],
-        available: availableOut[0],
+        appId: koffi.decode(appIdOut, 'uint32'),
+        available: koffi.decode(availableOut, 'bool'),
         name: nameBuffer.toString('utf8').replace(/\0/g, '').trim()
       };
     } catch (error) {
@@ -472,8 +473,8 @@ export class SteamAppsManager {
       const apps = this.getSteamApps();
       if (!apps) return null;
 
-      const bytesDownloaded = [BigInt(0)];
-      const bytesTotal = [BigInt(0)];
+      const bytesDownloaded = koffi.alloc('uint64', 1);
+      const bytesTotal = koffi.alloc('uint64', 1);
 
       const downloading = this.libraryLoader.SteamAPI_ISteamApps_GetDlcDownloadProgress(
         apps,
@@ -484,8 +485,8 @@ export class SteamAppsManager {
 
       if (!downloading) return null;
 
-      const downloaded = bytesDownloaded[0];
-      const total = bytesTotal[0];
+      const downloaded = BigInt(koffi.decode(bytesDownloaded, 'uint64'));
+      const total = BigInt(koffi.decode(bytesTotal, 'uint64'));
       const percent = total > BigInt(0) 
         ? Number((downloaded * BigInt(100)) / total) 
         : 0;
@@ -553,8 +554,8 @@ export class SteamAppsManager {
       const apps = this.getSteamApps();
       if (!apps) return null;
 
-      const secondsAllowed = [0];
-      const secondsPlayed = [0];
+      const secondsAllowed = koffi.alloc('uint32', 1);
+      const secondsPlayed = koffi.alloc('uint32', 1);
 
       const isTrial = this.libraryLoader.SteamAPI_ISteamApps_BIsTimedTrial(
         apps,
@@ -564,9 +565,9 @@ export class SteamAppsManager {
 
       return {
         isTimedTrial: isTrial,
-        secondsAllowed: secondsAllowed[0],
-        secondsPlayed: secondsPlayed[0],
-        secondsRemaining: Math.max(0, secondsAllowed[0] - secondsPlayed[0])
+        secondsAllowed: koffi.decode(secondsAllowed, 'uint32'),
+        secondsPlayed: koffi.decode(secondsPlayed, 'uint32'),
+        secondsRemaining: Math.max(0, koffi.decode(secondsAllowed, 'uint32') - koffi.decode(secondsPlayed, 'uint32'))
       };
     } catch (error) {
       SteamLogger.error('[Steamworks] Error checking timed trial status:', error);
@@ -846,15 +847,15 @@ export class SteamAppsManager {
       const apps = this.getSteamApps();
       if (!apps) return { total: 0, available: 0, private: 0 };
 
-      const availableOut = [0];
-      const privateOut = [0];
+      const availableOut = koffi.alloc('int', 1);
+      const privateOut = koffi.alloc('int', 1);
 
       const total = this.libraryLoader.SteamAPI_ISteamApps_GetNumBetas(apps, availableOut, privateOut);
 
       return {
         total,
-        available: availableOut[0],
-        private: privateOut[0]
+        available: koffi.decode(availableOut, 'int'),
+        private: koffi.decode(privateOut, 'int')
       };
     } catch (error) {
       SteamLogger.error('[Steamworks] Error getting beta count:', error);
@@ -882,11 +883,11 @@ export class SteamAppsManager {
       const apps = this.getSteamApps();
       if (!apps) return null;
 
-      const flagsOut = [0];
-      const buildIdOut = [0];
+      const flagsOut = koffi.alloc('uint32', 1);
+      const buildIdOut = koffi.alloc('uint32', 1);
       const nameBuffer = Buffer.alloc(256);
       const descBuffer = Buffer.alloc(256);
-      const lastUpdatedOut = [0];
+      const lastUpdatedOut = koffi.alloc('uint32', 1);
 
       const success = this.libraryLoader.SteamAPI_ISteamApps_GetBetaInfo(
         apps,
@@ -905,9 +906,9 @@ export class SteamAppsManager {
       return {
         name: nameBuffer.toString('utf8').replace(/\0/g, '').trim(),
         description: descBuffer.toString('utf8').replace(/\0/g, '').trim(),
-        buildId: buildIdOut[0],
-        flags: flagsOut[0],
-        lastUpdated: lastUpdatedOut[0]
+        buildId: koffi.decode(buildIdOut, 'uint32'),
+        flags: koffi.decode(flagsOut, 'uint32'),
+        lastUpdated: koffi.decode(lastUpdatedOut, 'uint32')
       };
     } catch (error) {
       SteamLogger.error('[Steamworks] Error getting beta info:', error);
