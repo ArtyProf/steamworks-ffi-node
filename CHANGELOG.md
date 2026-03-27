@@ -5,13 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.2] - 2026-03-27
+
+### Fixed
+- **`getDLCDataByIndex()` always returning `appId: 0` and `available: false`** (Fixes #54) — root cause: koffi does not write back into plain JS arrays (`[0]`, `[false]`) used as output pointer arguments; the fix replaces all such out-params across `SteamAppsManager` with `koffi.alloc()` / `koffi.decode()`, matching the pattern already used in `SteamAchievementManager` for `getDLCDataByIndex`, `getDlcDownloadProgress`, `getTimedTrialStatus`, `getNumBetas`, `getBetaInfo`
+
 ## [0.10.1] - 2026-03-27
 
 ### Fixed
 - **Linux overlay: focus steal breaking inputs and Shift+Tab** — resolved a regression where the Steam overlay became unresponsive to keyboard input after clicking a Chromium input element, and where `Shift+Tab` stopped opening the overlay after such a click
 
 ### Documentation
-- **`INPUT_MANAGER.md` — `game_actions_<AppID>.vdf` filename clarified** and`controller_config` folder note added** (relates to #52 and #53) 
+- **`INPUT_MANAGER.md` — `game_actions_<AppID>.vdf` filename clarified and`controller_config` folder note added** (relates to #52 and #53) 
 - **`STEAM_OVERLAY_INTEGRATION.md` — Electron packaging section expanded** — the *electron-builder Configuration* section has been rewritten into a full *Electron Packaging* guide:
 - **`README.md` — ASAR packaging guide added**
 
@@ -512,6 +517,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.10.2 | 2026-03-27 | Fix `getAllDLC()` / `getDLCDataByIndex()` returning `appId: 0` and `available: false` (fixes #54); same koffi out-param bug in `getDlcDownloadProgress`, `getTimedTrialStatus`, `getNumBetas`, `getBetaInfo` |
 | 0.10.1 | 2026-03-27 | Fix Linux overlay focus steal (inputs + Shift+Tab broken after clicking input element); doc fixes: `game_actions_<AppID>.vdf` naming, `controller_config` folder note (#52, #53), Electron ASAR packaging guide |
 | 0.10.0 | 2026-03-21 | **BREAKING**: `ISteamApps v008→v009` (SDK 1.64+), `getBetaInfo` return `lastUpdated` |
 | 0.9.5 | 2026-03-14 | ContentDescriptors API for Workshop (4 functions), `EUGCContentDescriptorID` enum, resolves #50 |
@@ -538,6 +544,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.10.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.2
 [0.10.1]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.1
 [0.10.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.0
 [0.9.5]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.9.5
