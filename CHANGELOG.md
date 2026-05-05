@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.3] - 2026-05-05
+
+### Fixed
+- **`joinLobby()` reporting failure on macOS arm64 when the join succeeded** (Fixes #58) — `LobbyEnter_t.m_EChatRoomEnterResponse` was being read at byte offset 13 instead of 16, producing `0x01000000` (16777216) instead of `1` (`EChatRoomEnterResponse.Success`); with Steam SDK's `#pragma pack(4)`, `uint32` still requires 4-byte alignment, so 3 padding bytes follow the `bool` field on all platforms — the fix removes the incorrect manual parser and delegates to `koffi.decode` using the already-correct `LobbyEnter_t` struct definition
+- **`steam.shutdown()` crashing on second call** — calling `shutdown()` more than once (e.g. both manually and via a window `closed` event) could invoke `SteamAPI_ISteamInput_Shutdown` and `SteamAPI_UnregisterCallback` against an already-unloaded native library; the fix marks the API as shut down atomically at the very start of the sequence via `apiCore.markShutdown()`, so any re-entrant or duplicate call returns immediately before touching any native handles
+
 ## [0.10.2] - 2026-03-27
 
 ### Fixed
@@ -517,6 +523,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.10.3 | 2026-05-05 | Fix `joinLobby()` false failure on macOS arm64 (wrong byte offset in `LobbyEnter_t`, fixes #58); fix `shutdown()` crash on second call (atomic idempotency guard) |
 | 0.10.2 | 2026-03-27 | Fix `getAllDLC()` / `getDLCDataByIndex()` returning `appId: 0` and `available: false` (fixes #54); same koffi out-param bug in `getDlcDownloadProgress`, `getTimedTrialStatus`, `getNumBetas`, `getBetaInfo` |
 | 0.10.1 | 2026-03-27 | Fix Linux overlay focus steal (inputs + Shift+Tab broken after clicking input element); doc fixes: `game_actions_<AppID>.vdf` naming, `controller_config` folder note (#52, #53), Electron ASAR packaging guide |
 | 0.10.0 | 2026-03-21 | **BREAKING**: `ISteamApps v008→v009` (SDK 1.64+), `getBetaInfo` return `lastUpdated` |
@@ -544,6 +551,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.10.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.3
 [0.10.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.2
 [0.10.1]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.1
 [0.10.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.0
