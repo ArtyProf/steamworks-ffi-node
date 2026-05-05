@@ -771,6 +771,11 @@ class SteamworksSDK {
    * `SteamAPI_Shutdown()`.
    */
   shutdown(): void {
+    // Mark as shut down immediately — before any native calls — so that any
+    // re-entrant call (e.g. a window 'closed' event already queued while this
+    // is executing steps 1–4) sees isInitialized()===false and returns early.
+    if (!this.apiCore.markShutdown()) return;
+
     // 1. Destroy overlay first — before V8 teardown begins — to prevent
     //    SIGSEGV in v8::api_internal::DisposeGlobal during Electron shutdown.
     this.nativeOverlay.destroyOverlayWindow();

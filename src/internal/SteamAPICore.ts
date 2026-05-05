@@ -296,10 +296,9 @@ export class SteamAPICore {
    * - `SteamAPI_Shutdown()` - Shutdown the Steam API
    */
   shutdown(): void {
-    if (this.libraryLoader.isLoaded() && this.initialized) {
+    if (this.libraryLoader.isLoaded()) {
       SteamLogger.debug('[Steamworks] Shutting down Steam API...');
       this.libraryLoader.SteamAPI_Shutdown();
-      this.initialized = false;
       this.userStatsInterface = null;
       this.userInterface = null;
       this.utilsInterface = null;
@@ -493,6 +492,18 @@ export class SteamAPICore {
    */
   isInitialized(): boolean {
     return this.initialized;
+  }
+
+  /**
+   * Atomically marks the API as shut down.
+   * Returns true if the caller should proceed with shutdown, false if already shut down.
+   * Setting initialized=false here closes the race window between the guard check
+   * and the native cleanup steps that follow.
+   */
+  markShutdown(): boolean {
+    if (!this.initialized) return false;
+    this.initialized = false;
+    return true;
   }
 
   /**
