@@ -60,7 +60,7 @@
     "prepublishOnly": "tsc"
   },
   "dependencies": {
-    "koffi": "^2.8.8"
+    "koffi": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.3.0",
