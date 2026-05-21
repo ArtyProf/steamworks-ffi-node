@@ -747,19 +747,6 @@ _Note: You must download and install the SDK redistributables separately as desc
 
 Here are some projects and applications built with `steamworks-ffi-node`:
 
-### Bulletail
-**[Steam Store Page](https://store.steampowered.com/app/4087020/)**
-
-<p align="center">
-  <a href="https://store.steampowered.com/app/4087020/">
-    <img src="assets/4087020.jpg" alt="Bulletail Game" width="600">
-  </a>
-</p>
-
-Snake-meets-bullet-hell roguelike where your tail is your ammo. Eat bullets to grow, spend length to shoot, and survive escalating waves, enemies, and bosses.
-
----
-
 ### Beaming
 **[Steam Store Page](https://store.steampowered.com/app/4172230/)** | **[Source Code](https://github.com/kflorence/beaming)**
 
@@ -770,6 +757,19 @@ Snake-meets-bullet-hell roguelike where your tail is your ammo. Eat bullets to g
 </p>
 
 Beaming is a minimalist logic-based puzzler that involves directing beams through a hexagonal grid.
+
+---
+
+### Bulletail
+**[Steam Store Page](https://store.steampowered.com/app/4087020/)**
+
+<p align="center">
+  <a href="https://store.steampowered.com/app/4087020/">
+    <img src="assets/4087020.jpg" alt="Bulletail Game" width="600">
+  </a>
+</p>
+
+Snake-meets-bullet-hell roguelike where your tail is your ammo. Eat bullets to grow, spend length to shoot, and survive escalating waves, enemies, and bosses.
 
 ---
 
