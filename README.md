@@ -760,6 +760,19 @@ Snake-meets-bullet-hell roguelike where your tail is your ammo. Eat bullets to g
 
 ---
 
+### Beaming
+**[Steam Store Page](https://store.steampowered.com/app/4172230/)** | **[Source Code](https://github.com/kflorence/beaming)**
+
+<p align="center">
+  <a href="https://store.steampowered.com/app/4172230/">
+    <img src="assets/4172230.jpg" alt="Beaming" width="600">
+  </a>
+</p>
+
+Beaming is a minimalist logic-based puzzler that involves directing beams through a hexagonal grid.
+
+---
+
 ### DekaDuck
 **[Steam Store Page](https://store.steampowered.com/app/3715040/)**
 
