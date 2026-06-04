@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.4] - 2026-06-04
+
+### Fixed
+- **`SteamOverlay` frame capture lag and stuttering** — the capture loop used a recursive `setTimeout` which added each frame's async capture time on top of the target interval, causing effective FPS to drop and jitter to accumulate; the fix switches to `setInterval` with a `captureInProgress` guard so the interval fires at a steady cadence regardless of capture duration, and overlapping captures are skipped instead of queued
+
+### Performance
+- **`SteamLibraryLoader.load()` no longer binds all ~200 FFI functions eagerly** — previously every `koffi.func()` symbol lookup ran at library load time, blocking the main thread for hundreds of milliseconds before the app window could appear; functions are now lazily bound on first call via a thin closure wrapper, so `load()` is near-instant and only the ~12 functions called during `init()` pay the binding cost at startup
+
 ## [0.10.3] - 2026-05-05
 
 ### Fixed
@@ -523,6 +531,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.10.4 | 2026-06-04 | Fix `SteamOverlay` frame capture lag (steady `setInterval` + skip-if-busy guard); perf: lazy FFI binding in `SteamLibraryLoader` reduces startup blocking from ~200 symbol lookups to near-zero |
 | 0.10.3 | 2026-05-05 | Fix `joinLobby()` false failure on macOS arm64 (wrong byte offset in `LobbyEnter_t`, fixes #58); fix `shutdown()` crash on second call (atomic idempotency guard) |
 | 0.10.2 | 2026-03-27 | Fix `getAllDLC()` / `getDLCDataByIndex()` returning `appId: 0` and `available: false` (fixes #54); same koffi out-param bug in `getDlcDownloadProgress`, `getTimedTrialStatus`, `getNumBetas`, `getBetaInfo` |
 | 0.10.1 | 2026-03-27 | Fix Linux overlay focus steal (inputs + Shift+Tab broken after clicking input element); doc fixes: `game_actions_<AppID>.vdf` naming, `controller_config` folder note (#52, #53), Electron ASAR packaging guide |
@@ -551,6 +560,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.10.4]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.4
 [0.10.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.3
 [0.10.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.2
 [0.10.1]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.1
