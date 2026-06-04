@@ -217,16 +217,16 @@ export class SteamOverlay {
         "[Steam Overlay] Overlay window created, setting up frame capture...",
       );
 
-      // Store reference for cleanup
       let captureActive = true;
       let frameCount = 0;
+      let captureInProgress = false;
 
-      // Use capturePage() - more reliable than offscreen rendering
       const captureFrame = async () => {
-        if (!captureActive || !this.overlayWindow || !this.nativeModule) {
+        if (!captureActive || !this.overlayWindow || !this.nativeModule || captureInProgress) {
           return;
         }
 
+        captureInProgress = true;
         try {
           const image = await browserWindow.webContents.capturePage();
           const size = image.getSize();
@@ -241,7 +241,6 @@ export class SteamOverlay {
               );
             }
 
-            // Send frame to overlay window
             this.nativeModule.renderFrame(
               this.overlayWindow,
               buffer,
@@ -254,15 +253,11 @@ export class SteamOverlay {
             SteamLogger.debug(`[Steam Overlay] Capture error: ${error}`);
           }
         }
-
-        // Schedule next capture
-        if (captureActive) {
-          setTimeout(captureFrame, frameInterval);
-        }
+        captureInProgress = false;
       };
 
       SteamLogger.debug(`[Steam Overlay] Starting frame capture at ${fps} FPS`);
-      captureFrame();
+      const captureInterval = setInterval(captureFrame, frameInterval);
 
       // Function to sync overlay window frame with Electron's CONTENT area
       // Overlay window is borderless, so it only covers the content, not title bar
@@ -379,10 +374,10 @@ export class SteamOverlay {
         }
       });
 
-      // Cleanup function — stops frame capture.
       const cleanup = () => {
         SteamLogger.debug("[Steam Overlay] Cleaning up capture loop...");
         captureActive = false;
+        clearInterval(captureInterval);
       };
 
       // Handle window close - hide immediately then stop capture
