@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Steam Overlay Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      overflow: hidden;
+      user-select: none;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    canvas#bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .ui {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      grid-template-rows: auto 1fr auto;
+      gap: 16px;
+      padding: 20px;
+      height: 100vh;
+    }
+
+    /* ── FPS badge ── */
+    .fps-badge {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .fps-value {
+      font-size: 64px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      color: #58a6ff;
+      text-shadow: 0 0 30px rgba(88, 166, 255, 0.4);
+      min-width: 120px;
+    }
+
+    .fps-label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .fps-label span:first-child {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8b949e;
+    }
+    .fps-label .fps-note {
+      font-size: 12px;
+      color: #30363d;
+      max-width: 200px;
+    }
+    .fps-label .fps-note.good { color: #3fb950; }
+    .fps-label .fps-note.warn { color: #d29922; }
+
+    /* ── Right panel ── */
+    .panel {
+      grid-column: 2;
+      grid-row: 1 / 4;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: rgba(22, 27, 34, 0.85);
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+    }
+
+    .card h3 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #8b949e;
+      margin-bottom: 12px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #21262d;
+      font-size: 13px;
+    }
+    .status-row:last-child { border-bottom: none; }
+    .status-row .label { color: #8b949e; }
+    .status-row .value { font-weight: 600; }
+
+    .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .dot.green { background: #3fb950; box-shadow: 0 0 6px #3fb950; }
+    .dot.red   { background: #f85149; box-shadow: 0 0 6px #f85149; }
+    .dot.gray  { background: #484f58; }
+    .dot.yellow { background: #d29922; box-shadow: 0 0 6px #d29922; }
+
+    .btn {
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid #388bfd;
+      background: rgba(56, 139, 253, 0.15);
+      color: #58a6ff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 4px;
+    }
+    .btn:hover {
+      background: rgba(56, 139, 253, 0.3);
+      border-color: #58a6ff;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: #30363d;
+      color: #8b949e;
+      background: transparent;
+    }
+
+    /* ── Instructions ── */
+    .instructions {
+      grid-column: 1;
+      grid-row: 3;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .instruction-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #8b949e;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e6edf3;
+      white-space: nowrap;
+    }
+
+    /* ── Title area (center, row 2) ── */
+    .center {
+      grid-column: 1;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 6px;
+      padding-bottom: 8px;
+    }
+
+    .title-text {
+      font-size: 32px;
+      font-weight: 700;
+      color: #e6edf3;
+    }
+    .subtitle-text {
+      font-size: 14px;
+      color: #8b949e;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <div class="ui">
+    <!-- FPS counter (top-left) -->
+    <div class="fps-badge">
+      <div class="fps-value" id="fps">--</div>
+      <div class="fps-label">
+        <span>FPS</span>
+        <span class="fps-note" id="fps-note">Measuring…</span>
+      </div>
+    </div>
+
+    <!-- Center title -->
+    <div class="center">
+      <div class="title-text">Steam Overlay Test</div>
+      <div class="subtitle-text">Verify that overlay integration doesn't affect framerate</div>
+    </div>
+
+    <!-- Instructions (bottom-left) -->
+    <div class="instructions">
+      <div class="instruction-item">
+        <span class="key">Shift</span><span>+</span><span class="key">Tab</span>
+        <span>Open Steam overlay (must launch from Steam)</span>
+      </div>
+      <div class="instruction-item">
+        <span class="key">F12</span>
+        <span>DevTools</span>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="panel">
+      <!-- Steam status card -->
+      <div class="card">
+        <h3>Steam Status</h3>
+        <div class="status-row">
+          <span class="label">Steam</span>
+          <span class="value" id="steam-status">
+            <span class="dot gray"></span>Checking…
+          </span>
+        </div>
+        <div class="status-row">
+          <span class="label">User</span>
+          <span class="value" id="steam-user">—</span>
+        </div>
+        <div class="status-row">
+          <span class="label">App ID</span>
+          <span class="value" id="steam-appid">480</span>
+        </div>
+      </div>
+
+      <!-- Overlay card -->
+      <div class="card">
+        <h3>Overlay</h3>
+        <div class="status-row">
+          <span class="label">Available</span>
+          <span class="value" id="overlay-available">
+            <span class="dot gray"></span>Checking…
+          </span>
+        </div>
+        <div class="status-row">
+          <span class="label">Active</span>
+          <span class="value" id="overlay-active">
+            <span class="dot gray"></span>Waiting…
+          </span>
+        </div>
+        <button class="btn" id="open-overlay-btn" disabled>
+          Open Steam Overlay (Friends)
+        </button>
+      </div>
+
+      <!-- FPS health card -->
+      <div class="card">
+        <h3>Frame Health</h3>
+        <div class="status-row">
+          <span class="label">Render FPS</span>
+          <span class="value" id="render-fps">—</span>
+        </div>
+        <div class="status-row">
+          <span class="label">Frame time</span>
+          <span class="value" id="frame-time">—</span>
+        </div>
+        <div class="status-row">
+          <span class="label">Captured</span>
+          <span class="value" id="frames-captured">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    // ── Particle animation ────────────────────────────────────────────────
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+
+    const PARTICLE_COUNT = 120;
+    const particles = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        r: Math.random() * 2 + 0.5,
+        alpha: Math.random() * 0.5 + 0.1,
+        hue: Math.random() * 60 + 200,  // blue-teal range
+      });
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#0d1117';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(88, 166, 255, ${0.12 * (1 - dist / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw particles
+      for (const p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue}, 80%, 70%, ${p.alpha})`;
+        ctx.fill();
+      }
+    }
+
+    function updateParticles() {
+      const W = canvas.width, H = canvas.height;
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+      }
+    }
+
+    // ── FPS measurement ───────────────────────────────────────────────────
+    let frameCount = 0;
+    let lastFpsTime = performance.now();
+    let currentFps = 0;
+    let lastFrameTime = performance.now();
+    let frameTime = 0;
+
+    const fpsEl        = document.getElementById('fps');
+    const fpsNoteEl    = document.getElementById('fps-note');
+    const renderFpsEl  = document.getElementById('render-fps');
+    const frameTimeEl  = document.getElementById('frame-time');
+    const capturedEl   = document.getElementById('frames-captured');
+
+    let capturedFrames = 0;
+    let lastRafFire = performance.now();
+    let rafId = null;
+
+    function resumeLoop() {
+      const now = performance.now();
+      lastFrameTime = now;
+      lastFpsTime = now;
+      frameCount = 0;
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function loop(now) {
+      rafId = null;
+      lastRafFire = now;
+      frameTime = now - lastFrameTime;
+      lastFrameTime = now;
+      frameCount++;
+
+      updateParticles();
+      drawParticles();
+
+      const elapsed = now - lastFpsTime;
+      if (elapsed >= 500) {
+        currentFps = Math.round(frameCount / (elapsed / 1000));
+        frameCount = 0;
+        lastFpsTime = now;
+        updateFpsDisplay(currentFps, frameTime);
+      }
+
+      rafId = requestAnimationFrame(loop);
+    }
+
+    // Heartbeat from main process (200ms interval, never throttled).
+    // If rAF hasn't fired in >300ms, the compositor has suspended it —
+    // cancel the stale pending callback and schedule a fresh one.
+    ipcRenderer.on('heartbeat', () => {
+      if (performance.now() - lastRafFire > 300) {
+        if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+        resumeLoop();
+      }
+    });
+
+    function updateFpsDisplay(fps, ft) {
+      fpsEl.textContent = fps;
+      renderFpsEl.textContent = fps + ' fps';
+      frameTimeEl.textContent = ft.toFixed(1) + ' ms';
+
+      if (fps >= 55) {
+        fpsEl.style.color = '#3fb950';
+        fpsEl.style.textShadow = '0 0 30px rgba(63,185,80,0.4)';
+        fpsNoteEl.className = 'fps-note good';
+        fpsNoteEl.textContent = 'Full framerate — overlay is not impacting performance ✓';
+      } else if (fps >= 30) {
+        fpsEl.style.color = '#d29922';
+        fpsEl.style.textShadow = '0 0 30px rgba(210,153,34,0.4)';
+        fpsNoteEl.className = 'fps-note warn';
+        fpsNoteEl.textContent = 'Reduced — overlay may be impacting performance';
+      } else {
+        fpsEl.style.color = '#f85149';
+        fpsEl.style.textShadow = '0 0 30px rgba(248,81,73,0.4)';
+        fpsNoteEl.className = 'fps-note';
+        fpsNoteEl.textContent = 'Low framerate — check overlay configuration';
+      }
+    }
+
+    resumeLoop();
+
+    // ── Steam status from main process ───────────────────────────────────
+    ipcRenderer.on('steam-status', (_, status) => {
+      const steamEl = document.getElementById('steam-status');
+      const userEl  = document.getElementById('steam-user');
+      const overlayAvailEl = document.getElementById('overlay-available');
+      const openBtn = document.getElementById('open-overlay-btn');
+
+      if (status.ready) {
+        steamEl.innerHTML = '<span class="dot green"></span>Connected';
+        userEl.textContent = status.userName || 'Unknown';
+      } else {
+        steamEl.innerHTML = '<span class="dot red"></span>Not connected';
+        userEl.textContent = '—';
+      }
+
+      if (status.overlayAvailable) {
+        overlayAvailEl.innerHTML = '<span class="dot green"></span>Yes';
+        openBtn.disabled = false;
+      } else {
+        overlayAvailEl.innerHTML = '<span class="dot red"></span>No — launch from Steam';
+      }
+    });
+
+    ipcRenderer.on('overlay-ready', (_, success) => {
+      const activeEl = document.getElementById('overlay-active');
+      const openBtn  = document.getElementById('open-overlay-btn');
+
+      if (success) {
+        activeEl.innerHTML = '<span class="dot green"></span>Running';
+        openBtn.disabled = false;
+      } else {
+        activeEl.innerHTML = '<span class="dot red"></span>Failed to start';
+        openBtn.disabled = true;
+      }
+    });
+
+    // Track frame subscription deliveries (optional: count via IPC if needed)
+    // For now just count renderer frames as a proxy
+    setInterval(() => {
+      capturedFrames++;
+      capturedEl.textContent = capturedFrames;
+    }, 1000 / 60);
+
+    // ── Buttons ───────────────────────────────────────────────────────────
+    document.getElementById('open-overlay-btn').addEventListener('click', () => {
+      ipcRenderer.send('open-steam-overlay');
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F12') {
+        const { getCurrentWindow } = require('@electron/remote') || {};
+        // Fallback: just try to open devtools via ipc or directly
+        try { require('electron').remote?.getCurrentWindow().webContents.openDevTools(); } catch (_) {}
+      }
+    });
+  </script>
+</body>
+</html>

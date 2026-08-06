@@ -169,7 +169,6 @@ export class SteamOverlay {
       // Get content bounds (excludes title bar) for overlay window
       const contentBounds = browserWindow.getContentBounds();
       const fps = options?.fps || 60;
-      const frameInterval = Math.floor(1000 / fps);
 
       // Create overlay window matching Electron's content area (not full window)
       const overlayWindowOptions = {
@@ -214,50 +213,45 @@ export class SteamOverlay {
       }
 
       SteamLogger.debug(
-        "[Steam Overlay] Overlay window created, setting up frame capture...",
+        "[Steam Overlay] Overlay window created, setting up frame subscription...",
       );
 
       let captureActive = true;
       let frameCount = 0;
-      let captureInProgress = false;
 
-      const captureFrame = async () => {
-        if (!captureActive || !this.overlayWindow || !this.nativeModule || captureInProgress) {
-          return;
-        }
+      // Prevent Chromium from pausing the renderer when the native overlay
+      // window occludes the Electron window (macOS occlusion tracking).
+      // Without this, rAF and beginFrameSubscription stop firing while the
+      // Steam overlay is open, causing the native window to show a frozen frame.
+      browserWindow.webContents.setBackgroundThrottling(false);
 
-        captureInProgress = true;
-        try {
-          const image = await browserWindow.webContents.capturePage();
-          const size = image.getSize();
+      // setFrameRate controls the paint rate in offscreen rendering (OSR) mode.
+      // On non-OSR windows setFrameRate has no effect but the subscription still
+      // fires in sync with the compositor — more efficient than the old
+      // setInterval + capturePage() approach (no forced GPU→CPU readback stalls).
+      browserWindow.webContents.setFrameRate(fps);
 
-          if (size.width > 0 && size.height > 0) {
-            const buffer = image.toBitmap();
-            frameCount++;
-
-            if (frameCount <= 3) {
-              SteamLogger.debug(
-                `[Steam Overlay] Captured frame ${frameCount}: ${size.width}x${size.height}`,
-              );
-            }
-
-            this.nativeModule.renderFrame(
-              this.overlayWindow,
-              buffer,
-              size.width,
-              size.height,
+      const frameSubscription = (image: any) => {
+        if (!captureActive || !this.overlayWindow || !this.nativeModule) return;
+        const size = image.getSize();
+        if (size.width > 0 && size.height > 0) {
+          frameCount++;
+          if (frameCount <= 3) {
+            SteamLogger.debug(
+              `[Steam Overlay] Frame ${frameCount}: ${size.width}x${size.height}`,
             );
           }
-        } catch (error) {
-          if (frameCount === 0) {
-            SteamLogger.debug(`[Steam Overlay] Capture error: ${error}`);
-          }
+          this.nativeModule.renderFrame(
+            this.overlayWindow,
+            image.getBitmap(),
+            size.width,
+            size.height,
+          );
         }
-        captureInProgress = false;
       };
 
-      SteamLogger.debug(`[Steam Overlay] Starting frame capture at ${fps} FPS`);
-      const captureInterval = setInterval(captureFrame, frameInterval);
+      SteamLogger.debug(`[Steam Overlay] Starting frame subscription at ${fps} FPS`);
+      browserWindow.webContents.beginFrameSubscription(false, frameSubscription);
 
       // Function to sync overlay window frame with Electron's CONTENT area
       // Overlay window is borderless, so it only covers the content, not title bar
@@ -340,49 +334,32 @@ export class SteamOverlay {
       });
       browserWindow.on("hide", () => hideOverlay("hide"));
 
-      // blur/focus control overlay visibility on all platforms including Linux.
-      // On Linux, XSetInputFocus(overlay) causes a spurious X11 FocusOut on the
-      // Electron window within ~50ms.  shouldSuppressNextBlur() consumes this
-      // one-shot stamp so we don't hide the overlay on our own focus grab.
-      // Real alt-tab / click-outside blurs arrive independently of our grabs
-      // and are NOT suppressed.
-      let blurTimeout: NodeJS.Timeout | null = null;
-      let isBlurred = false;
-
-      browserWindow.on("blur", () => {
-        // Suppress spurious blur caused by our own XSetInputFocus on Linux.
-        if (
-          process.platform === "linux" &&
-          this.nativeModule?.shouldSuppressNextBlur?.(this.overlayWindow)
-        ) {
-          return;
-        }
-        isBlurred = true;
-        blurTimeout = setTimeout(() => {
-          if (isBlurred) hideOverlay("app switch");
-        }, 150);
-      });
+      // Do NOT hide the overlay on blur. When the Steam overlay (Shift+Tab)
+      // opens, it steals focus from the Electron window, firing a blur event.
+      // Hiding on blur would remove our overlay during the Steam overlay session.
+      // Visibility is already managed by minimize / restore / show / hide events.
+      // On focus, sync the overlay frame position in case the window moved.
       browserWindow.on("focus", () => {
-        isBlurred = false;
-        if (blurTimeout) {
-          clearTimeout(blurTimeout);
-          blurTimeout = null;
-        }
         if (!browserWindow.isMinimized()) {
           showOverlay("focus");
           syncOverlayFrame();
         }
       });
 
-      const cleanup = () => {
-        SteamLogger.debug("[Steam Overlay] Cleaning up capture loop...");
+      // Handle window close.
+      // IMPORTANT: on macOS the 'close' event fires even when the window is
+      // only being hidden (red X + e.preventDefault() in the app's close handler).
+      // Calling endFrameSubscription() here would permanently kill the subscription,
+      // so frames would never arrive after the window is re-shown.
+      // We only hide the native overlay; captureActive stays true so the
+      // subscription resumes automatically when the compositor starts rendering again.
+      // Electron cleans up the subscription automatically when webContents is destroyed.
+      browserWindow.on("close", () => {
+        hideOverlay("close");
+      });
+      browserWindow.on("closed", () => {
         captureActive = false;
-        clearInterval(captureInterval);
-      };
-
-      // Handle window close - hide immediately then stop capture
-      browserWindow.on("close", () => hideOverlay("close"));
-      browserWindow.on("closed", cleanup);
+      });
 
       // Position overlay window over Electron window initially
       syncOverlayFrame();
