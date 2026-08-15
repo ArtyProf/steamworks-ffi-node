@@ -65,7 +65,7 @@
   "devDependencies": {
     "@types/node": "^26.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.3"
   },
   "files": [
     "dist/**/*",
@@ -109,6 +109,6 @@
   },
   "optionalDependencies": {
     "node-addon-api": "^8.5.0",
-    "node-gyp": "^12.2.0"
+    "node-gyp": "^13.0.0"
   }
 }
