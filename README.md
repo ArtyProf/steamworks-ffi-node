@@ -697,6 +697,14 @@ module.exports = {
 
 No code changes are needed in your app — just the packager config above. The `asarUnpack` setting is what physically places the files outside the archive so the OS loader and Node's native addon loader can access them.
 
+#### macOS universal (x64 + arm64) builds
+
+koffi 3.x ships its native binary as a separate per-architecture package (npm only installs the one matching your build machine). If you're packaging a macOS **universal** binary, run this once before `electron-builder`/`electron-forge` so both architectures' koffi binaries are present to bundle:
+
+```bash
+npx steamworks-fetch-universal-koffi
+```
+
 ## Requirements
 
 - **Node.js**: 18+

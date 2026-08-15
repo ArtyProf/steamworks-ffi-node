@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2026-08-15
+
+### Fixed
+- **koffi 3.x breaks macOS universal (x64 + arm64) Electron builds** — koffi 3.x ships its native binary as a separate per-platform `optionalDependency` package (`@koromix/koffi-<os>-<arch>`); `npm install` only fetches the variant matching the build machine, so a universal bundle built on a single machine silently ships a broken slice for the *other* architecture, crashing at startup under Rosetta or on native Intel hardware with `Error: Cannot find the native Koffi module; did you bundle it correctly?`. This can't be worked around via a normal dependency declaration — `npm install <foreign-arch-package> --force` succeeds once, but any later plain `npm install`/`npm ci` re-blocks it with `EBADPLATFORM`, since npm's platform gate applies on every install, not just the first. Added `scripts/fetch-universal-koffi.js`, exposed as `npx steamworks-fetch-universal-koffi`: run it once before packaging a universal build to fetch the missing darwin counterpart directly from the npm registry (bypassing npm's install-time platform filter, the same technique `esbuild`/`sharp` use for their own consumers). Opt-in and explicit by design — nothing runs automatically on install
+
+### Documentation
+- **README.md, `docs/STEAM_OVERLAY_INTEGRATION.md`** — added a "macOS universal builds" note under the Electron Packaging sections pointing at the new `npx steamworks-fetch-universal-koffi` command
+
 ## [0.11.0] - 2026-08-15
 
 ### ⚠️ BREAKING CHANGE
@@ -554,6 +562,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.11.1 | 2026-08-15 | Fix koffi 3.x breaking macOS universal (x64+arm64) Electron builds; new `npx steamworks-fetch-universal-koffi` command |
 | 0.11.0 | 2026-08-15 | **BREAKING**: minimum Node.js raised to 22; upgrade `typescript`→6.0.3, `node-gyp`→13.0.0, `koffi`→3.1.5 (fixes a koffi shutdown segfault), `@types/node`→26.0.0; committed lockfile + `npm ci` + audit gate in CI; fix Electron `asarUnpack`/`asar.unpack` docs missing koffi's native binary package |
 | 0.10.4 | 2026-06-04 | Fix `SteamOverlay` frame capture lag (steady `setInterval` + skip-if-busy guard); perf: lazy FFI binding in `SteamLibraryLoader` reduces startup blocking from ~200 symbol lookups to near-zero |
 | 0.10.3 | 2026-05-05 | Fix `joinLobby()` false failure on macOS arm64 (wrong byte offset in `LobbyEnter_t`, fixes #58); fix `shutdown()` crash on second call (atomic idempotency guard) |
@@ -584,6 +593,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.11.1]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.11.1
 [0.11.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.11.0
 [0.10.4]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.4
 [0.10.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.3

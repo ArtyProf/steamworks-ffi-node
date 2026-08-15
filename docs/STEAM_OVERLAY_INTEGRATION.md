@@ -241,6 +241,14 @@ module.exports = {
 };
 ```
 
+### macOS universal (x64 + arm64) builds
+
+koffi 3.x ships its native binary as a separate per-architecture package (npm only installs the one matching your build machine). If you're packaging a macOS **universal** binary, run this once before `electron-builder`/`electron-forge` so both architectures' koffi binaries are present to bundle:
+
+```bash
+npx steamworks-fetch-universal-koffi
+```
+
 ## Complete Example
 
 ```typescript
