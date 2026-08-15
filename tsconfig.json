@@ -14,7 +14,8 @@
     "sourceMap": true,
     "moduleResolution": "node16",
     "resolveJsonModule": true,
-    "types": ["node"]
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "koffi"]
   },
   "include": [
     "src/**/*"

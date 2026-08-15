@@ -1,17 +1,25 @@
 #!/usr/bin/env node
 
 /**
- * Regenerates src/types/koffi.d.ts from the currently installed koffi
- * package's index.d.ts. Run this after bumping the koffi dependency.
+ * Regenerates src/types/koffi/index.d.ts from the currently installed
+ * koffi package's index.d.ts. Run this after bumping the koffi dependency.
  *
- * See the header comment in src/types/koffi.d.ts for why this shim exists.
+ * Lives at src/types/koffi/index.d.ts (not a flat .d.ts file) because
+ * tsconfig.json's "typeRoots"/"types" entries auto-load type packages
+ * structured this way for every compilation using this tsconfig -- e.g.
+ * ts-node compiling a single tests/ts/*.ts file directly, which does not
+ * follow tsconfig's "include" glob the way a full `tsc` project build does
+ * and would otherwise miss a flat ambient .d.ts file entirely.
+ *
+ * See the header comment in src/types/koffi/index.d.ts for why this
+ * shim exists in the first place.
  */
 
 const fs = require('fs');
 const path = require('path');
 
 const SOURCE = path.join(__dirname, '..', 'node_modules', 'koffi', 'index.d.ts');
-const TARGET = path.join(__dirname, '..', 'src', 'types', 'koffi.d.ts');
+const TARGET = path.join(__dirname, '..', 'src', 'types', 'koffi', 'index.d.ts');
 
 const HEADER = `// Local ambient type shim for the 'koffi' package.
 //
