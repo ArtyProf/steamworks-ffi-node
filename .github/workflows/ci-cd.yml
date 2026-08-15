@@ -50,7 +50,7 @@ jobs:
     
     # Install npm dependencies
     - name: Install dependencies
-      run: npm i
+      run: npm ci
     
     # Build native module
     - name: Build native module
@@ -100,7 +100,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
     
     - name: Install dependencies
-      run: npm i
+      run: npm ci
     
     - name: Build TypeScript
       run: npx tsc
@@ -133,7 +133,10 @@ jobs:
         node-version: '24.x'
 
     - name: Install dependencies
-      run: npm i
+      run: npm ci
+
+    - name: Audit dependencies for known vulnerabilities
+      run: npm audit --audit-level=high
 
     - name: TypeScript type check
       run: npx tsc --noEmit
@@ -204,7 +207,7 @@ jobs:
       run: npm install -g npm@latest
 
     - name: Install dependencies
-      run: npm i
+      run: npm ci
     
     - name: Build TypeScript
       run: npx tsc
