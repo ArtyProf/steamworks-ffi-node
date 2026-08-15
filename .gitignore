@@ -5,7 +5,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # NPM lockfile (for libraries, do not commit)
-package-lock.json
+tests/electron-overlay-test/package-lock.json
 
 # Build output
 dist/
