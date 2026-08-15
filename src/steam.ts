@@ -1,4 +1,5 @@
-import { 
+import * as koffi from 'koffi';
+import {
   SteamInitOptions,
   SteamStatus
 } from './types';
@@ -794,6 +795,26 @@ class SteamworksSDK {
 
     // 5. Call SteamAPI_Shutdown() + lib.unload() (dlclose).
     this.apiCore.shutdown();
+
+    // 6. Release Koffi's internal state (parser type names + async broker),
+    //    now that every Koffi call in this shutdown sequence is done.
+    //
+    //    Koffi's own docs warn that calling a function or using a type
+    //    defined before reset() afterwards is undefined behavior and will
+    //    likely crash — so this MUST be the last Koffi operation of the
+    //    process, never before steps 1–5.
+    //
+    //    The reset itself avoids a deadlock during Electron teardown: the
+    //    async broker created by koffi.register() is normally released by
+    //    Koffi's InstanceData finalizer via napi_release_threadsafe_function(),
+    //    but by Node env teardown CleanupHandles() already holds the libuv
+    //    mutex that call also needs → deadlock (the hang seen in Electron 39+).
+    //    Releasing the broker here, before that mutex is held, avoids it.
+    try {
+      koffi.reset();
+    } catch (_) {
+      // reset() may throw if koffi was never fully initialised; safe to ignore.
+    }
   }
 
   /**
