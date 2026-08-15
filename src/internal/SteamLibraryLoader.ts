@@ -3,6 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { SteamLogger } from './SteamLogger';
 
+type KoffiFunction = koffi.KoffiFunc<(...args: any[]) => any>;
+
 // Define callback prototype at module level
 // The callback receives a pointer to SteamNetConnectionStatusChangedCallback_t
 // Using 'void*' for the parameter since we'll decode it manually
@@ -74,646 +76,646 @@ export const InputMotionData_t = koffi.struct('InputMotionData_t', {
  * Handles loading the Steamworks native library and FFI function declarations
  */
 export class SteamLibraryLoader {
-  private steamLib: koffi.IKoffiLib | null = null;
+  private steamLib: koffi.LibraryHandle | null = null;
 
   // Koffi function declarations
-  public SteamAPI_Init!: koffi.KoffiFunction;
-  public SteamAPI_Shutdown!: koffi.KoffiFunction;
-  public SteamAPI_RunCallbacks!: koffi.KoffiFunction;
-  public SteamAPI_IsSteamRunning!: koffi.KoffiFunction;
-  public SteamAPI_RestartAppIfNecessary!: koffi.KoffiFunction;
+  public SteamAPI_Init!: KoffiFunction;
+  public SteamAPI_Shutdown!: KoffiFunction;
+  public SteamAPI_RunCallbacks!: KoffiFunction;
+  public SteamAPI_IsSteamRunning!: KoffiFunction;
+  public SteamAPI_RestartAppIfNecessary!: KoffiFunction;
   
   // Callback registration functions
-  public SteamAPI_RegisterCallback!: koffi.KoffiFunction;
-  public SteamAPI_UnregisterCallback!: koffi.KoffiFunction;
+  public SteamAPI_RegisterCallback!: KoffiFunction;
+  public SteamAPI_UnregisterCallback!: KoffiFunction;
   
-  public SteamAPI_SteamUserStats_v013!: koffi.KoffiFunction;
-  public SteamAPI_SteamUser_v023!: koffi.KoffiFunction;
-  public SteamAPI_SteamUtils_v010!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetNumAchievements!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetAchievementName!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetAchievementDisplayAttribute!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetAchievement!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetAchievementAndUnlockTime!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_SetAchievement!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_ClearAchievement!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_StoreStats!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_RequestCurrentStats!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_GetSteamID!: koffi.KoffiFunction;
+  public SteamAPI_SteamUserStats_v013!: KoffiFunction;
+  public SteamAPI_SteamUser_v023!: KoffiFunction;
+  public SteamAPI_SteamUtils_v010!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetNumAchievements!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetAchievementName!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetAchievementDisplayAttribute!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetAchievement!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetAchievementAndUnlockTime!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_SetAchievement!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_ClearAchievement!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_StoreStats!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_RequestCurrentStats!: KoffiFunction;
+  public SteamAPI_ISteamUser_GetSteamID!: KoffiFunction;
   
   // Achievement icon and visual functions
-  public SteamAPI_ISteamUserStats_GetAchievementIcon!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_IndicateAchievementProgress!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetAchievementIcon!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_IndicateAchievementProgress!: KoffiFunction;
   
   // Achievement progress limits
-  public SteamAPI_ISteamUserStats_GetAchievementProgressLimitsInt32!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetAchievementProgressLimitsFloat!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetAchievementProgressLimitsInt32!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetAchievementProgressLimitsFloat!: KoffiFunction;
   
   // Friend/user achievements
-  public SteamAPI_ISteamUserStats_RequestUserStats!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetUserAchievement!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetUserAchievementAndUnlockTime!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_RequestUserStats!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetUserAchievement!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetUserAchievementAndUnlockTime!: KoffiFunction;
   
   // Global achievement percentages
-  public SteamAPI_ISteamUserStats_RequestGlobalAchievementPercentages!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetMostAchievedAchievementInfo!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetNextMostAchievedAchievementInfo!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetAchievementAchievedPercent!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_RequestGlobalAchievementPercentages!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetMostAchievedAchievementInfo!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetNextMostAchievedAchievementInfo!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetAchievementAchievedPercent!: KoffiFunction;
   
   // Reset stats
-  public SteamAPI_ISteamUserStats_ResetAllStats!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_ResetAllStats!: KoffiFunction;
 
   // ========================================
   // Stats API Functions
   // ========================================
   
   // User stats (get/set)
-  public SteamAPI_ISteamUserStats_GetStatInt32!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetStatFloat!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_SetStatInt32!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_SetStatFloat!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_UpdateAvgRateStat!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetStatInt32!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetStatFloat!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_SetStatInt32!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_SetStatFloat!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_UpdateAvgRateStat!: KoffiFunction;
   
   // Friend/user stats
-  public SteamAPI_ISteamUserStats_GetUserStatInt32!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetUserStatFloat!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetUserStatInt32!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetUserStatFloat!: KoffiFunction;
   
   // Global stats
-  public SteamAPI_ISteamUserStats_RequestGlobalStats!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetGlobalStatInt64!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetGlobalStatDouble!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_RequestGlobalStats!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetGlobalStatInt64!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetGlobalStatDouble!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble!: KoffiFunction;
   
   // Player count
-  public SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers!: KoffiFunction;
 
   // ========================================
   // Leaderboard API Functions
   // ========================================
   
   // Leaderboard find/create
-  public SteamAPI_ISteamUserStats_FindOrCreateLeaderboard!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_FindLeaderboard!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_FindOrCreateLeaderboard!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_FindLeaderboard!: KoffiFunction;
   
   // Leaderboard info
-  public SteamAPI_ISteamUserStats_GetLeaderboardName!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetLeaderboardEntryCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetLeaderboardSortMethod!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetLeaderboardDisplayType!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetLeaderboardName!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetLeaderboardEntryCount!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetLeaderboardSortMethod!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetLeaderboardDisplayType!: KoffiFunction;
   
   // Leaderboard entries
-  public SteamAPI_ISteamUserStats_DownloadLeaderboardEntries!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_DownloadLeaderboardEntriesForUsers!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_GetDownloadedLeaderboardEntry!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_DownloadLeaderboardEntries!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_DownloadLeaderboardEntriesForUsers!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_GetDownloadedLeaderboardEntry!: KoffiFunction;
   
   // Leaderboard upload
-  public SteamAPI_ISteamUserStats_UploadLeaderboardScore!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUserStats_AttachLeaderboardUGC!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUserStats_UploadLeaderboardScore!: KoffiFunction;
+  public SteamAPI_ISteamUserStats_AttachLeaderboardUGC!: KoffiFunction;
 
   // ========================================
   // ISteamUtils API Functions (for callback results)
   // ========================================
   
   // API call result checking
-  public SteamAPI_ISteamUtils_IsAPICallCompleted!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetAPICallResult!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetAPICallFailureReason!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_IsAPICallCompleted!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetAPICallResult!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetAPICallFailureReason!: KoffiFunction;
   
   // System information
-  public SteamAPI_ISteamUtils_GetIPCountry!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetCurrentBatteryPower!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetAppID!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetSecondsSinceAppActive!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetSecondsSinceComputerActive!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetServerRealTime!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetSteamUILanguage!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetConnectedUniverse!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetIPCountry!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetCurrentBatteryPower!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetAppID!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetSecondsSinceAppActive!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetSecondsSinceComputerActive!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetServerRealTime!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetSteamUILanguage!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetConnectedUniverse!: KoffiFunction;
   
   // Steam Deck / Device detection
-  public SteamAPI_ISteamUtils_IsSteamRunningOnSteamDeck!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_IsSteamInBigPictureMode!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_IsVRHeadsetStreamingEnabled!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_SetVRHeadsetStreamingEnabled!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_IsSteamChinaLauncher!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_IsSteamRunningOnSteamDeck!: KoffiFunction;
+  public SteamAPI_ISteamUtils_IsSteamInBigPictureMode!: KoffiFunction;
+  public SteamAPI_ISteamUtils_IsVRHeadsetStreamingEnabled!: KoffiFunction;
+  public SteamAPI_ISteamUtils_SetVRHeadsetStreamingEnabled!: KoffiFunction;
+  public SteamAPI_ISteamUtils_IsSteamChinaLauncher!: KoffiFunction;
   
   // Overlay notifications
-  public SteamAPI_ISteamUtils_SetOverlayNotificationPosition!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_SetOverlayNotificationInset!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_BOverlayNeedsPresent!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_IsOverlayEnabled!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_SetOverlayNotificationPosition!: KoffiFunction;
+  public SteamAPI_ISteamUtils_SetOverlayNotificationInset!: KoffiFunction;
+  public SteamAPI_ISteamUtils_BOverlayNeedsPresent!: KoffiFunction;
+  public SteamAPI_ISteamUtils_IsOverlayEnabled!: KoffiFunction;
   
   // Image loading
-  public SteamAPI_ISteamUtils_GetImageSize!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetImageRGBA!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetImageSize!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetImageRGBA!: KoffiFunction;
   
   // Gamepad text input
-  public SteamAPI_ISteamUtils_ShowGamepadTextInput!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetEnteredGamepadTextLength!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_GetEnteredGamepadTextInput!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_ShowFloatingGamepadTextInput!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_DismissFloatingGamepadTextInput!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_ShowGamepadTextInput!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetEnteredGamepadTextLength!: KoffiFunction;
+  public SteamAPI_ISteamUtils_GetEnteredGamepadTextInput!: KoffiFunction;
+  public SteamAPI_ISteamUtils_ShowFloatingGamepadTextInput!: KoffiFunction;
+  public SteamAPI_ISteamUtils_DismissFloatingGamepadTextInput!: KoffiFunction;
   
   // App update checking
-  public SteamAPI_ISteamUtils_GetIPCCallCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_StartVRDashboard!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_GetIPCCallCount!: KoffiFunction;
+  public SteamAPI_ISteamUtils_StartVRDashboard!: KoffiFunction;
   
   // Text filtering
-  public SteamAPI_ISteamUtils_FilterText!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUtils_InitFilterText!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUtils_FilterText!: KoffiFunction;
+  public SteamAPI_ISteamUtils_InitFilterText!: KoffiFunction;
 
   // ========================================
   // ISteamNetworkingUtils API Functions
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamNetworkingUtils_SteamAPI_v004!: koffi.KoffiFunction;
+  public SteamAPI_SteamNetworkingUtils_SteamAPI_v004!: KoffiFunction;
   
   // Relay network access
-  public SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingUtils_GetRelayNetworkStatus!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetRelayNetworkStatus!: KoffiFunction;
   
   // Ping location
-  public SteamAPI_ISteamNetworkingUtils_GetLocalPingLocation!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingUtils_EstimatePingTimeBetweenTwoLocations!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingUtils_EstimatePingTimeFromLocalHost!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingUtils_ConvertPingLocationToString!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingUtils_ParsePingLocationString!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingUtils_CheckPingDataUpToDate!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetLocalPingLocation!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_EstimatePingTimeBetweenTwoLocations!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_EstimatePingTimeFromLocalHost!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_ConvertPingLocationToString!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_ParsePingLocationString!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_CheckPingDataUpToDate!: KoffiFunction;
   
   // POP (Point of Presence) functions
-  public SteamAPI_ISteamNetworkingUtils_GetPingToDataCenter!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingUtils_GetDirectPingToPOP!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingUtils_GetPOPCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingUtils_GetPOPList!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetPingToDataCenter!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetDirectPingToPOP!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetPOPCount!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetPOPList!: KoffiFunction;
   
   // Time functions
-  public SteamAPI_ISteamNetworkingUtils_GetLocalTimestamp!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_GetLocalTimestamp!: KoffiFunction;
   
   // Debug output
-  public SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_SetDebugOutputFunction!: KoffiFunction;
   
   // Global callbacks
-  public SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged!: KoffiFunction;
 
   // ========================================
   // ISteamNetworkingSockets API Functions
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamNetworkingSockets_SteamAPI_v012!: koffi.KoffiFunction;
+  public SteamAPI_SteamNetworkingSockets_SteamAPI_v012!: KoffiFunction;
   
   // P2P Listen/Connect
-  public SteamAPI_ISteamNetworkingSockets_CreateListenSocketP2P!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_ConnectP2P!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_CreateListenSocketP2P!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_ConnectP2P!: KoffiFunction;
   
   // Connection management
-  public SteamAPI_ISteamNetworkingSockets_AcceptConnection!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_CloseConnection!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_CloseListenSocket!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_AcceptConnection!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_CloseConnection!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_CloseListenSocket!: KoffiFunction;
   
   // Connection data
-  public SteamAPI_ISteamNetworkingSockets_SetConnectionUserData!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_GetConnectionUserData!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_SetConnectionName!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_GetConnectionName!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_SetConnectionUserData!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetConnectionUserData!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_SetConnectionName!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetConnectionName!: KoffiFunction;
   
   // Messaging
-  public SteamAPI_ISteamNetworkingSockets_SendMessageToConnection!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_FlushMessagesOnConnection!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnConnection!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_SendMessageToConnection!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_FlushMessagesOnConnection!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnConnection!: KoffiFunction;
   
   // Connection info
-  public SteamAPI_ISteamNetworkingSockets_GetConnectionInfo!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_GetConnectionRealTimeStatus!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_GetDetailedConnectionStatus!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_GetListenSocketAddress!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetConnectionInfo!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetConnectionRealTimeStatus!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetDetailedConnectionStatus!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetListenSocketAddress!: KoffiFunction;
   
   // Poll groups
-  public SteamAPI_ISteamNetworkingSockets_CreatePollGroup!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_DestroyPollGroup!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_SetConnectionPollGroup!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnPollGroup!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_CreatePollGroup!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_DestroyPollGroup!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_SetConnectionPollGroup!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_ReceiveMessagesOnPollGroup!: KoffiFunction;
   
   // Identity
-  public SteamAPI_ISteamNetworkingSockets_GetIdentity!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetIdentity!: KoffiFunction;
   
   // Authentication
-  public SteamAPI_ISteamNetworkingSockets_InitAuthentication!: koffi.KoffiFunction;
-  public SteamAPI_ISteamNetworkingSockets_GetAuthenticationStatus!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_InitAuthentication!: KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_GetAuthenticationStatus!: KoffiFunction;
   
   // Callbacks
-  public SteamAPI_ISteamNetworkingSockets_RunCallbacks!: koffi.KoffiFunction;
+  public SteamAPI_ISteamNetworkingSockets_RunCallbacks!: KoffiFunction;
   
   // Message utilities
-  public SteamAPI_SteamNetworkingMessage_t_Release!: koffi.KoffiFunction;
+  public SteamAPI_SteamNetworkingMessage_t_Release!: KoffiFunction;
 
   // ========================================
   // ISteamFriends API Functions
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamFriends_v018!: koffi.KoffiFunction;
+  public SteamAPI_SteamFriends_v018!: KoffiFunction;
   
   // User info
-  public SteamAPI_ISteamFriends_GetPersonaName!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetPersonaState!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetPersonaName!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetPersonaState!: KoffiFunction;
   
   // Friends list
-  public SteamAPI_ISteamFriends_GetFriendCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendByIndex!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendCount!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendByIndex!: KoffiFunction;
   
   // Friend info
-  public SteamAPI_ISteamFriends_GetFriendPersonaName!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendPersonaState!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendRelationship!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendSteamLevel!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendGamePlayed!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendPersonaName!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendPersonaState!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendRelationship!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendSteamLevel!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendGamePlayed!: KoffiFunction;
   
   // Rich Presence
-  public SteamAPI_ISteamFriends_SetRichPresence!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_ClearRichPresence!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendRichPresence!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendRichPresenceKeyCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendRichPresenceKeyByIndex!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_RequestFriendRichPresence!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_SetRichPresence!: KoffiFunction;
+  public SteamAPI_ISteamFriends_ClearRichPresence!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendRichPresence!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendRichPresenceKeyCount!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendRichPresenceKeyByIndex!: KoffiFunction;
+  public SteamAPI_ISteamFriends_RequestFriendRichPresence!: KoffiFunction;
   
   // Overlay
-  public SteamAPI_ISteamFriends_ActivateGameOverlay!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_ActivateGameOverlayToUser!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_ActivateGameOverlayToWebPage!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_ActivateGameOverlayToStore!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_ActivateGameOverlayRemotePlayTogetherInviteDialog!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialogConnectString!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlay!: KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayToUser!: KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayToWebPage!: KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayToStore!: KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog!: KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayRemotePlayTogetherInviteDialog!: KoffiFunction;
+  public SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialogConnectString!: KoffiFunction;
   
   // Avatars
-  public SteamAPI_ISteamFriends_GetSmallFriendAvatar!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetMediumFriendAvatar!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetLargeFriendAvatar!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetSmallFriendAvatar!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetMediumFriendAvatar!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetLargeFriendAvatar!: KoffiFunction;
   
   // Friend Groups
-  public SteamAPI_ISteamFriends_GetFriendsGroupCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendsGroupName!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendsGroupMembersCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendsGroupMembersList!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendsGroupCount!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendsGroupName!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendsGroupMembersCount!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendsGroupMembersList!: KoffiFunction;
   
   // Coplay (Recently Played With)
-  public SteamAPI_ISteamFriends_GetCoplayFriendCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetCoplayFriend!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendCoplayTime!: koffi.KoffiFunction;
-  public SteamAPI_ISteamFriends_GetFriendCoplayGame!: koffi.KoffiFunction;
+  public SteamAPI_ISteamFriends_GetCoplayFriendCount!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetCoplayFriend!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendCoplayTime!: KoffiFunction;
+  public SteamAPI_ISteamFriends_GetFriendCoplayGame!: KoffiFunction;
 
   // ========================================
   // ISteamRemoteStorage API Functions
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamRemoteStorage_v016!: koffi.KoffiFunction;
+  public SteamAPI_SteamRemoteStorage_v016!: KoffiFunction;
   
   // File operations
-  public SteamAPI_ISteamRemoteStorage_FileWrite!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_FileRead!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_FileExists!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_FileDelete!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_GetFileSize!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_GetFileTimestamp!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_FilePersisted!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_FileWrite!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_FileRead!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_FileExists!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_FileDelete!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_GetFileSize!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_GetFileTimestamp!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_FilePersisted!: KoffiFunction;
   
   // File iteration
-  public SteamAPI_ISteamRemoteStorage_GetFileCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_GetFileNameAndSize!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_GetFileCount!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_GetFileNameAndSize!: KoffiFunction;
   
   // Quota and settings
-  public SteamAPI_ISteamRemoteStorage_GetQuota!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_GetQuota!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp!: KoffiFunction;
 
   // Batch operations
-  public SteamAPI_ISteamRemoteStorage_BeginFileWriteBatch!: koffi.KoffiFunction;
-  public SteamAPI_ISteamRemoteStorage_EndFileWriteBatch!: koffi.KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_BeginFileWriteBatch!: KoffiFunction;
+  public SteamAPI_ISteamRemoteStorage_EndFileWriteBatch!: KoffiFunction;
 
   // ========================================
   // ISteamUGC (Workshop) API Functions
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamUGC_v021!: koffi.KoffiFunction;
+  public SteamAPI_SteamUGC_v021!: KoffiFunction;
   
   // Query operations
-  public SteamAPI_ISteamUGC_CreateQueryUserUGCRequest!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_CreateQueryAllUGCRequestPage!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_SendQueryUGCRequest!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetQueryUGCResult!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetQueryUGCNumTags!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetQueryUGCTag!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetQueryUGCTagDisplayName!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetQueryUGCPreviewURL!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetQueryUGCMetadata!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetQueryUGCChildren!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_SetReturnPlaytimeStats!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_ReleaseQueryUGCRequest!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_CreateQueryUserUGCRequest!: KoffiFunction;
+  public SteamAPI_ISteamUGC_CreateQueryAllUGCRequestPage!: KoffiFunction;
+  public SteamAPI_ISteamUGC_SendQueryUGCRequest!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCResult!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCNumTags!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCTag!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCTagDisplayName!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCPreviewURL!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCMetadata!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCChildren!: KoffiFunction;
+  public SteamAPI_ISteamUGC_SetReturnPlaytimeStats!: KoffiFunction;
+  public SteamAPI_ISteamUGC_ReleaseQueryUGCRequest!: KoffiFunction;
   
   // Subscription operations
-  public SteamAPI_ISteamUGC_SubscribeItem!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_UnsubscribeItem!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetNumSubscribedItems!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetSubscribedItems!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SubscribeItem!: KoffiFunction;
+  public SteamAPI_ISteamUGC_UnsubscribeItem!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetNumSubscribedItems!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetSubscribedItems!: KoffiFunction;
   
   // Item state and info
-  public SteamAPI_ISteamUGC_GetItemState!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetItemInstallInfo!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetItemDownloadInfo!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_DownloadItem!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_GetItemState!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetItemInstallInfo!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetItemDownloadInfo!: KoffiFunction;
+  public SteamAPI_ISteamUGC_DownloadItem!: KoffiFunction;
   
   // Creation and update
-  public SteamAPI_ISteamUGC_CreateItem!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_StartItemUpdate!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_SetItemTitle!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_SetItemDescription!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_SetItemVisibility!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_SetItemTags!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_SetItemContent!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_SetItemPreview!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_AddContentDescriptor!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_RemoveContentDescriptor!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetQueryUGCContentDescriptors!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetUserContentDescriptorPreferences!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_SubmitItemUpdate!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetItemUpdateProgress!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_CreateItem!: KoffiFunction;
+  public SteamAPI_ISteamUGC_StartItemUpdate!: KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemTitle!: KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemDescription!: KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemVisibility!: KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemTags!: KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemContent!: KoffiFunction;
+  public SteamAPI_ISteamUGC_SetItemPreview!: KoffiFunction;
+  public SteamAPI_ISteamUGC_AddContentDescriptor!: KoffiFunction;
+  public SteamAPI_ISteamUGC_RemoveContentDescriptor!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetQueryUGCContentDescriptors!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetUserContentDescriptorPreferences!: KoffiFunction;
+  public SteamAPI_ISteamUGC_SubmitItemUpdate!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetItemUpdateProgress!: KoffiFunction;
   
   // Query options
-  public SteamAPI_ISteamUGC_SetSearchText!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SetSearchText!: KoffiFunction;
   
   // Voting and favorites
-  public SteamAPI_ISteamUGC_SetUserItemVote!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_GetUserItemVote!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_AddItemToFavorites!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUGC_RemoveItemFromFavorites!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_SetUserItemVote!: KoffiFunction;
+  public SteamAPI_ISteamUGC_GetUserItemVote!: KoffiFunction;
+  public SteamAPI_ISteamUGC_AddItemToFavorites!: KoffiFunction;
+  public SteamAPI_ISteamUGC_RemoveItemFromFavorites!: KoffiFunction;
   
   // Deletion
-  public SteamAPI_ISteamUGC_DeleteItem!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUGC_DeleteItem!: KoffiFunction;
 
   // ========================================
   // ISteamInput Functions
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamInput_v006!: koffi.KoffiFunction;
+  public SteamAPI_SteamInput_v006!: KoffiFunction;
   
   // Initialization
-  public SteamAPI_ISteamInput_Init!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_Shutdown!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_SetInputActionManifestFilePath!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_RunFrame!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_BWaitForData!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_BNewDataAvailable!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_Init!: KoffiFunction;
+  public SteamAPI_ISteamInput_Shutdown!: KoffiFunction;
+  public SteamAPI_ISteamInput_SetInputActionManifestFilePath!: KoffiFunction;
+  public SteamAPI_ISteamInput_RunFrame!: KoffiFunction;
+  public SteamAPI_ISteamInput_BWaitForData!: KoffiFunction;
+  public SteamAPI_ISteamInput_BNewDataAvailable!: KoffiFunction;
   
   // Controller enumeration
-  public SteamAPI_ISteamInput_GetConnectedControllers!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_EnableDeviceCallbacks!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_EnableActionEventCallbacks!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetInputTypeForHandle!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetControllerForGamepadIndex!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetGamepadIndexForController!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetConnectedControllers!: KoffiFunction;
+  public SteamAPI_ISteamInput_EnableDeviceCallbacks!: KoffiFunction;
+  public SteamAPI_ISteamInput_EnableActionEventCallbacks!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetInputTypeForHandle!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetControllerForGamepadIndex!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetGamepadIndexForController!: KoffiFunction;
   
   // Action sets
-  public SteamAPI_ISteamInput_GetActionSetHandle!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_ActivateActionSet!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetCurrentActionSet!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_ActivateActionSetLayer!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_DeactivateActionSetLayer!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_DeactivateAllActionSetLayers!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetActiveActionSetLayers!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetActionSetHandle!: KoffiFunction;
+  public SteamAPI_ISteamInput_ActivateActionSet!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetCurrentActionSet!: KoffiFunction;
+  public SteamAPI_ISteamInput_ActivateActionSetLayer!: KoffiFunction;
+  public SteamAPI_ISteamInput_DeactivateActionSetLayer!: KoffiFunction;
+  public SteamAPI_ISteamInput_DeactivateAllActionSetLayers!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetActiveActionSetLayers!: KoffiFunction;
   
   // Digital actions
-  public SteamAPI_ISteamInput_GetDigitalActionHandle!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetDigitalActionData!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetDigitalActionOrigins!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetStringForDigitalActionName!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetDigitalActionHandle!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetDigitalActionData!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetDigitalActionOrigins!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetStringForDigitalActionName!: KoffiFunction;
   
   // Analog actions
-  public SteamAPI_ISteamInput_GetAnalogActionHandle!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetAnalogActionData!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetAnalogActionOrigins!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetStringForAnalogActionName!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_StopAnalogActionMomentum!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetAnalogActionHandle!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetAnalogActionData!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetAnalogActionOrigins!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetStringForAnalogActionName!: KoffiFunction;
+  public SteamAPI_ISteamInput_StopAnalogActionMomentum!: KoffiFunction;
   
   // Motion data
-  public SteamAPI_ISteamInput_GetMotionData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetMotionData!: KoffiFunction;
   
   // Haptics and rumble
-  public SteamAPI_ISteamInput_TriggerVibration!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_TriggerVibrationExtended!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_TriggerSimpleHapticEvent!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_SetLEDColor!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_Legacy_TriggerHapticPulse!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_Legacy_TriggerRepeatedHapticPulse!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_TriggerVibration!: KoffiFunction;
+  public SteamAPI_ISteamInput_TriggerVibrationExtended!: KoffiFunction;
+  public SteamAPI_ISteamInput_TriggerSimpleHapticEvent!: KoffiFunction;
+  public SteamAPI_ISteamInput_SetLEDColor!: KoffiFunction;
+  public SteamAPI_ISteamInput_Legacy_TriggerHapticPulse!: KoffiFunction;
+  public SteamAPI_ISteamInput_Legacy_TriggerRepeatedHapticPulse!: KoffiFunction;
   
   // Glyphs and strings
-  public SteamAPI_ISteamInput_GetGlyphPNGForActionOrigin!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetGlyphSVGForActionOrigin!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetGlyphForActionOrigin_Legacy!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetStringForActionOrigin!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetStringForXboxOrigin!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetGlyphForXboxOrigin!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetActionOriginFromXboxOrigin!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_TranslateActionOrigin!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_GetGlyphPNGForActionOrigin!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetGlyphSVGForActionOrigin!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetGlyphForActionOrigin_Legacy!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetStringForActionOrigin!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetStringForXboxOrigin!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetGlyphForXboxOrigin!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetActionOriginFromXboxOrigin!: KoffiFunction;
+  public SteamAPI_ISteamInput_TranslateActionOrigin!: KoffiFunction;
   
   // Utility
-  public SteamAPI_ISteamInput_ShowBindingPanel!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetDeviceBindingRevision!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetRemotePlaySessionID!: koffi.KoffiFunction;
-  public SteamAPI_ISteamInput_GetSessionInputConfigurationSettings!: koffi.KoffiFunction;
+  public SteamAPI_ISteamInput_ShowBindingPanel!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetDeviceBindingRevision!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetRemotePlaySessionID!: KoffiFunction;
+  public SteamAPI_ISteamInput_GetSessionInputConfigurationSettings!: KoffiFunction;
 
   // ========================================
   // ISteamScreenshots Functions
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamScreenshots_v003!: koffi.KoffiFunction;
+  public SteamAPI_SteamScreenshots_v003!: KoffiFunction;
   
   // Screenshot capture
-  public SteamAPI_ISteamScreenshots_WriteScreenshot!: koffi.KoffiFunction;
-  public SteamAPI_ISteamScreenshots_AddScreenshotToLibrary!: koffi.KoffiFunction;
-  public SteamAPI_ISteamScreenshots_TriggerScreenshot!: koffi.KoffiFunction;
-  public SteamAPI_ISteamScreenshots_HookScreenshots!: koffi.KoffiFunction;
-  public SteamAPI_ISteamScreenshots_IsScreenshotsHooked!: koffi.KoffiFunction;
+  public SteamAPI_ISteamScreenshots_WriteScreenshot!: KoffiFunction;
+  public SteamAPI_ISteamScreenshots_AddScreenshotToLibrary!: KoffiFunction;
+  public SteamAPI_ISteamScreenshots_TriggerScreenshot!: KoffiFunction;
+  public SteamAPI_ISteamScreenshots_HookScreenshots!: KoffiFunction;
+  public SteamAPI_ISteamScreenshots_IsScreenshotsHooked!: KoffiFunction;
   
   // Screenshot tagging
-  public SteamAPI_ISteamScreenshots_SetLocation!: koffi.KoffiFunction;
-  public SteamAPI_ISteamScreenshots_TagUser!: koffi.KoffiFunction;
-  public SteamAPI_ISteamScreenshots_TagPublishedFile!: koffi.KoffiFunction;
+  public SteamAPI_ISteamScreenshots_SetLocation!: KoffiFunction;
+  public SteamAPI_ISteamScreenshots_TagUser!: KoffiFunction;
+  public SteamAPI_ISteamScreenshots_TagPublishedFile!: KoffiFunction;
   
   // VR screenshots
-  public SteamAPI_ISteamScreenshots_AddVRScreenshotToLibrary!: koffi.KoffiFunction;
+  public SteamAPI_ISteamScreenshots_AddVRScreenshotToLibrary!: KoffiFunction;
 
   // ========================================
   // ISteamApps Functions (DLC & App Ownership)
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamApps_v009!: koffi.KoffiFunction;
+  public SteamAPI_SteamApps_v009!: KoffiFunction;
   
   // Ownership checks
-  public SteamAPI_ISteamApps_BIsSubscribed!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_BIsLowViolence!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_BIsCybercafe!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_BIsVACBanned!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_BIsSubscribedApp!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_BIsAppInstalled!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_BIsSubscribedFromFreeWeekend!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_BIsSubscribedFromFamilySharing!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_BIsTimedTrial!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BIsSubscribed!: KoffiFunction;
+  public SteamAPI_ISteamApps_BIsLowViolence!: KoffiFunction;
+  public SteamAPI_ISteamApps_BIsCybercafe!: KoffiFunction;
+  public SteamAPI_ISteamApps_BIsVACBanned!: KoffiFunction;
+  public SteamAPI_ISteamApps_BIsSubscribedApp!: KoffiFunction;
+  public SteamAPI_ISteamApps_BIsAppInstalled!: KoffiFunction;
+  public SteamAPI_ISteamApps_BIsSubscribedFromFreeWeekend!: KoffiFunction;
+  public SteamAPI_ISteamApps_BIsSubscribedFromFamilySharing!: KoffiFunction;
+  public SteamAPI_ISteamApps_BIsTimedTrial!: KoffiFunction;
   
   // DLC functions
-  public SteamAPI_ISteamApps_BIsDlcInstalled!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetDLCCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_BGetDLCDataByIndex!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_InstallDLC!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_UninstallDLC!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetDlcDownloadProgress!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_SetDlcContext!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_BIsDlcInstalled!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetDLCCount!: KoffiFunction;
+  public SteamAPI_ISteamApps_BGetDLCDataByIndex!: KoffiFunction;
+  public SteamAPI_ISteamApps_InstallDLC!: KoffiFunction;
+  public SteamAPI_ISteamApps_UninstallDLC!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetDlcDownloadProgress!: KoffiFunction;
+  public SteamAPI_ISteamApps_SetDlcContext!: KoffiFunction;
   
   // App info
-  public SteamAPI_ISteamApps_GetCurrentGameLanguage!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetAvailableGameLanguages!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetEarliestPurchaseUnixTime!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetAppInstallDir!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetAppOwner!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetAppBuildId!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetInstalledDepots!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetCurrentGameLanguage!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetAvailableGameLanguages!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetEarliestPurchaseUnixTime!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetAppInstallDir!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetAppOwner!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetAppBuildId!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetInstalledDepots!: KoffiFunction;
   
   // Beta branches
-  public SteamAPI_ISteamApps_GetCurrentBetaName!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetNumBetas!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetBetaInfo!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_SetActiveBeta!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetCurrentBetaName!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetNumBetas!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetBetaInfo!: KoffiFunction;
+  public SteamAPI_ISteamApps_SetActiveBeta!: KoffiFunction;
   
   // Launch parameters
-  public SteamAPI_ISteamApps_GetLaunchQueryParam!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetLaunchCommandLine!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_GetLaunchQueryParam!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetLaunchCommandLine!: KoffiFunction;
   
   // Misc
-  public SteamAPI_ISteamApps_MarkContentCorrupt!: koffi.KoffiFunction;
-  public SteamAPI_ISteamApps_GetFileDetails!: koffi.KoffiFunction;
+  public SteamAPI_ISteamApps_MarkContentCorrupt!: KoffiFunction;
+  public SteamAPI_ISteamApps_GetFileDetails!: KoffiFunction;
 
   // ========================================
   // ISteamMatchmaking Functions (Lobbies)
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamMatchmaking_v009!: koffi.KoffiFunction;
+  public SteamAPI_SteamMatchmaking_v009!: KoffiFunction;
   
   // Favorite servers
-  public SteamAPI_ISteamMatchmaking_GetFavoriteGameCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_GetFavoriteGame!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_AddFavoriteGame!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_RemoveFavoriteGame!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetFavoriteGameCount!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetFavoriteGame!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddFavoriteGame!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_RemoveFavoriteGame!: KoffiFunction;
   
   // Lobby list requests
-  public SteamAPI_ISteamMatchmaking_RequestLobbyList!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListNumericalFilter!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListNearValueFilter!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListFilterSlotsAvailable!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListCompatibleMembersFilter!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_GetLobbyByIndex!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_RequestLobbyList!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListNumericalFilter!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListNearValueFilter!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListFilterSlotsAvailable!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_AddRequestLobbyListCompatibleMembersFilter!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyByIndex!: KoffiFunction;
   
   // Lobby creation and joining
-  public SteamAPI_ISteamMatchmaking_CreateLobby!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_JoinLobby!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_LeaveLobby!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_InviteUserToLobby!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_CreateLobby!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_JoinLobby!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_LeaveLobby!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_InviteUserToLobby!: KoffiFunction;
   
   // Lobby members
-  public SteamAPI_ISteamMatchmaking_GetNumLobbyMembers!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetNumLobbyMembers!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex!: KoffiFunction;
   
   // Lobby data
-  public SteamAPI_ISteamMatchmaking_GetLobbyData!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_SetLobbyData!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_GetLobbyDataCount!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_GetLobbyDataByIndex!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_DeleteLobbyData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyData!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyData!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyDataCount!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyDataByIndex!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_DeleteLobbyData!: KoffiFunction;
   
   // Lobby member data
-  public SteamAPI_ISteamMatchmaking_GetLobbyMemberData!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_SetLobbyMemberData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyMemberData!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyMemberData!: KoffiFunction;
   
   // Lobby chat
-  public SteamAPI_ISteamMatchmaking_SendLobbyChatMsg!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_GetLobbyChatEntry!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SendLobbyChatMsg!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyChatEntry!: KoffiFunction;
   
   // Lobby metadata request
-  public SteamAPI_ISteamMatchmaking_RequestLobbyData!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_RequestLobbyData!: KoffiFunction;
   
   // Lobby game server
-  public SteamAPI_ISteamMatchmaking_SetLobbyGameServer!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_GetLobbyGameServer!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyGameServer!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyGameServer!: KoffiFunction;
   
   // Lobby settings
-  public SteamAPI_ISteamMatchmaking_SetLobbyMemberLimit!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_GetLobbyMemberLimit!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_SetLobbyType!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_SetLobbyJoinable!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_GetLobbyOwner!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_SetLobbyOwner!: koffi.KoffiFunction;
-  public SteamAPI_ISteamMatchmaking_SetLinkedLobby!: koffi.KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyMemberLimit!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyMemberLimit!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyType!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyJoinable!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_GetLobbyOwner!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLobbyOwner!: KoffiFunction;
+  public SteamAPI_ISteamMatchmaking_SetLinkedLobby!: KoffiFunction;
 
   // ========================================
   // ISteamUser Authentication Functions
   // ========================================
   
   // Login state
-  public SteamAPI_ISteamUser_BLoggedOn!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_BLoggedOn!: KoffiFunction;
   
   // Auth session tickets
-  public SteamAPI_ISteamUser_GetAuthSessionTicket!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_GetAuthTicketForWebApi!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_BeginAuthSession!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_EndAuthSession!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_CancelAuthTicket!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_UserHasLicenseForApp!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetAuthSessionTicket!: KoffiFunction;
+  public SteamAPI_ISteamUser_GetAuthTicketForWebApi!: KoffiFunction;
+  public SteamAPI_ISteamUser_BeginAuthSession!: KoffiFunction;
+  public SteamAPI_ISteamUser_EndAuthSession!: KoffiFunction;
+  public SteamAPI_ISteamUser_CancelAuthTicket!: KoffiFunction;
+  public SteamAPI_ISteamUser_UserHasLicenseForApp!: KoffiFunction;
   
   // Encrypted app tickets
-  public SteamAPI_ISteamUser_RequestEncryptedAppTicket!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_GetEncryptedAppTicket!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_RequestEncryptedAppTicket!: KoffiFunction;
+  public SteamAPI_ISteamUser_GetEncryptedAppTicket!: KoffiFunction;
   
   // Security and account info
-  public SteamAPI_ISteamUser_BIsPhoneVerified!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_BIsTwoFactorEnabled!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_BIsPhoneIdentifying!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_BIsPhoneRequiringVerification!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_BIsBehindNAT!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_BIsPhoneVerified!: KoffiFunction;
+  public SteamAPI_ISteamUser_BIsTwoFactorEnabled!: KoffiFunction;
+  public SteamAPI_ISteamUser_BIsPhoneIdentifying!: KoffiFunction;
+  public SteamAPI_ISteamUser_BIsPhoneRequiringVerification!: KoffiFunction;
+  public SteamAPI_ISteamUser_BIsBehindNAT!: KoffiFunction;
   
   // User info
-  public SteamAPI_ISteamUser_GetPlayerSteamLevel!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_GetGameBadgeLevel!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_GetUserDataFolder!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetPlayerSteamLevel!: KoffiFunction;
+  public SteamAPI_ISteamUser_GetGameBadgeLevel!: KoffiFunction;
+  public SteamAPI_ISteamUser_GetUserDataFolder!: KoffiFunction;
   
   // Market and duration control
-  public SteamAPI_ISteamUser_GetMarketEligibility!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_GetDurationControl!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_BSetDurationControlOnlineState!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_GetMarketEligibility!: KoffiFunction;
+  public SteamAPI_ISteamUser_GetDurationControl!: KoffiFunction;
+  public SteamAPI_ISteamUser_BSetDurationControlOnlineState!: KoffiFunction;
   
   // Store auth URL
-  public SteamAPI_ISteamUser_RequestStoreAuthURL!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_RequestStoreAuthURL!: KoffiFunction;
   
   // Advertising game
-  public SteamAPI_ISteamUser_AdvertiseGame!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_AdvertiseGame!: KoffiFunction;
   
   // Voice recording
-  public SteamAPI_ISteamUser_StartVoiceRecording!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_StopVoiceRecording!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_GetAvailableVoice!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_GetVoice!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_DecompressVoice!: koffi.KoffiFunction;
-  public SteamAPI_ISteamUser_GetVoiceOptimalSampleRate!: koffi.KoffiFunction;
+  public SteamAPI_ISteamUser_StartVoiceRecording!: KoffiFunction;
+  public SteamAPI_ISteamUser_StopVoiceRecording!: KoffiFunction;
+  public SteamAPI_ISteamUser_GetAvailableVoice!: KoffiFunction;
+  public SteamAPI_ISteamUser_GetVoice!: KoffiFunction;
+  public SteamAPI_ISteamUser_DecompressVoice!: KoffiFunction;
+  public SteamAPI_ISteamUser_GetVoiceOptimalSampleRate!: KoffiFunction;
 
   /**
    * Get platform-specific Steam library path
@@ -833,13 +835,13 @@ export class SteamLibraryLoader {
 
     // Lazy FFI binding: defers koffi.func() symbol lookup to first call.
     // With ~200 functions, eager binding at load() adds hundreds of ms to startup.
-    const lf = (name: string, ret: any, args: any[]): koffi.KoffiFunction => {
-      let fn: koffi.KoffiFunction | undefined;
+    const lf = (name: string, ret: any, args: any[]): KoffiFunction => {
+      let fn: KoffiFunction | undefined;
       const wrapper = (...a: any[]) => {
         if (!fn) fn = this.steamLib!.func(name, ret, args);
         return fn(...a);
       };
-      return wrapper as unknown as koffi.KoffiFunction;
+      return wrapper as unknown as KoffiFunction;
     };
 
     // Define function signatures using Koffi
@@ -1533,7 +1535,7 @@ export class SteamLibraryLoader {
   /**
    * Get the loaded library instance
    */
-  getLibrary(): koffi.IKoffiLib | null {
+  getLibrary(): koffi.LibraryHandle | null {
     return this.steamLib;
   }
 }
