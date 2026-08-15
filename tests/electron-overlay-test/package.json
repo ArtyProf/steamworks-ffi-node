@@ -1,0 +1,62 @@
+{
+  "name": "steam-overlay-test",
+  "version": "1.0.0",
+  "description": "Test app for steamworks-ffi-node Electron overlay integration",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --dir",
+    "build:win": "electron-builder --win --dir",
+    "build:mac": "electron-builder --mac --dir",
+    "build:linux": "electron-builder --linux --dir"
+  },
+  "devDependencies": {
+    "electron": "38.7.2",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.steamworks-ffi-node.overlay-test",
+    "productName": "SteamOverlayTest",
+    "asar": true,
+    "files": [
+      "main.js",
+      "index.html"
+    ],
+    "extraResources": [
+      {
+        "from": "../../node_modules/koffi",
+        "to": "sdk/node_modules/koffi"
+      },
+      {
+        "from": "../../dist",
+        "to": "sdk/dist"
+      },
+      {
+        "from": "../../prebuilds",
+        "to": "sdk/prebuilds"
+      },
+      {
+        "from": "../../native/build/Release",
+        "to": "sdk/native/build/Release"
+      },
+      {
+        "from": "../../steamworks_sdk/redistributable_bin",
+        "to": "sdk/steamworks_sdk/redistributable_bin"
+      },
+      {
+        "from": "steam_appid.txt",
+        "to": "../steam_appid.txt"
+      }
+    ],
+    "mac": {
+      "hardenedRuntime": false,
+      "entitlements": null
+    },
+    "win": {
+      "target": "dir"
+    },
+    "linux": {
+      "target": "dir"
+    }
+  }
+}

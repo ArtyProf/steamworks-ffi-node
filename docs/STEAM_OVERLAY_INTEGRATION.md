@@ -69,7 +69,6 @@ if (!steam.init({ appId: 480 })) {
 setInterval(() => steam.runCallbacks(), 1000);
 
 app.whenReady().then(() => {
-  // Create your window normally
   const win = new BrowserWindow({
     width: 1280,
     height: 720,
@@ -383,11 +382,15 @@ Launch your app from Steam (not directly). Press **Shift+Tab** to open the overl
 2. Verify native module is loaded correctly
 3. Ensure proper cleanup with `steam.shutdown()` on quit
 
-### Performance issues
+### Performance issues / halved framerate
 
-1. Lower FPS: `steam.addElectronSteamOverlay(win, { fps: 30 })`
-2. Disable VSync: `steam.addElectronSteamOverlay(win, { vsync: false })`
-3. Reduce window size
+Since v0.10.5, frame delivery uses `beginFrameSubscription` which fires in sync with Electron's compositor — no forced GPU→CPU stalls. If you're on an older version, update first.
+
+If you still see performance issues:
+
+1. Lower the overlay capture FPS if the overlay background doesn't need to match the game rate: `steam.addElectronSteamOverlay(win, { fps: 30 })`
+2. Reduce window size
+3. Check that `runCallbacks()` isn't being called at an extremely high rate (once per second is enough)
 
 ## How It Works
 
@@ -401,7 +404,7 @@ Launch your app from Steam (not directly). Press **Shift+Tab** to open the overl
 │  │               (HTML/CSS/JavaScript)                   │  │
 │  └───────────────────────────────────────────────────────┘  │
 │                           │                                 │
-│                     capturePage()                           │
+│               beginFrameSubscription()                      │
 │                           ▼                                 │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │                Frame Buffer (BGRA)                    │  │
@@ -429,8 +432,8 @@ Launch your app from Steam (not directly). Press **Shift+Tab** to open the overl
 
 ### Frame Pipeline
 
-1. **Electron Rendering**: Your Electron window renders normally
-2. **Frame Capture**: `capturePage()` captures the window content at 60 FPS
+1. **Electron Rendering**: Your Electron window renders to an offscreen buffer (OSR mode)
+2. **Frame Delivery**: `beginFrameSubscription` delivers each frame in sync with the compositor — no forced GPU→CPU stalls
 3. **Buffer Transfer**: Frame data is passed to native module via N-API
 4. **Texture Upload**: Frame is uploaded to GPU texture
 5. **Native Rendering**: Native window displays the texture
@@ -439,10 +442,11 @@ Launch your app from Steam (not directly). Press **Shift+Tab** to open the overl
 
 ## Performance
 
-- **CPU Usage**: ~2-5% additional CPU for frame copying
+- **CPU Usage**: ~1-3% additional CPU for frame copying (OSR mode)
 - **Memory**: ~50-100 MB for buffers and textures
-- **Latency**: <16ms (60 FPS) frame delay
+- **Latency**: One compositor frame of delay (<16ms at 60 FPS)
 - **GPU**: Minimal GPU usage (texture upload + blit)
+- **Game FPS**: No impact in OSR mode — frames are delivered by `beginFrameSubscription` in sync with the compositor without forced GPU→CPU readback stalls
 
 ## Best Practices
 
