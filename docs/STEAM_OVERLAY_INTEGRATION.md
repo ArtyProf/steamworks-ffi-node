@@ -202,6 +202,8 @@ The Linux implementation uses OpenGL 3.3 with X11:
 ## Electron Packaging
 
 > ⚠️ The native overlay module (`steam-overlay.node`) **must** be outside the `.asar` archive — `require()` cannot load native addons from inside `.asar`. The recommended approach for games is to unpack the entire library with a single rule.
+>
+> ⚠️ Since `koffi` 3.x, its native binary ships as a separate platform-specific package (`@koromix/koffi-<platform>-<arch>`, an `optionalDependency` of `koffi` — npm installs only the one matching your OS/arch). It is a **sibling** of `steamworks-ffi-node` in `node_modules`, not nested inside it, so a rule that only unpacks `steamworks-ffi-node/**` will miss it, leaving `koffi`'s native binary trapped inside `.asar` and causing `Error: Cannot find the native Koffi module; did you bundle it correctly?` at runtime. Unpack `koffi` and `@koromix` explicitly, as shown below.
 
 ### electron-builder
 
@@ -212,6 +214,8 @@ Add to your `package.json` (or `electron-builder.json`):
   "build": {
     "asarUnpack": [
       "node_modules/steamworks-ffi-node/**",
+      "node_modules/koffi/**",
+      "node_modules/@koromix/**",
       "steamworks_sdk/redistributable_bin/**"
     ],
     "mac": {
@@ -231,7 +235,7 @@ Add to your `package.json` (or `electron-builder.json`):
 module.exports = {
   packagerConfig: {
     asar: {
-      unpack: "*(steamworks_sdk/**|**/steamworks-ffi-node/**)"
+      unpack: "*(steamworks_sdk/**|**/steamworks-ffi-node/**|**/koffi/**|**/@koromix/**)"
     }
   }
 };

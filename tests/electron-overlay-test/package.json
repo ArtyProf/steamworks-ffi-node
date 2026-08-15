@@ -11,8 +11,8 @@
     "build:linux": "electron-builder --linux --dir"
   },
   "devDependencies": {
-    "electron": "38.7.2",
-    "electron-builder": "^25.0.0"
+    "electron": "43.4.0",
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "com.steamworks-ffi-node.overlay-test",
@@ -26,6 +26,10 @@
       {
         "from": "../../node_modules/koffi",
         "to": "sdk/node_modules/koffi"
+      },
+      {
+        "from": "../../node_modules/@koromix",
+        "to": "sdk/node_modules/@koromix"
       },
       {
         "from": "../../dist",

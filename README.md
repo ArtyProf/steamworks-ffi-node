@@ -660,11 +660,12 @@ app.on("before-quit", () => {
 
 ### 📦 Electron Packaging
 
-> ⚠️ **ASAR packaging will break the library.** Two native components must live on the real filesystem — they cannot be loaded from inside an `.asar` archive:
+> ⚠️ **ASAR packaging will break the library.** Three native components must live on the real filesystem — they cannot be loaded from inside an `.asar` archive:
 > - `steamworks_sdk/redistributable_bin/` — loaded by the OS dynamic linker (`dlopen` / `LoadLibrary`)
 > - `prebuilds/<platform>/steam-overlay.node` — a native Node addon (`require()` cannot load `.node` files from `.asar`)
+> - `node_modules/koffi` and its native binary package `node_modules/@koromix/koffi-<platform>-<arch>` — since koffi 3.x, the native binary ships as a separate `optionalDependency` package (npm installs only the one matching your OS/arch). It's a **sibling** of `steamworks-ffi-node` in `node_modules`, not nested inside it, so a rule that only unpacks `steamworks-ffi-node/**` will miss it — this causes `Error: Cannot find the native Koffi module; did you bundle it correctly?` at runtime.
 
-The recommended approach for games is to unpack the entire library. This covers all required components with a single rule and keeps configuration simple:
+The recommended approach for games is to unpack the entire library plus koffi. This covers all required components with a single rule set and keeps configuration simple:
 
 #### electron-builder
 
@@ -673,6 +674,8 @@ The recommended approach for games is to unpack the entire library. This covers 
   "build": {
     "asarUnpack": [
       "node_modules/steamworks-ffi-node/**",
+      "node_modules/koffi/**",
+      "node_modules/@koromix/**",
       "steamworks_sdk/redistributable_bin/**"
     ]
   }
@@ -686,7 +689,7 @@ The recommended approach for games is to unpack the entire library. This covers 
 module.exports = {
   packagerConfig: {
     asar: {
-      unpack: "*(steamworks_sdk/**|**/steamworks-ffi-node/**)"
+      unpack: "*(steamworks_sdk/**|**/steamworks-ffi-node/**|**/koffi/**|**/@koromix/**)"
     }
   }
 };
