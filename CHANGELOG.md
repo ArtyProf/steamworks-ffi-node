@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-08-15
+
+### ⚠️ BREAKING CHANGE
+
+- **Minimum supported Node.js version raised from 18 to 22** — Node 18 reached end-of-life in April 2025 and Node 20's Maintenance LTS window is winding down; if you're on Node 18–21, upgrade before updating to this version
+
+### Changed
+- **Dependencies upgraded**: `typescript` 5.9.3 → 6.0.3, `node-gyp` 12.2.0 → 13.0.0, `koffi` 2.16.2 → 3.1.5, `@types/node` 25.3.0 → 26.0.0
+  - `tsconfig.json` migrated to `module`/`moduleResolution: "node16"` — required by TypeScript 6, which turns the deprecated `moduleResolution: "node"` into a hard error; verified emitted `dist/` output is byte-identical to before
+  - koffi 3.x ships no CommonJS-specific type declarations (`"type": "module"` plus a single non-conditional `types` entry), which conflicts with `node16` resolution for this project's CommonJS sources — added a local ambient type shim (`src/types/koffi/index.d.ts`, regenerate via `node scripts/generate-koffi-types-shim.js` after future koffi bumps) that re-declares koffi's real type surface without falling back to `any`
+  - `node-gyp` 13 raises its own Node engine floor to `^22.22.2 || ^24.15.0 || >=26.0.0`; it's an `optionalDependency` used only by the `build:native` maintainer script (never triggered by consumer installs — `postinstall.js` is purely informational), so this doesn't affect published-package installs. On Node below its floor it's simply skipped and the build falls back to npm's bundled node-gyp
+- **CI Node.js matrix updated** to `22.x` / `24.x` (previously `18.x` / `20.x`)
+
+### Fixed
+- **`koffi` 3.x shutdown segfault (SIGSEGV)** — `SteamUserManager.cleanup()` called `koffi.reset()` unconditionally as part of `SteamworksSDK.shutdown()`, *before* `apiCore.shutdown()` made its own (often first-ever, lazily-bound) koffi call; koffi's own docs state that using any function or type defined before `reset()` afterwards is undefined behavior and "will likely lead to a crash." Confirmed via an lldb backtrace (crash inside koffi's native call dispatcher) and an isolated repro reproducing the exact segfault with nothing but `reset()` followed by a first-time bind+call. Fix: `koffi.reset()` now runs as the final step of `SteamworksSDK.shutdown()`, strictly after every other koffi call including `apiCore.shutdown()`'s `unload()`
+- **Security Vulnerabilities**
+  - Committed `package-lock.json` (previously gitignored) and switched all CI installs from `npm i` to `npm ci`, so builds install from exact pinned versions + integrity hashes instead of re-resolving the dependency graph fresh on every run
+  - Added an `npm audit --audit-level=high` gate to the CI lint job
+  - Fixed a critical `tar` vulnerability (file smuggling / DoS bugs, pulled in transitively via `node-gyp`) that had no CI signal before this gate existed
+
+### Documentation
+- **Electron packaging guides corrected (`README.md`, `docs/STEAM_OVERLAY_INTEGRATION.md`)** — the documented `asarUnpack` (electron-builder) / `asar.unpack` (electron-forge) glob patterns only covered `steamworks-ffi-node/**`; since koffi 3.x ships its native binary as a separate sibling package (`@koromix/koffi-<platform>-<arch>`, an `optionalDependency` of `koffi`, not nested inside it), consumers following the old docs would hit `Error: Cannot find the native Koffi module; did you bundle it correctly?` at runtime. Patterns now explicitly include `node_modules/koffi/**` and `node_modules/@koromix/**`
+
 ## [0.10.4] - 2026-06-04
 
 ### Fixed
@@ -531,6 +554,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.11.0 | 2026-08-15 | **BREAKING**: minimum Node.js raised to 22; upgrade `typescript`→6.0.3, `node-gyp`→13.0.0, `koffi`→3.1.5 (fixes a koffi shutdown segfault), `@types/node`→26.0.0; committed lockfile + `npm ci` + audit gate in CI; fix Electron `asarUnpack`/`asar.unpack` docs missing koffi's native binary package |
 | 0.10.4 | 2026-06-04 | Fix `SteamOverlay` frame capture lag (steady `setInterval` + skip-if-busy guard); perf: lazy FFI binding in `SteamLibraryLoader` reduces startup blocking from ~200 symbol lookups to near-zero |
 | 0.10.3 | 2026-05-05 | Fix `joinLobby()` false failure on macOS arm64 (wrong byte offset in `LobbyEnter_t`, fixes #58); fix `shutdown()` crash on second call (atomic idempotency guard) |
 | 0.10.2 | 2026-03-27 | Fix `getAllDLC()` / `getDLCDataByIndex()` returning `appId: 0` and `available: false` (fixes #54); same koffi out-param bug in `getDlcDownloadProgress`, `getTimedTrialStatus`, `getNumBetas`, `getBetaInfo` |
@@ -560,6 +584,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.11.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.11.0
 [0.10.4]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.4
 [0.10.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.3
 [0.10.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.2
