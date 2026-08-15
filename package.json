@@ -105,7 +105,7 @@
   "author": "Artur Khutak (Arty_Prof)",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "optionalDependencies": {
     "node-addon-api": "^8.5.0",
