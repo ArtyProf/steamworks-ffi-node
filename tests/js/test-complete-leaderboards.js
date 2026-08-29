@@ -157,21 +157,29 @@ async function testLeaderboardsAPI() {
   }
   console.log('');
   
-  console.log('�📤 Uploading time score: 65 seconds (KeepBest method)...');
+  const entriesBeforeBaseline = await steam.leaderboards.downloadLeaderboardEntriesForUsers(
+    quickestWinHandle,
+    [status.steamId]
+  );
+  const entryBeforeBaseline = entriesBeforeBaseline[0];
+
+  console.log('�📤 Force updating baseline score: 65 seconds (ForceUpdate method)...');
   console.log('   Using Quickest Win leaderboard (handle 1)');
   const upload1 = await steam.leaderboards.uploadScore(
     quickestWinHandle,
     65, // 65 seconds
-    LeaderboardUploadScoreMethod.KeepBest
+    LeaderboardUploadScoreMethod.ForceUpdate
   );
   
   if (upload1) {
-    console.log('✅ Score uploaded successfully');
+    console.log('✅ Baseline score force updated successfully');
     console.log(`   Success: ${upload1.success}`);
     console.log(`   Score: ${upload1.score}`);
     console.log(`   Score Changed: ${upload1.scoreChanged}`);
     console.log(`   New Global Rank: ${upload1.globalRankNew}`);
     console.log(`   Previous Global Rank: ${upload1.globalRankPrevious}`);
+    console.log(`   Handle Matches: ${BigInt(upload1.leaderboardHandle) === quickestWinHandle ? '✅' : '❌'}`);
+    console.log(`   Attempted Score Matches: ${upload1.score === 65 ? '✅' : '❌'}`);
   } else {
     console.log('❌ Score upload failed');
   }
@@ -182,16 +190,25 @@ async function testLeaderboardsAPI() {
   // Check leaderboard info after first upload
   console.log('\n📋 Checking leaderboard after first upload...');
   const infoAfter1 = await steam.leaderboards.getLeaderboardInfo(quickestWinHandle);
+  const entriesAfterBaseline = await steam.leaderboards.downloadLeaderboardEntriesForUsers(
+    quickestWinHandle,
+    [status.steamId]
+  );
+  const entryAfterBaseline = entriesAfterBaseline[0];
   if (infoAfter1 && infoBefore) {
     console.log(`   Name: ${infoAfter1.name} ${infoAfter1.name === infoBefore.name ? '✓' : '✗ CHANGED'}`);
     console.log(`   Entry Count: ${infoAfter1.entryCount} ${infoAfter1.entryCount === infoBefore.entryCount ? '(unchanged)' : `(${infoBefore.entryCount} → ${infoAfter1.entryCount})`}`);
     console.log(`   Sort Method: ${infoAfter1.sortMethod} ${infoAfter1.sortMethod === infoBefore.sortMethod ? '✓' : '✗ CHANGED'}`);
     console.log(`   Display Type: ${infoAfter1.displayType} ${infoAfter1.displayType === infoBefore.displayType ? '✓' : '✗ CHANGED'}`);
   }
+  if (upload1?.scoreChanged && entryAfterBaseline) {
+    console.log(`   Previous Rank Matches: ${upload1.globalRankPrevious === (entryBeforeBaseline?.globalRank ?? 0) ? '✅' : '❌'}`);
+    console.log(`   New Rank Matches: ${upload1.globalRankNew === entryAfterBaseline.globalRank ? '✅' : '❌'}`);
+  }
   console.log('');
   
   // Upload time score with details
-  console.log('📤 Uploading time score: 45 seconds with details [3, 12, 0]...');
+  console.log('📤 Uploading better time score: 45 seconds with details [3, 12, 0] (KeepBest method)...');
   console.log('   Details: attempts=3, deaths=12, powerups=0');
   const upload2 = await steam.leaderboards.uploadScore(
     quickestWinHandle,
@@ -202,12 +219,23 @@ async function testLeaderboardsAPI() {
   
   if (upload2) {
     console.log('✅ Score uploaded successfully');
+    console.log(`   Score Changed: ${upload2.scoreChanged} ${upload2.scoreChanged ? '✅' : '❌'}`);
   } else {
     console.log('❌ Score upload failed');
   }
   
   await new Promise(resolve => setTimeout(resolve, 3000));
   steam.runCallbacks();
+  const entriesAfterBetter = await steam.leaderboards.downloadLeaderboardEntriesForUsers(
+    quickestWinHandle,
+    [status.steamId]
+  );
+  const entryAfterBetter = entriesAfterBetter[0];
+  if (upload2 && entryAfterBaseline && entryAfterBetter) {
+    console.log(`   Downloaded Score Matches: ${entryAfterBetter.score === 45 ? '✅' : '❌'}`);
+    console.log(`   Previous Rank Matches: ${upload2.globalRankPrevious === entryAfterBaseline.globalRank ? '✅' : '❌'}`);
+    console.log(`   New Rank Matches: ${upload2.globalRankNew === entryAfterBetter.globalRank ? '✅' : '❌'}`);
+  }
   
   // Check leaderboard info after second upload
   console.log('\n📋 Checking leaderboard after second upload...');
@@ -220,16 +248,17 @@ async function testLeaderboardsAPI() {
   }
   console.log('');
   
-  // Force update with slower time
-  console.log('📤 Force updating time score: 120 seconds (ForceUpdate method)...');
+  // Upload a slower time with KeepBest
+  console.log('📤 Uploading worse time score: 120 seconds (KeepBest method)...');
   const upload3 = await steam.leaderboards.uploadScore(
     quickestWinHandle,
     120, // 120 seconds (slower time)
-    LeaderboardUploadScoreMethod.ForceUpdate
+    LeaderboardUploadScoreMethod.KeepBest
   );
   
   if (upload3) {
-    console.log('✅ Score uploaded successfully (forced)');
+    console.log('✅ Worse score upload completed');
+    console.log(`   Score Changed: ${upload3.scoreChanged} ${!upload3.scoreChanged ? '✅' : '❌'}`);
   } else {
     console.log('❌ Score upload failed');
   }
@@ -237,14 +266,22 @@ async function testLeaderboardsAPI() {
   await new Promise(resolve => setTimeout(resolve, 3000));
   steam.runCallbacks();
   
-  // Check leaderboard info after force update
-  console.log('\n📋 Checking leaderboard after force update...');
+  // Check leaderboard info after worse upload
+  console.log('\n📋 Checking leaderboard after worse upload...');
   const infoAfter3 = await steam.leaderboards.getLeaderboardInfo(quickestWinHandle);
+  const entriesAfterWorse = await steam.leaderboards.downloadLeaderboardEntriesForUsers(
+    quickestWinHandle,
+    [status.steamId]
+  );
+  const entryAfterWorse = entriesAfterWorse[0];
   if (infoAfter3 && infoAfter2) {
     console.log(`   Name: ${infoAfter3.name} ${infoAfter3.name === infoAfter2.name ? '✓' : '✗ CHANGED'}`);
     console.log(`   Entry Count: ${infoAfter3.entryCount} ${infoAfter3.entryCount === infoAfter2.entryCount ? '(unchanged)' : `(${infoAfter2.entryCount} → ${infoAfter3.entryCount})`}`);
     console.log(`   Sort Method: ${infoAfter3.sortMethod} ${infoAfter3.sortMethod === infoAfter2.sortMethod ? '✓' : '✗ CHANGED'}`);
     console.log(`   Display Type: ${infoAfter3.displayType} ${infoAfter3.displayType === infoAfter2.displayType ? '✓' : '✗ CHANGED'}`);
+  }
+  if (entryAfterBetter && entryAfterWorse) {
+    console.log(`   Score Remained Unchanged: ${entryAfterWorse.score === entryAfterBetter.score ? '✅' : '❌'}`);
   }
   
   // Final summary - check if any values changed throughout the process
