@@ -187,6 +187,31 @@ export interface LobbyChatMessageEvent {
 export type LobbyChatHandler = (event: LobbyChatMessageEvent) => void;
 
 /**
+ * GameLobbyJoinRequested event data
+ *
+ * Fired when the user accepts a lobby invite, or clicks "Join Game" from
+ * their friends list / Rich Presence, while the game is already running.
+ *
+ * @remarks
+ * If the game is NOT running when the user does this, Steam launches it
+ * with `+connect_lobby <lobby id>` on the command line instead, and this
+ * event never fires for that launch -- call
+ * `SteamMatchmakingManager.getConnectLobbyIdFromCommandLine()` once at
+ * startup to handle that case with the same `joinLobby()` call.
+ */
+export interface GameLobbyJoinRequestedEvent {
+  /** Steam ID of the lobby to join */
+  lobbyId: LobbyId;
+  /** Steam ID of the friend whose lobby/game this is */
+  friendSteamId: string;
+}
+
+/**
+ * Event handler type for GameLobbyJoinRequested events
+ */
+export type GameLobbyJoinRequestedHandler = (event: GameLobbyJoinRequestedEvent) => void;
+
+/**
  * Result from creating a lobby
  */
 export interface LobbyCreateResult {

@@ -774,7 +774,7 @@ class SteamworksSDK {
   shutdown(): void {
     // Mark as shut down immediately — before any native calls — so that any
     // re-entrant call (e.g. a window 'closed' event already queued while this
-    // is executing steps 1–4) sees isInitialized()===false and returns early.
+    // is executing steps 1–5) sees isInitialized()===false and returns early.
     if (!this.apiCore.markShutdown()) return;
 
     // 1. Destroy overlay first — before V8 teardown begins — to prevent
@@ -788,21 +788,25 @@ class SteamworksSDK {
     // 3. Shutdown Steam Input before SteamAPI_Shutdown() (Steamworks requirement).
     this.input.shutdown();
 
-    // 4. Unregister Koffi callbacks and cancel active auth tickets.
+    // 4. Unregister the GameLobbyJoinRequested_t koffi callback.
+    //    Same reasoning as step 5 — must happen before SteamAPI_Shutdown().
+    this.matchmaking.cleanup();
+
+    // 5. Unregister Koffi callbacks and cancel active auth tickets.
     //    MUST happen before SteamAPI_Shutdown() so Steam doesn't fire callbacks
     //    into freed Koffi function pointers.
     this.user.cleanup();
 
-    // 5. Call SteamAPI_Shutdown() + lib.unload() (dlclose).
+    // 6. Call SteamAPI_Shutdown() + lib.unload() (dlclose).
     this.apiCore.shutdown();
 
-    // 6. Release Koffi's internal state (parser type names + async broker),
+    // 7. Release Koffi's internal state (parser type names + async broker),
     //    now that every Koffi call in this shutdown sequence is done.
     //
     //    Koffi's own docs warn that calling a function or using a type
     //    defined before reset() afterwards is undefined behavior and will
     //    likely crash — so this MUST be the last Koffi operation of the
-    //    process, never before steps 1–5.
+    //    process, never before steps 1–6.
     //
     //    The reset itself avoids a deadlock during Electron teardown: the
     //    async broker created by koffi.register() is normally released by

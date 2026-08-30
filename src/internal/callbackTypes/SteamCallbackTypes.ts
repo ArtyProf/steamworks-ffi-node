@@ -144,6 +144,21 @@ export interface LobbyMatchListType {
   m_nLobbiesMatching: number;
 }
 
+/**
+ * GameLobbyJoinRequested_t callback structure
+ *
+ * Pushed when the user tries to join a lobby from their friends list, an
+ * invite, or Rich Presence -- while the game is already running. If the
+ * game is NOT running yet, Steam instead launches it with
+ * `+connect_lobby <lobby id>` on the command line, and this callback never
+ * fires for that launch; see `SteamMatchmakingManager.getConnectLobbyIdFromCommandLine()`
+ * for handling that case.
+ */
+export interface GameLobbyJoinRequestedType {
+  m_steamIDLobby: bigint;
+  m_steamIDFriend: bigint;
+}
+
 // ========================================
 // Networking Sockets Callback Types
 // ========================================

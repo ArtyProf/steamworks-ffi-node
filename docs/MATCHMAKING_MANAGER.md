@@ -18,7 +18,7 @@ This manager is useful for:
 | Category | Functions | Description |
 |----------|-----------|-------------|
 | [Lobby Creation](#lobby-creation) | 1 | Create new lobbies |
-| [Lobby Joining](#lobby-joining) | 3 | Join, leave, invite |
+| [Lobby Joining](#lobby-joining) | 5 | Join, leave, invite, accept invite |
 | [Lobby Searching](#lobby-searching) | 8 | Search with filters |
 | [Lobby Data](#lobby-data) | 5 | Get/set metadata |
 | [Lobby Members](#lobby-members) | 8 | Member management |
@@ -26,7 +26,7 @@ This manager is useful for:
 | [Lobby Management](#lobby-management) | 2 | Type and joinability |
 | [Game Server](#game-server) | 2 | Server association |
 
-**Total: 36 Functions**
+**Total: 38 Functions**
 
 ---
 
@@ -212,6 +212,59 @@ if (invited) {
   console.log('✅ Invite sent!');
 }
 ```
+
+---
+
+### Handling an accepted invite
+
+`inviteUserToLobby()` only covers the *sender's* side. When the invited friend accepts, there are **two separate cases** to handle, depending on whether their game was already running:
+
+| Case | What happens | How to handle it |
+|---|---|---|
+| Game already running | Steam fires `GameLobbyJoinRequested_t` | `onGameLobbyJoinRequested(handler)` |
+| Game not running | Steam launches it with `+connect_lobby <id>` on the command line — the callback **never fires** for this case | `getConnectLobbyIdFromCommandLine()` at startup |
+
+Both should be wired up so either path ends up joining the same lobby:
+
+```typescript
+// At startup, right after steam.init():
+const lobbyId = steam.matchmaking.getConnectLobbyIdFromCommandLine();
+if (lobbyId) {
+  await steam.matchmaking.joinLobby(lobbyId);
+}
+
+// While the game is running, listen for further invite acceptances:
+const unsubscribe = steam.matchmaking.onGameLobbyJoinRequested(async (event) => {
+  console.log(`Joining lobby ${event.lobbyId} via invite from ${event.friendSteamId}`);
+  await steam.matchmaking.joinLobby(event.lobbyId);
+});
+```
+
+#### `onGameLobbyJoinRequested(handler)`
+
+Subscribes to lobby join requests while the game is already running.
+
+**Steamworks SDK Callback:**
+- `GameLobbyJoinRequested_t` (`k_iSteamFriendsCallbacks + 33`)
+
+**Parameters:**
+- `handler: (event: GameLobbyJoinRequestedEvent) => void`
+
+**Returns:** `() => void` — call to unsubscribe
+
+**`GameLobbyJoinRequestedEvent`:**
+```typescript
+interface GameLobbyJoinRequestedEvent {
+  lobbyId: string;       // Steam ID of the lobby to join
+  friendSteamId: string; // Steam ID of the friend whose lobby/game this is
+}
+```
+
+#### `getConnectLobbyIdFromCommandLine()`
+
+Checks the game's own launch command line for a `+connect_lobby <id>` parameter, which Steam appends automatically when launching the game in response to an accepted invite.
+
+**Returns:** `string | null` — the lobby ID, or `null` if not present
 
 ---
 

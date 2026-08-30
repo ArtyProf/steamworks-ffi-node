@@ -1,5 +1,5 @@
 import * as koffi from 'koffi';
-import { SteamLibraryLoader } from './SteamLibraryLoader';
+import { SteamLibraryLoader, CCallbackBase, FnCallbackRunPtr, FnCallbackRunResultPtr, FnGetCallbackSizeBytesPtr } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamCallbackPoller } from './SteamCallbackPoller';
 import { SteamLogger } from './SteamLogger';
@@ -7,9 +7,11 @@ import {
   K_I_LOBBY_CREATED,
   K_I_LOBBY_ENTER,
   K_I_LOBBY_MATCH_LIST,
+  K_I_GAME_LOBBY_JOIN_REQUESTED,
   LobbyCreatedType,
   LobbyEnterType,
   LobbyMatchListType,
+  GameLobbyJoinRequestedType,
 } from './callbackTypes';
 import {
   ELobbyType,
@@ -26,6 +28,8 @@ import {
   LobbyListResult,
   LobbyGameServer,
   FavoriteGame,
+  GameLobbyJoinRequestedEvent,
+  GameLobbyJoinRequestedHandler,
 } from '../types/matchmaking';
 
 // Define Koffi struct types for callbacks
@@ -43,6 +47,12 @@ const LobbyEnter_t = koffi.struct('LobbyEnter_t', {
 
 const LobbyMatchList_t = koffi.struct('LobbyMatchList_t', {
   m_nLobbiesMatching: 'uint32',
+});
+
+// GameLobbyJoinRequested_t: two CSteamIDs (uint64), 16 bytes, no padding
+const GameLobbyJoinRequested_t = koffi.struct('GameLobbyJoinRequested_t', {
+  m_steamIDLobby: 'uint64',
+  m_steamIDFriend: 'uint64',
 });
 
 /**
@@ -92,9 +102,17 @@ export class SteamMatchmakingManager {
   
   // Event handlers
   private chatMessageHandlers: LobbyChatHandler[] = [];
-  
+  private gameLobbyJoinRequestedHandlers: GameLobbyJoinRequestedHandler[] = [];
+
   // Queued chat messages (for polling approach)
   private pendingChatMessages: LobbyChatMessageEvent[] = [];
+
+  // Registered push callback for GameLobbyJoinRequested_t
+  private lobbyJoinCallback: any = null;
+  private lobbyJoinCallbackObject: any = null;
+  private lobbyJoinCallbackRegistered: boolean = false;
+  private lobbyJoinVTable: any = null; // Keep vtable alive
+  private lobbyJoinCallbackFunctions: any[] = []; // Keep registered functions alive
 
   constructor(libraryLoader: SteamLibraryLoader, apiCore: SteamAPICore) {
     this.libraryLoader = libraryLoader;
@@ -484,6 +502,203 @@ export class SteamMatchmakingManager {
       SteamLogger.error('[Steamworks] Error inviting user to lobby:', (error as Error).message);
       return false;
     }
+  }
+
+  // ============================================================================
+  // Lobby Join Requests (accepting an invite)
+  // ============================================================================
+
+  /**
+   * Register a push-callback handler for GameLobbyJoinRequested_t
+   *
+   * This is an unprompted Steam callback (not a call result), so it uses
+   * the same low-level koffi.register + SteamAPI_RegisterCallback pattern
+   * as SteamUserManager's Web API ticket callback, rather than
+   * SteamCallbackPoller's poll-for-a-call-result approach.
+   */
+  private registerGameLobbyJoinRequestedCallback(): void {
+    if (this.lobbyJoinCallbackRegistered) return;
+
+    try {
+      // Run(void* pvParam) — used on macOS/Linux
+      const runCallback = (selfPtr: any, pvParam: any) => {
+        try {
+          const response = koffi.decode(pvParam, GameLobbyJoinRequested_t);
+          this.handleGameLobbyJoinRequested(response);
+        } catch (error) {
+          SteamLogger.error('[Steamworks] Error in GameLobbyJoinRequested callback:', error);
+        }
+      };
+
+      // Run(void* pvParam, bool bIOFailure, uint64 hSteamAPICall) — Steam
+      // dispatches non-call-result callbacks like this one via Run() on
+      // macOS/Linux, but via this RunResult-shaped slot on Windows.
+      const runCallbackResult = (selfPtr: any, pvParam: any, _bIOFailure: boolean, _hSteamAPICall: bigint) => {
+        try {
+          const response = koffi.decode(pvParam, GameLobbyJoinRequested_t);
+          this.handleGameLobbyJoinRequested(response);
+        } catch (error) {
+          SteamLogger.error('[Steamworks] Error in GameLobbyJoinRequested callback (RunResult):', error);
+        }
+      };
+
+      const getCallbackSizeBytes = (_selfPtr: any): number => {
+        return 16; // sizeof(GameLobbyJoinRequested_t) — two uint64 CSteamIDs, no padding
+      };
+
+      this.lobbyJoinCallback = koffi.register(runCallback, FnCallbackRunPtr);
+      const runResultCb = koffi.register(runCallbackResult, FnCallbackRunResultPtr);
+      const getSizeCb = koffi.register(getCallbackSizeBytes, FnGetCallbackSizeBytesPtr);
+
+      // Keep references alive to prevent garbage collection
+      this.lobbyJoinCallbackFunctions = [this.lobbyJoinCallback, runResultCb, getSizeCb];
+
+      this.lobbyJoinVTable = koffi.alloc('void*', 3);
+      koffi.encode(this.lobbyJoinVTable, koffi.array('void*', 3), this.lobbyJoinCallbackFunctions);
+
+      this.lobbyJoinCallbackObject = koffi.alloc(CCallbackBase, 1);
+      koffi.encode(this.lobbyJoinCallbackObject, CCallbackBase, {
+        vfptr: this.lobbyJoinVTable,
+        m_nCallbackFlags: 0,
+        _pad: [0, 0, 0],
+        m_iCallback: K_I_GAME_LOBBY_JOIN_REQUESTED,
+      });
+
+      this.libraryLoader.SteamAPI_RegisterCallback(
+        this.lobbyJoinCallbackObject,
+        K_I_GAME_LOBBY_JOIN_REQUESTED,
+      );
+
+      this.lobbyJoinCallbackRegistered = true;
+    } catch (error) {
+      SteamLogger.error('[Steamworks] Failed to register GameLobbyJoinRequested callback:', error);
+    }
+  }
+
+  /**
+   * Handle GameLobbyJoinRequested_t callback from Steam
+   */
+  private handleGameLobbyJoinRequested(response: GameLobbyJoinRequestedType): void {
+    const event: GameLobbyJoinRequestedEvent = {
+      lobbyId: response.m_steamIDLobby.toString(),
+      friendSteamId: response.m_steamIDFriend.toString(),
+    };
+
+    for (const handler of this.gameLobbyJoinRequestedHandlers) {
+      try {
+        handler(event);
+      } catch (err) {
+        SteamLogger.error('[Steamworks] GameLobbyJoinRequested handler error:', (err as Error).message);
+      }
+    }
+  }
+
+  /**
+   * Subscribe to lobby join request events
+   *
+   * Fires when the user accepts a lobby invite, or clicks "Join Game" from
+   * their friends list / Rich Presence, **while the game is already
+   * running**. Call `joinLobby(event.lobbyId)` in your handler to actually
+   * join.
+   *
+   * @param handler - Function to call when a join request is received
+   * @returns Unsubscribe function to remove the handler
+   *
+   * @remarks
+   * If the game is NOT running when the user does this, Steam instead
+   * launches it with `+connect_lobby <lobby id>` on the command line, and
+   * this event never fires for that launch. Call
+   * `getConnectLobbyIdFromCommandLine()` once at startup to handle that
+   * case with the same `joinLobby()` call — see that method's docs.
+   *
+   * @example
+   * ```typescript
+   * const unsubscribe = steam.matchmaking.onGameLobbyJoinRequested(async (event) => {
+   *   console.log(`Joining lobby ${event.lobbyId} via invite from ${event.friendSteamId}`);
+   *   await steam.matchmaking.joinLobby(event.lobbyId);
+   * });
+   *
+   * // Later, to stop receiving events:
+   * unsubscribe();
+   * ```
+   *
+   * Steamworks SDK Callback:
+   * - `GameLobbyJoinRequested_t` (k_iSteamFriendsCallbacks + 33)
+   */
+  onGameLobbyJoinRequested(handler: GameLobbyJoinRequestedHandler): () => void {
+    this.registerGameLobbyJoinRequestedCallback();
+    this.gameLobbyJoinRequestedHandlers.push(handler);
+    return () => {
+      const index = this.gameLobbyJoinRequestedHandlers.indexOf(handler);
+      if (index > -1) {
+        this.gameLobbyJoinRequestedHandlers.splice(index, 1);
+      }
+    };
+  }
+
+  /**
+   * Gets the lobby ID from a `+connect_lobby <id>` launch command line, if present
+   *
+   * When a friend invites the user to a lobby and the game isn't running
+   * yet, Steam launches the game with `+connect_lobby <64-bit lobby
+   * SteamID>` on its command line instead of firing
+   * `GameLobbyJoinRequested_t` (that callback only fires while the game is
+   * already running — see `onGameLobbyJoinRequested()`). Call this once at
+   * startup to handle both cases with the same `joinLobby()` call.
+   *
+   * @returns The lobby ID as a string, or null if not present on the command line
+   *
+   * @example
+   * ```typescript
+   * // At startup, after steam.init():
+   * const lobbyId = steam.matchmaking.getConnectLobbyIdFromCommandLine();
+   * if (lobbyId) {
+   *   await steam.matchmaking.joinLobby(lobbyId);
+   * }
+   *
+   * // While the game is already running:
+   * steam.matchmaking.onGameLobbyJoinRequested(async (event) => {
+   *   await steam.matchmaking.joinLobby(event.lobbyId);
+   * });
+   * ```
+   */
+  getConnectLobbyIdFromCommandLine(): string | null {
+    try {
+      const apps = this.libraryLoader.SteamAPI_SteamApps_v009();
+      if (!apps) return null;
+
+      const cmdBuffer = Buffer.alloc(1024);
+      const length = this.libraryLoader.SteamAPI_ISteamApps_GetLaunchCommandLine(apps, cmdBuffer, 1024);
+      if (length === 0) return null;
+
+      const commandLine = cmdBuffer.toString('utf8').replace(/\0/g, '').trim();
+      const match = commandLine.match(/\+connect_lobby\s+(\d+)/);
+      return match ? match[1] : null;
+    } catch (error) {
+      SteamLogger.error('[Steamworks] Error parsing connect_lobby from command line:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Unregister the GameLobbyJoinRequested_t callback
+   *
+   * Called during SteamworksSDK.shutdown(), before SteamAPI_Shutdown() and
+   * before koffi.reset(), so Steam doesn't fire this callback into a freed
+   * koffi function pointer.
+   */
+  cleanup(): void {
+    if (this.lobbyJoinCallbackObject) {
+      this.libraryLoader.SteamAPI_UnregisterCallback(this.lobbyJoinCallbackObject);
+
+      for (const func of this.lobbyJoinCallbackFunctions) {
+        if (func) {
+          koffi.unregister(func);
+        }
+      }
+    }
+    this.lobbyJoinCallbackRegistered = false;
+    this.gameLobbyJoinRequestedHandlers = [];
   }
 
   // ============================================================================

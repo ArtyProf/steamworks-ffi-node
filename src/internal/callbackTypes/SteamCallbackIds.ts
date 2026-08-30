@@ -57,6 +57,16 @@ export const K_I_LOBBY_MATCH_LIST = 510;
 export const K_I_LOBBY_CREATED = 513;
 
 // ========================================
+// Steam Friends Callback IDs
+// ========================================
+
+/** Base callback ID for ISteamFriends callbacks (k_iSteamFriendsCallbacks) */
+export const K_I_STEAM_FRIENDS_CALLBACKS = 300;
+
+/** Callback for GameLobbyJoinRequested_t */
+export const K_I_GAME_LOBBY_JOIN_REQUESTED = 333; // k_iSteamFriendsCallbacks + 33
+
+// ========================================
 // Steam Networking Sockets Callback IDs
 // ========================================
 
