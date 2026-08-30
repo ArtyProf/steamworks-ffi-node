@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.2] - 2026-08-26
+
+### Added
+- **`SteamMatchmakingManager.onGameLobbyJoinRequested(handler)` and `getConnectLobbyIdFromCommandLine()`** — handling for accepted lobby invites, which `inviteUserToLobby()` never covered (it only sends the invite). Accepting an invite splits into two cases per Valve's docs: if the invitee's game is already running, Steam fires `GameLobbyJoinRequested_t` (`k_iSteamFriendsCallbacks + 33`) — now exposed via `onGameLobbyJoinRequested()`, registered with the same `CCallbackBase` + `koffi.register` + `SteamAPI_RegisterCallback` push-callback pattern already used for `GetTicketForWebApiResponse_t` in `SteamUserManager`, since it's an unprompted callback, not a call result pollable via `SteamCallbackPoller`. If the invitee's game is **not** running, Steam instead launches it with `+connect_lobby <lobby id>` on the command line and the callback never fires for that launch — `getConnectLobbyIdFromCommandLine()` parses that out of `ISteamApps::GetLaunchCommandLine()` (already bound as `SteamAppsManager.getLaunchCommandLine()`) so both cases can route through the same `joinLobby()` call. The new push callback is unregistered during `SteamworksSDK.shutdown()`, before `SteamAPI_Shutdown()` and before the final `koffi.reset()`, matching the existing callback-cleanup ordering.
+
+### Fixed
+- **`uploadScore()` and other leaderboard callbacks returning corrupted data on macOS/Linux** (Fixes #74, via #75, thanks [@Stanko](https://github.com/Stanko)) — Steam's callback structs are compiled under `#pragma pack(push, 4)` on Linux/macOS/FreeBSD but `pack(push, 8)` on Windows (`steamclientpublic.h`, `VALVE_CALLBACK_PACK_SMALL`/`_LARGE` — done so 32-bit and 64-bit Steam clients agree on callback layout), while koffi's default struct definitions used native platform alignment (8-byte `uint64` on macOS/Linux) — silently decoding several fields from the wrong byte offset. Confirmed by hand-computing real field offsets and reproducing against a live Steam client: with the bug, `LeaderboardScoreUploaded_t` read `m_hSteamLeaderboard` from offset 8 instead of the real offset 4, cascading into every field after it (`m_nScore`, `m_bScoreChanged`, both rank fields) reading garbage — matching the original report's symptom of scores coming back as unrelated large numbers (e.g. `57746945` instead of `25000`) and `scoreChanged`/rank fields always wrong. Also affected `LeaderboardUGCSet_t.m_hSteamLeaderboard` and `LeaderboardEntry_t.m_hUGC`. Fixed by explicitly overriding the affected `uint64` members' alignment per platform (`koffi.struct()`'s `[alignment, type]` member syntax) to match Valve's real packing exactly, rather than relying on koffi's native-ABI default — this is the same class of bug as the `LobbyEnter_t` fix in v0.10.3, since koffi has no visibility into upstream `#pragma pack` directives and can only lay out whatever field list it's handed.
+- **`downloadLeaderboardEntriesForUsers()` only encoding the Steam ID array's first element correctly** (via #75) — `koffi.encode(steamIdArray, 'uint64', value, i)` matched the `encode(ref, type, value, len)` overload, where the 4th argument is a length, not a byte offset, so every loop iteration wrote to byte offset 0 regardless of `i` — the requested-users array was never populated correctly for more than one Steam ID. Fixed by using the `encode(ref, offset, type, value)` overload with an explicit `i * koffi.sizeof('uint64')` byte offset.
+
 ## [0.11.1] - 2026-08-15
 
 ### Fixed
@@ -562,6 +571,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.11.2 | 2026-08-26 | `onGameLobbyJoinRequested()` + `getConnectLobbyIdFromCommandLine()` for lobby invites; fix leaderboard callback struct packing on macOS/Linux corrupting `uploadScore()` results (#74/#75); fix `downloadLeaderboardEntriesForUsers()` Steam ID array encoding |
 | 0.11.1 | 2026-08-15 | Fix koffi 3.x breaking macOS universal (x64+arm64) Electron builds; new `npx steamworks-fetch-universal-koffi` command |
 | 0.11.0 | 2026-08-15 | **BREAKING**: minimum Node.js raised to 22; upgrade `typescript`→6.0.3, `node-gyp`→13.0.0, `koffi`→3.1.5 (fixes a koffi shutdown segfault), `@types/node`→26.0.0; committed lockfile + `npm ci` + audit gate in CI; fix Electron `asarUnpack`/`asar.unpack` docs missing koffi's native binary package |
 | 0.10.4 | 2026-06-04 | Fix `SteamOverlay` frame capture lag (steady `setInterval` + skip-if-busy guard); perf: lazy FFI binding in `SteamLibraryLoader` reduces startup blocking from ~200 symbol lookups to near-zero |
@@ -593,6 +603,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.11.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.11.2
 [0.11.1]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.11.1
 [0.11.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.11.0
 [0.10.4]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.10.4

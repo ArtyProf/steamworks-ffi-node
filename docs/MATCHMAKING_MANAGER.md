@@ -1310,6 +1310,56 @@ process.on('SIGINT', () => {
 });
 ```
 
+### Accepting Invites (add this to Host or Client)
+
+Neither example above reacts to a friend inviting this player to a lobby — that's a separate flow from browsing/joining public lobbies, and it needs to work whether *this* process is the host, the client, or hasn't joined anything yet. Add this once near `steam.init()`, regardless of which role the process ends up playing:
+
+```typescript
+import SteamworksSDK from 'steamworks-ffi-node';
+
+const steam = SteamworksSDK.getInstance();
+steam.init({ appId: 480 });
+
+async function joinLobbyAndCatchUp(lobbyId: string) {
+  const result = await steam.matchmaking.joinLobby(lobbyId);
+  if (!result.success) {
+    console.log(`❌ Failed to join invited lobby: ${result.error}`);
+    return;
+  }
+
+  console.log(`✅ Joined lobby via invite: ${lobbyId}`);
+  steam.matchmaking.startChatPolling(lobbyId);
+  steam.matchmaking.onChatMessage((event) => {
+    if (event.message) {
+      const name = steam.friends.getFriendPersonaName(event.senderId);
+      console.log(`[${name}]: ${event.message}`);
+    }
+  });
+  steam.matchmaking.setLobbyMemberData(lobbyId, 'ready', 'true');
+}
+
+// Case 1: the game was ALREADY RUNNING when the invite was accepted.
+// Steam fires this callback directly into the running process.
+steam.matchmaking.onGameLobbyJoinRequested(async (event) => {
+  console.log(`📨 Invite accepted by friend ${event.friendSteamId} -> lobby ${event.lobbyId}`);
+  await joinLobbyAndCatchUp(event.lobbyId);
+});
+
+// Case 2: the game was NOT running -- Steam launched it with
+// `+connect_lobby <id>` on the command line instead, and the callback
+// above never fires for this launch. Check for it once at startup.
+const launchLobbyId = steam.matchmaking.getConnectLobbyIdFromCommandLine();
+if (launchLobbyId) {
+  console.log(`🚀 Launched via invite -> lobby ${launchLobbyId}`);
+  joinLobbyAndCatchUp(launchLobbyId);
+}
+
+// Both cases route through the same joinLobbyAndCatchUp(), so the rest of
+// your game loop (steam.runCallbacks(), steam.matchmaking.pollChatMessages(),
+// etc. -- see the Host/Client examples above) doesn't need to know which
+// path brought the player into the lobby.
+```
+
 ---
 
 ## Testing
