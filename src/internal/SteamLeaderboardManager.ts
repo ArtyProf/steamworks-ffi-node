@@ -17,12 +17,20 @@ import {
   LeaderboardUGCSetType
 } from '../types';
 
+// Steam callback structs use pack(8) on Windows and pack(4) on macOS/Linux.
+// Override Koffi's native uint64 alignment so its allocation and decoding
+// match the callback ABI on every supported platform.
+const callbackUint64Member: [number, string] = [
+  process.platform === 'win32' ? 8 : 4,
+  'uint64'
+];
+
 /**
  * LeaderboardFindResult_t - Result of FindOrCreateLeaderboard/FindLeaderboard
  * Callback ID: k_iSteamUserStatsCallbacks + 4 = 1104
  */
 const LeaderboardFindResult_t = koffi.struct('LeaderboardFindResult_t', {
-  m_hSteamLeaderboard: 'uint64',  // Leaderboard handle (0 if not found)
+  m_hSteamLeaderboard: callbackUint64Member,  // Leaderboard handle (0 if not found)
   m_bLeaderboardFound: 'uint8'     // 1 if found, 0 otherwise
 });
 
@@ -32,7 +40,7 @@ const LeaderboardFindResult_t = koffi.struct('LeaderboardFindResult_t', {
  */
 const LeaderboardScoreUploaded_t = koffi.struct('LeaderboardScoreUploaded_t', {
   m_bSuccess: 'uint8',               // 1 if successful
-  m_hSteamLeaderboard: 'uint64',     // Leaderboard handle
+  m_hSteamLeaderboard: callbackUint64Member, // Leaderboard handle
   m_nScore: 'int32',                 // Score that was uploaded
   m_bScoreChanged: 'uint8',          // 1 if score changed
   m_nGlobalRankNew: 'int',           // New global rank
@@ -44,8 +52,8 @@ const LeaderboardScoreUploaded_t = koffi.struct('LeaderboardScoreUploaded_t', {
  * Callback ID: k_iSteamUserStatsCallbacks + 5 = 1105
  */
 const LeaderboardScoresDownloaded_t = koffi.struct('LeaderboardScoresDownloaded_t', {
-  m_hSteamLeaderboard: 'uint64',         // Leaderboard handle
-  m_hSteamLeaderboardEntries: 'uint64',  // Handle for GetDownloadedLeaderboardEntry
+  m_hSteamLeaderboard: callbackUint64Member,        // Leaderboard handle
+  m_hSteamLeaderboardEntries: callbackUint64Member, // Handle for GetDownloadedLeaderboardEntry
   m_cEntryCount: 'int'                   // Number of entries downloaded
 });
 
@@ -55,7 +63,7 @@ const LeaderboardScoresDownloaded_t = koffi.struct('LeaderboardScoresDownloaded_
  */
 const LeaderboardUGCSet_t = koffi.struct('LeaderboardUGCSet_t', {
   m_eResult: 'int',               // EResult value
-  m_hSteamLeaderboard: 'uint64'   // Leaderboard handle
+  m_hSteamLeaderboard: callbackUint64Member // Leaderboard handle
 });
 
 /**
@@ -63,11 +71,11 @@ const LeaderboardUGCSet_t = koffi.struct('LeaderboardUGCSet_t', {
  * Used with GetDownloadedLeaderboardEntry
  */
 const LeaderboardEntry_t = koffi.struct('LeaderboardEntry_t', {
-  m_steamIDUser: 'uint64',  // Steam ID of the user
+  m_steamIDUser: callbackUint64Member, // Steam ID of the user
   m_nGlobalRank: 'int32',   // Global rank [1..N]
   m_nScore: 'int32',        // Score value
   m_cDetails: 'int32',      // Number of details available
-  m_hUGC: 'uint64'          // UGC handle attached to entry
+  m_hUGC: callbackUint64Member // UGC handle attached to entry
 });
 
 // Callback IDs (k_iSteamUserStatsCallbacks = 1100)
@@ -735,11 +743,17 @@ export class SteamLeaderboardManager {
     try {
       const userCount = Math.min(steamIds.length, 100);
       console.log(`[Steamworks] Downloading entries for ${userCount} users`);
-      
+
+      if (userCount === 0) {
+        return [];
+      }
+
       // Convert Steam IDs to BigInt array
+      // Koffi takes the byte offset as its second argument when encoding individual elements.
       const steamIdArray = koffi.alloc('uint64', userCount);
+      const steamIdSize = koffi.sizeof('uint64');
       for (let i = 0; i < userCount; i++) {
-        koffi.encode(steamIdArray, 'uint64', BigInt(steamIds[i]), i);
+        koffi.encode(steamIdArray, i * steamIdSize, 'uint64', BigInt(steamIds[i]));
       }
 
       const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_DownloadLeaderboardEntriesForUsers(
@@ -911,4 +925,3 @@ export class SteamLeaderboardManager {
     }
   }
 }
-
