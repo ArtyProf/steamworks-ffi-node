@@ -36,10 +36,29 @@ import { SteamLogger } from "./SteamLogger";
  * steam.addElectronSteamOverlay(win);
  * ```
  */
+/**
+ * The platform window handle behind a BrowserWindow, or undefined if it cannot
+ * be read. Never throws: an overlay is optional, and failing to read a handle
+ * must not take the host application down with it.
+ */
+function readWindowHandle(browserWindow: any): bigint | undefined {
+  try {
+    const handle = browserWindow?.getNativeWindowHandle?.();
+    if (!handle || handle.length < 8) return undefined;
+    return handle.readBigUInt64LE(0);
+  } catch {
+    return undefined;
+  }
+}
+
 export class SteamOverlay {
   private nativeModule: any = null;
   private isInitialized: boolean = false;
   private overlayWindow: any = null;
+  /** Whether the overlay window is genuinely transparent -- see isTransparent(). */
+  private transparentActive = false;
+  /** Drives Present in transparent mode, where there is no frame subscription. */
+  private presentTimer: any = null;
 
   constructor() {
     // Load native overlay module for the current platform
@@ -148,6 +167,27 @@ export class SteamOverlay {
       title?: string;
       fps?: number;
       vsync?: boolean;
+      /**
+       * Present an empty TRANSPARENT frame instead of mirroring the window,
+       * and let Steam draw into it.
+       *
+       * The default (mirroring) copies the window via beginFrameSubscription,
+       * which is capped at 30fps on a non-offscreen window -- and since the
+       * overlay window sits on top, that cap is what the user sees. In
+       * transparent mode nothing is copied at all: the real window shows
+       * through at its own framerate, and Steam draws its overlay,
+       * notifications and FPS counter on top of it.
+       *
+       * What has to be available differs by platform: D3D11 +
+       * DirectComposition on Windows, a depth-32 ARGB visual plus a running
+       * compositing manager on Linux, and Metal on macOS (where the layer is
+       * already configured for per-pixel alpha).
+       *
+       * Where it is not available this falls back to the mirroring path,
+       * silently -- isTransparent() reports which one is in effect. Leave
+       * this unset and nothing changes: mirroring behaves as before.
+       */
+      transparent?: boolean;
     },
   ): boolean {
     if (!this.isInitialized || !this.nativeModule) {
@@ -170,6 +210,21 @@ export class SteamOverlay {
       const contentBounds = browserWindow.getContentBounds();
       const fps = options?.fps || 60;
 
+      // A transparent overlay window is on screen permanently, so it must not
+      // be WS_EX_TOPMOST -- that would paint it over whatever the user
+      // switches to while the game sits in the background. Passing the game's
+      // HWND as CreateWindowEx's hWndParent makes it an OWNED window instead:
+      // always above its owner, hidden and minimised with it, and never above
+      // unrelated applications.
+      //
+      // Derived here rather than asked of the caller: we already hold the
+      // BrowserWindow, so making them extract the handle from it would be
+      // asking for something we can read ourselves.
+      const ownerHwnd =
+        options?.transparent === true && process.platform === "win32"
+          ? readWindowHandle(browserWindow)
+          : undefined;
+
       // Create overlay window matching Electron's content area (not full window)
       const overlayWindowOptions = {
         width: contentBounds.width,
@@ -177,6 +232,8 @@ export class SteamOverlay {
         title: options?.title || "Electron Steam App",
         fps: fps,
         vsync: options?.vsync !== false,
+        transparent: options?.transparent === true,
+        ownerHwnd: ownerHwnd,
       };
 
       this.overlayWindow =
@@ -185,6 +242,21 @@ export class SteamOverlay {
       if (!this.overlayWindow) {
         SteamLogger.error("[Steam Overlay] Failed to create overlay window");
         return false;
+      }
+
+      // Requesting transparency is not the same as getting it: the native side
+      // falls back to an opaque window when D3D11 or DirectComposition are
+      // unavailable. Ask what actually happened.
+      this.transparentActive =
+        options?.transparent === true &&
+        typeof this.nativeModule.isOverlayTransparent === "function" &&
+        this.nativeModule.isOverlayTransparent(this.overlayWindow) === true;
+
+      if (options?.transparent === true && !this.transparentActive) {
+        SteamLogger.error(
+          "[Steam Overlay] Transparency was requested but is unavailable; " +
+            "falling back to mirroring. The overlay window is OPAQUE.",
+        );
       }
 
       // On Linux: tag the Electron window with STEAM_GAME and wire up input forwarding
@@ -250,8 +322,36 @@ export class SteamOverlay {
         }
       };
 
-      SteamLogger.debug(`[Steam Overlay] Starting frame subscription at ${fps} FPS`);
-      browserWindow.webContents.beginFrameSubscription(false, frameSubscription);
+      if (this.transparentActive) {
+        // Nothing to capture: the window presents empty transparent frames and
+        // Steam draws into them. This is what removes the 30fps ceiling that
+        // beginFrameSubscription imposes on a non-offscreen window, along with
+        // the per-frame getBitmap() readback.
+        if (typeof this.nativeModule.presentFrame === "function") {
+          const interval = Math.max(1, Math.round(1000 / fps));
+          this.presentTimer = setInterval(() => {
+            if (!this.overlayWindow || !this.nativeModule) return;
+            if (browserWindow.isDestroyed && browserWindow.isDestroyed()) return;
+            try {
+              this.nativeModule.presentFrame(this.overlayWindow);
+            } catch {
+              /* a failed present must never take the app down */
+            }
+          }, interval);
+          SteamLogger.debug(
+            `[Steam Overlay] Transparent mode: presenting empty frames at ${fps} FPS, no capture`,
+          );
+        } else {
+          // macOS: MTKView runs its own display link, so it is already
+          // presenting empty frames and must not also be pumped from here.
+          SteamLogger.debug(
+            "[Steam Overlay] Transparent mode: backend presents on its own, no capture",
+          );
+        }
+      } else {
+        SteamLogger.debug(`[Steam Overlay] Starting frame subscription at ${fps} FPS`);
+        browserWindow.webContents.beginFrameSubscription(false, frameSubscription);
+      }
 
       // Function to sync overlay window frame with Electron's CONTENT area
       // Overlay window is borderless, so it only covers the content, not title bar
@@ -403,7 +503,27 @@ export class SteamOverlay {
    * This is called automatically when the Electron window closes,
    * but can be called manually if needed.
    */
+  /**
+   * Whether the overlay window is genuinely transparent.
+   *
+   * Only meaningful if `transparent: true` was requested; false otherwise.
+   *
+   * Requesting `transparent: true` does not guarantee it: the native side
+   * falls back to an opaque mirroring window when D3D11 or DirectComposition
+   * are unavailable, and on platforms where transparency is unimplemented.
+   * Callers MUST branch on this rather than on what they asked for -- an
+   * opaque overlay window covers the app it sits on.
+   */
+  isTransparent(): boolean {
+    return this.transparentActive;
+  }
+
   destroyOverlayWindow(): void {
+    if (this.presentTimer) {
+      clearInterval(this.presentTimer);
+      this.presentTimer = null;
+    }
+    this.transparentActive = false;
     if (this.overlayWindow && this.nativeModule) {
       try {
         this.nativeModule.destroyOverlayWindow(this.overlayWindow);

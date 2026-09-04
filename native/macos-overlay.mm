@@ -33,16 +33,18 @@ static BOOL g_debugMode = NO;
 @property (assign, nonatomic) int width;
 @property (assign, nonatomic) int height;
 @property (assign, nonatomic) BOOL isDestroyed;
+@property (assign, nonatomic) BOOL transparent;  // Present empty frames instead of mirroring
 @property (strong, nonatomic) NSWindow *electronWindow;  // Reference to Electron window for input forwarding
 @end
 
 @implementation MetalWindowWrapper
 
-- (instancetype)initWithWidth:(int)w height:(int)h title:(NSString *)title {
+- (instancetype)initWithWidth:(int)w height:(int)h title:(NSString *)title transparent:(BOOL)transparent {
     self = [super init];
     if (self) {
         _width = w;
         _height = h;
+        _transparent = transparent;
         
         // Initialize Metal device
         _device = MTLCreateSystemDefaultDevice();
@@ -108,7 +110,8 @@ static BOOL g_debugMode = NO;
         // Make window transparent - content comes from rendered frames
         [_window setBackgroundColor:[NSColor clearColor]];
         
-        MetalLog(@"[Metal Overlay] Metal window created (borderless, transparent): %dx%d", w, h);
+        MetalLog(@"[Metal Overlay] Metal window created (borderless, transparent, %@): %dx%d",
+                 _transparent ? @"empty frames" : @"mirroring", w, h);
         
         // Set up rendering pipeline
         [self setupRenderPipeline];
@@ -288,8 +291,12 @@ static BOOL g_debugMode = NO;
             return;
         }
         
-        // If we have a texture and pipeline, render it
-        if (_texture && _pipelineState) {
+        // In transparent mode there is deliberately nothing to draw: the render
+        // pass clears to alpha 0 and presents, so Steam's hook fires against an
+        // empty frame and the real window shows through underneath.
+        if (_transparent) {
+            // Nothing to encode.
+        } else if (_texture && _pipelineState) {
             [renderEncoder setRenderPipelineState:_pipelineState];
             [renderEncoder setVertexBuffer:_vertexBuffer offset:0 atIndex:0];
             [renderEncoder setFragmentTexture:_texture atIndex:0];
@@ -309,6 +316,16 @@ static BOOL g_debugMode = NO;
         [commandBuffer presentDrawable:drawable];
         [commandBuffer commit];
     }
+}
+
+// Whether this window genuinely shows through. The layer is configured for
+// per-pixel alpha unconditionally, so the only question is whether the caller
+// asked for empty frames rather than a mirror.
+- (BOOL)isTransparent {
+    if (_isDestroyed || !_metalView) {
+        return NO;
+    }
+    return _transparent && !_metalView.layer.opaque;
 }
 
 - (void)destroy {
@@ -362,13 +379,17 @@ static napi_value CreateOverlayWindow(napi_env env, napi_callback_info info) {
     }
     
     // Parse options
-    napi_value widthVal, heightVal, titleVal;
+    napi_value widthVal, heightVal, titleVal, transparentVal;
     int width = 1280, height = 720;
     char title[256] = "Electron Steam App";
+    bool transparent = false;
     
     napi_get_named_property(env, args[0], "width", &widthVal);
     napi_get_named_property(env, args[0], "height", &heightVal);
     napi_get_named_property(env, args[0], "title", &titleVal);
+    if (napi_get_named_property(env, args[0], "transparent", &transparentVal) == napi_ok) {
+        napi_get_value_bool(env, transparentVal, &transparent);
+    }
     
     napi_get_value_int32(env, widthVal, &width);
     napi_get_value_int32(env, heightVal, &height);
@@ -379,7 +400,8 @@ static napi_value CreateOverlayWindow(napi_env env, napi_callback_info info) {
     // Create Metal window
     MetalWindowWrapper *wrapper = [[MetalWindowWrapper alloc] initWithWidth:width
                                                                       height:height
-                                                                       title:[NSString stringWithUTF8String:title]];
+                                                                       title:[NSString stringWithUTF8String:title]
+                                                                 transparent:transparent ? YES : NO];
     
     if (!wrapper) {
         napi_throw_error(env, nullptr, "Failed to create Metal window");
@@ -615,6 +637,23 @@ static napi_value SetDebugMode(napi_env env, napi_callback_info info) {
     return result;
 }
 
+static napi_value IsOverlayTransparent(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    void *data = nullptr;
+    napi_value result;
+    BOOL transparent = NO;
+    if (argc >= 1 &&
+        napi_get_value_external(env, args[0], &data) == napi_ok && data) {
+        MetalWindowWrapper *wrapper = (__bridge MetalWindowWrapper *)data;
+        transparent = [wrapper isTransparent];
+    }
+    napi_get_boolean(env, transparent ? true : false, &result);
+    return result;
+}
+
 // Module initialization
 static napi_value Init(napi_env env, napi_value exports) {
     napi_status status;
@@ -655,6 +694,15 @@ static napi_value Init(napi_env env, napi_value exports) {
     if (status != napi_ok) return nullptr;
     status = napi_set_named_property(env, exports, "renderFrame", fn);
     if (status != napi_ok) return nullptr;
+    
+    status = napi_create_function(env, nullptr, 0, IsOverlayTransparent, nullptr, &fn);
+    if (status != napi_ok) return nullptr;
+    status = napi_set_named_property(env, exports, "isOverlayTransparent", fn);
+    if (status != napi_ok) return nullptr;
+    
+    // Note: no presentFrame here. MTKView drives its own display link
+    // (paused = NO, preferredFramesPerSecond = 60), so it already presents
+    // continuously without being pumped from JavaScript.
     
     status = napi_create_function(env, nullptr, 0, DestroyOverlayWindow, nullptr, &fn);
     if (status != napi_ok) return nullptr;
