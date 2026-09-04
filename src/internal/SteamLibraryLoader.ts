@@ -91,7 +91,7 @@ export class SteamLibraryLoader {
   
   public SteamAPI_SteamUserStats_v013!: KoffiFunction;
   public SteamAPI_SteamUser_v023!: KoffiFunction;
-  public SteamAPI_SteamUtils_v010!: KoffiFunction;
+  public SteamAPI_SteamUtils!: KoffiFunction;
   public SteamAPI_ISteamUserStats_GetNumAchievements!: KoffiFunction;
   public SteamAPI_ISteamUserStats_GetAchievementName!: KoffiFunction;
   public SteamAPI_ISteamUserStats_GetAchievementDisplayAttribute!: KoffiFunction;
@@ -263,7 +263,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamNetworkingSockets_SteamAPI_v012!: KoffiFunction;
+  public SteamAPI_SteamNetworkingSockets_SteamAPI!: KoffiFunction;
   
   // P2P Listen/Connect
   public SteamAPI_ISteamNetworkingSockets_CreateListenSocketP2P!: KoffiFunction;
@@ -463,7 +463,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamInput_v006!: KoffiFunction;
+  public SteamAPI_SteamInput!: KoffiFunction;
   
   // Initialization
   public SteamAPI_ISteamInput_Init!: KoffiFunction;
@@ -835,6 +835,37 @@ export class SteamLibraryLoader {
 
     // Lazy FFI binding: defers koffi.func() symbol lookup to first call.
     // With ~200 functions, eager binding at load() adds hundreds of ms to startup.
+    // Steam's interface accessors carry a version suffix that changes between
+    // SDK releases -- SteamAPI_SteamUtils_v010 in older redistributables,
+    // _v011 in 1.65. Binding one hard-coded name makes the library work with
+    // exactly one SDK version and fail at load on every other, which is not
+    // something a consumer can work around: the redistributables are shipped
+    // by the game, not by this package.
+    //
+    // So versioned accessors are bound from a newest-first list and the first
+    // one present wins. The methods behind them are the unversioned flat
+    // functions (SteamAPI_ISteamUtils_*), which is what makes this safe: only
+    // the accessor is being version-negotiated, not the calls made through it.
+    const lfAny = (names: string[], ret: any, args: any[]): KoffiFunction => {
+      let fn: KoffiFunction | undefined;
+      const wrapper = (...a: any[]) => {
+        if (!fn) {
+          let lastError: unknown;
+          for (const name of names) {
+            try {
+              fn = this.steamLib!.func(name, ret, args);
+              break;
+            } catch (e) {
+              lastError = e;
+            }
+          }
+          if (!fn) throw lastError;
+        }
+        return fn(...a);
+      };
+      return wrapper as KoffiFunction;
+    };
+
     const lf = (name: string, ret: any, args: any[]): KoffiFunction => {
       let fn: KoffiFunction | undefined;
       const wrapper = (...a: any[]) => {
@@ -859,7 +890,11 @@ export class SteamLibraryLoader {
     
     this.SteamAPI_SteamUserStats_v013 = lf('SteamAPI_SteamUserStats_v013', 'void*', []);
     this.SteamAPI_SteamUser_v023 = lf('SteamAPI_SteamUser_v023', 'void*', []);
-    this.SteamAPI_SteamUtils_v010 = lf('SteamAPI_SteamUtils_v010', 'void*', []);
+    this.SteamAPI_SteamUtils = lfAny(
+      ['SteamAPI_SteamUtils_v011', 'SteamAPI_SteamUtils_v010'],
+      'void*',
+      [],
+    );
     
     this.SteamAPI_ISteamUserStats_GetNumAchievements = lf('SteamAPI_ISteamUserStats_GetNumAchievements', 'uint32', ['void*']);
     this.SteamAPI_ISteamUserStats_GetAchievementName = lf('SteamAPI_ISteamUserStats_GetAchievementName', 'str', ['void*', 'uint32']);
@@ -1038,7 +1073,11 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamNetworkingSockets_SteamAPI_v012 = lf('SteamAPI_SteamNetworkingSockets_SteamAPI_v012', 'void*', []);
+    this.SteamAPI_SteamNetworkingSockets_SteamAPI = lfAny(
+      ['SteamAPI_SteamNetworkingSockets_SteamAPI_v013', 'SteamAPI_SteamNetworkingSockets_SteamAPI_v012'],
+      'void*',
+      [],
+    );
     
     // P2P Listen/Connect
     // CreateListenSocketP2P(nLocalVirtualPort, nOptions, pOptions) -> HSteamListenSocket
@@ -1243,7 +1282,11 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamInput_v006 = lf('SteamAPI_SteamInput_v006', 'void*', []);
+    this.SteamAPI_SteamInput = lfAny(
+      ['SteamAPI_SteamInput_v007', 'SteamAPI_SteamInput_v006'],
+      'void*',
+      [],
+    );
     
     // Initialization
     this.SteamAPI_ISteamInput_Init = lf('SteamAPI_ISteamInput_Init', 'bool', ['void*', 'bool']);

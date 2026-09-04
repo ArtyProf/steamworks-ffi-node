@@ -30,7 +30,7 @@ import {
  * 
  * @remarks
  * All methods require the Steam API to be initialized. The manager uses
- * the SteamAPI_SteamUtils_v010 interface accessor for API calls.
+ * the SteamAPI_SteamUtils interface accessor for API calls.
  * 
  * @example Get system information
  * ```typescript
@@ -100,7 +100,7 @@ export class SteamUtilsManager {
     if (!status.initialized) {
       return null;
     }
-    return this.libraryLoader.SteamAPI_SteamUtils_v010();
+    return this.libraryLoader.SteamAPI_SteamUtils();
   }
 
   // ========================================

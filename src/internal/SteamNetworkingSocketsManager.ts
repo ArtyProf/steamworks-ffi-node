@@ -267,7 +267,7 @@ export class SteamNetworkingSocketsManager {
    */
   private getInterface(): any {
     if (!this.networkingSocketsInterface) {
-      this.networkingSocketsInterface = this.libraryLoader.SteamAPI_SteamNetworkingSockets_SteamAPI_v012();
+      this.networkingSocketsInterface = this.libraryLoader.SteamAPI_SteamNetworkingSockets_SteamAPI();
     }
     return this.networkingSocketsInterface;
   }

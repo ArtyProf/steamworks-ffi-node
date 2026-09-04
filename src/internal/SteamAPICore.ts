@@ -211,7 +211,7 @@ export class SteamAPICore {
       this.userInterface = this.libraryLoader.SteamAPI_SteamUser_v023();
       
       // Get Utils interface
-      this.utilsInterface = this.libraryLoader.SteamAPI_SteamUtils_v010();
+      this.utilsInterface = this.libraryLoader.SteamAPI_SteamUtils();
       if (!this.utilsInterface || this.utilsInterface === null) {
         SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamUtils interface');
       }
