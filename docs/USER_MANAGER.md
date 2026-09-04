@@ -4,7 +4,7 @@ Complete reference for Steam User functionality in Steamworks FFI.
 
 ## Overview
 
-The `SteamUserManager` provides **100% coverage** of the ISteamUser interface with 28 functions for authentication, session tickets, license verification, voice recording, and user information.
+The `SteamUserManager` provides **100% coverage** of the ISteamUser interface with 29 functions for authentication, session tickets, license verification, microtransactions, voice recording, and user information.
 
 ## Quick Reference
 
@@ -21,6 +21,7 @@ The `SteamUserManager` provides **100% coverage** of the ISteamUser interface wi
 | [Store Auth URL](#store-auth-url) | 1 | In-game browser authentication |
 | [Duration Control](#duration-control) | 2 | Anti-indulgence compliance (China) |
 | [Game Advertising](#game-advertising) | 1 | Advertise game server to friends |
+| [Microtransactions](#microtransactions) | 1 | In-game purchase authorization callback |
 | [Voice Recording](#voice-recording) | 6 | Record and transmit voice chat |
 | [Cleanup](#cleanup) | 1 | Cancel all active tickets |
 
@@ -756,6 +757,77 @@ steam.user.advertiseGame('0', 0, 0);
 
 ---
 
+## Microtransactions
+
+Steam's in-game purchase flow is driven from your **backend**, not from the
+game: you call the Web API to start a transaction, Steam shows the purchase
+dialog in the overlay, and the game is told what the user chose.
+
+| Step | Where it happens | What to call |
+|------|------------------|--------------|
+| Start the purchase | Your server | `ISteamMicroTxn/InitTxn/v3` (or `ISteamMicroTxnSandbox` while testing) |
+| User approves or declines | Steam overlay | — |
+| Game learns the answer | Your game | `onMicroTxnAuthorizationResponse(handler)` |
+| Confirm and settle | Your server | `ISteamMicroTxn/QueryTxn` then `FinalizeTxn` |
+
+The overlay has to be working for the dialog to appear at all. If nothing shows
+up, check that before assuming the callback is broken.
+
+> **`authorized: true` is consent, not payment.** It tells you the user pressed
+> the button; it does not tell you the transaction settled, and it reaches you
+> from the client. Never grant an entitlement on the strength of this event —
+> confirm with `QueryTxn` and settle with `FinalizeTxn` server-side. Treat the
+> event as a prompt to go and ask.
+
+```typescript
+const unsubscribe = steam.user.onMicroTxnAuthorizationResponse((event) => {
+  if (!event.authorized) {
+    console.log(`User declined order ${event.orderId}`);
+    return;
+  }
+  // Hand the order id to your backend, which owns QueryTxn/FinalizeTxn.
+  void fetch('/api/steam/settle', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderId: event.orderId }),
+  });
+});
+
+// Callbacks only arrive while the queue is being drained:
+setInterval(() => steam.runCallbacks(), 50);
+```
+
+#### `onMicroTxnAuthorizationResponse(handler)`
+
+Subscribes to the user answering Steam's in-overlay purchase dialog.
+
+**Steamworks SDK Callback:**
+- `MicroTxnAuthorizationResponse_t` (`k_iSteamUserCallbacks + 52`)
+
+**Parameters:**
+- `handler: (event: MicroTxnAuthorizationResponseEvent) => void`
+
+**Returns:** `() => void` — call to unsubscribe
+
+**`MicroTxnAuthorizationResponseEvent`:**
+```typescript
+interface MicroTxnAuthorizationResponseEvent {
+  appId: number;      // AppID this microtransaction was for
+  orderId: string;    // Order ID supplied to InitTxn
+  authorized: boolean; // Whether the user authorized the transaction
+}
+```
+
+`orderId` is a **string**. Steam order IDs are 64-bit, and values above 2^53
+cannot survive a JavaScript `number` — a rounded order ID settles the wrong
+transaction, silently.
+
+A handler that throws is caught and logged rather than propagated: this runs on
+Steam's dispatcher, so an exception must not unwind into it or stop other
+handlers.
+
+---
+
 ## Voice Recording
 
 Record and transmit voice chat audio.
@@ -975,6 +1047,7 @@ Test files are available in the repository:
 
 - **TypeScript tests:** `tests/ts/test-user.ts`
 - **JavaScript tests:** `tests/js/test-user.js`
+- **Microtransaction callback:** `tests/js/test-microtxn.js` (`npm run test:microtxn:js`)
 
 Run tests using npm:
 ```bash
