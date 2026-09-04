@@ -285,3 +285,21 @@ export interface DurationControlType {
   m_csecsToday: number;
   m_csecsRemaining: number;
 }
+
+/**
+ * MicroTxnAuthorizationResponse_t callback structure
+ *
+ * Pushed when the user answers the in-overlay purchase dialog for a
+ * microtransaction started via the Web API's ISteamMicroTxn/InitTxn.
+ *
+ * This struct is NOT decoded with koffi.decode: its layout differs between
+ * platforms because the Steam SDK packs callbacks to 8 bytes on Windows and 4
+ * on macOS/Linux, and koffi has no custom pack alignment. See
+ * MICRO_TXN_AUTHORIZATION_RESPONSE_SIZE_BYTES and the manual parser in
+ * SteamUserManager.
+ */
+export interface MicroTxnAuthorizationResponseType {
+  m_unAppID: number;
+  m_ulOrderID: bigint;
+  m_bAuthorized: boolean;
+}

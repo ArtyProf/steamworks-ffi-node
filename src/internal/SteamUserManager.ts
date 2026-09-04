@@ -9,11 +9,13 @@ import {
   K_I_MARKET_ELIGIBILITY_RESPONSE,
   K_I_DURATION_CONTROL,
   K_I_STORE_AUTH_URL_RESPONSE,
+  K_I_MICRO_TXN_AUTHORIZATION_RESPONSE,
   GetTicketForWebApiResponseType,
   EncryptedAppTicketResponseType,
   MarketEligibilityResponseType,
   DurationControlType,
   StoreAuthURLResponseType,
+  MicroTxnAuthorizationResponseType,
 } from './callbackTypes';
 import {
   HAuthTicket,
@@ -37,6 +39,8 @@ import {
   GetVoiceResult,
   DecompressVoiceResult,
   StoreAuthURLResult,
+  MicroTxnAuthorizationResponseEvent,
+  MicroTxnAuthorizationResponseHandler,
 } from '../types/user';
 
 // Define Koffi struct types for callbacks
@@ -130,6 +134,53 @@ const DurationControl_t = koffi.struct('DurationControl_t', {
  * 
  * @see {@link https://partner.steamgames.com/doc/api/ISteamUser}
  */
+/**
+ * Byte offsets of MicroTxnAuthorizationResponse_t, per platform packing.
+ *
+ * The Steam SDK packs callback structs to 8 bytes on Windows and 4 on
+ * macOS/Linux: steamtypes.h defines VALVE_CALLBACK_PACK_SMALL on those two,
+ * because a 32-bit gcc aligns uint64 to 4 and the 64-bit layout has to match
+ * the 32-bit one. For { uint32, uint64, uint8 } that gives:
+ *
+ *   Windows   pack(8): [uint32:0-3][pad:4-7][uint64:8-15][uint8:16] = 24 bytes
+ *   Mac/Linux pack(4): [uint32:0-3][uint64:4-11][uint8:12]          = 16 bytes
+ */
+export const MICRO_TXN_LAYOUT = {
+  win32: { size: 24, orderId: 8, authorized: 16 },
+  other: { size: 16, orderId: 4, authorized: 12 },
+} as const;
+
+/** The layout the running platform uses. */
+export function microTxnLayout(platform: NodeJS.Platform = process.platform) {
+  return platform === 'win32' ? MICRO_TXN_LAYOUT.win32 : MICRO_TXN_LAYOUT.other;
+}
+
+/**
+ * Decode MicroTxnAuthorizationResponse_t from Steam's raw bytes.
+ *
+ * Done by hand because koffi has no custom pack alignment and this struct's
+ * field offsets differ between platforms -- the same approach the other packed
+ * structs in SteamCallbackPoller use. Exported so the offsets can be tested
+ * without a Steam client attached: getting them wrong yields a plausible-looking
+ * object full of wrong numbers rather than an error.
+ */
+export function parseMicroTxnAuthorizationResponse(
+  buffer: Buffer,
+  platform: NodeJS.Platform = process.platform,
+): MicroTxnAuthorizationResponseType {
+  const layout = microTxnLayout(platform);
+  if (buffer.length < layout.size) {
+    throw new RangeError(
+      `MicroTxnAuthorizationResponse_t needs ${layout.size} bytes on ${platform}, got ${buffer.length}`,
+    );
+  }
+  return {
+    m_unAppID: buffer.readUInt32LE(0),
+    m_ulOrderID: buffer.readBigUInt64LE(layout.orderId),
+    m_bAuthorized: buffer.readUInt8(layout.authorized) !== 0,
+  };
+}
+
 export class SteamUserManager {
   private libraryLoader: SteamLibraryLoader;
   private apiCore: SteamAPICore;
@@ -151,6 +202,12 @@ export class SteamUserManager {
   private webApiCallbackRegistered: boolean = false;
   private webApiVTable: any = null; // Keep vtable alive
   private webApiCallbackFunctions: any[] = []; // Keep registered functions alive
+
+  private microTxnCallbackObject: any = null;
+  private microTxnCallbackRegistered: boolean = false;
+  private microTxnVTable: any = null; // Keep vtable alive
+  private microTxnCallbackFunctions: any[] = []; // Keep registered functions alive
+  private microTxnHandlers: MicroTxnAuthorizationResponseHandler[] = [];
 
   constructor(libraryLoader: SteamLibraryLoader, apiCore: SteamAPICore) {
     this.libraryLoader = libraryLoader;
@@ -230,6 +287,153 @@ export class SteamUserManager {
   }
 
   /**
+   * Size of MicroTxnAuthorizationResponse_t as the running platform lays it out.
+   *
+   * The Steam SDK packs callback structs to 8 bytes on Windows and 4 on
+   * macOS/Linux (steamtypes.h defines VALVE_CALLBACK_PACK_SMALL on those two,
+   * because a 32-bit gcc aligns uint64 to 4 and the 64-bit layout has to match
+   * the 32-bit one). For { uint32, uint64, uint8 } that is:
+   *
+   *   Windows   pack(8): [uint32:0-3][pad:4-7][uint64:8-15][uint8:16] = 24 bytes
+   *   Mac/Linux pack(4): [uint32:0-3][uint64:4-11][uint8:12]          = 16 bytes
+   *
+   * Steam copies this many bytes into the buffer it hands the callback, so
+   * reporting the wrong size corrupts the read rather than merely mislabelling
+   * it. GameLobbyJoinRequested_t never had to care -- two uint64s are 16 bytes
+   * under either packing.
+   */
+  private static readonly MICRO_TXN_SIZE_BYTES = microTxnLayout().size;
+
+  /**
+   * Register a push-callback handler for MicroTxnAuthorizationResponse_t
+   *
+   * Uses the low-level koffi.register + SteamAPI_RegisterCallback pattern
+   * rather than SteamCallbackPoller, because this is an unprompted callback
+   * and not the result of an API call this process made -- the purchase is
+   * started server-side with the Web API's ISteamMicroTxn/InitTxn, and Steam
+   * pushes the user's answer here.
+   */
+  private registerMicroTxnCallback(): void {
+    if (this.microTxnCallbackRegistered) return;
+
+    try {
+      // Run(void* pvParam) -- used on macOS/Linux
+      const runCallback = (selfPtr: any, pvParam: any) => {
+        try {
+          this.handleMicroTxnAuthorizationResponse(this.parseMicroTxnResponse(pvParam));
+        } catch (error) {
+          SteamLogger.error('[Steamworks] Error in MicroTxnAuthorizationResponse callback:', error);
+        }
+      };
+
+      // Run(void* pvParam, bool bIOFailure, uint64 hSteamAPICall) -- Steam
+      // dispatches non-call-result callbacks like this one via Run() on
+      // macOS/Linux, but via this RunResult-shaped slot on Windows.
+      const runCallbackResult = (selfPtr: any, pvParam: any, _bIOFailure: boolean, _hSteamAPICall: bigint) => {
+        try {
+          this.handleMicroTxnAuthorizationResponse(this.parseMicroTxnResponse(pvParam));
+        } catch (error) {
+          SteamLogger.error('[Steamworks] Error in MicroTxnAuthorizationResponse callback (RunResult):', error);
+        }
+      };
+
+      const getCallbackSizeBytes = (_selfPtr: any): number => SteamUserManager.MICRO_TXN_SIZE_BYTES;
+
+      this.microTxnCallbackFunctions = [
+        koffi.register(runCallback, FnCallbackRunPtr),
+        koffi.register(runCallbackResult, FnCallbackRunResultPtr),
+        koffi.register(getCallbackSizeBytes, FnGetCallbackSizeBytesPtr),
+      ];
+
+      this.microTxnVTable = koffi.alloc('void*', 3);
+      koffi.encode(this.microTxnVTable, koffi.array('void*', 3), this.microTxnCallbackFunctions);
+
+      this.microTxnCallbackObject = koffi.alloc(CCallbackBase, 1);
+      koffi.encode(this.microTxnCallbackObject, CCallbackBase, {
+        vfptr: this.microTxnVTable,
+        m_nCallbackFlags: 0,
+        _pad: [0, 0, 0],
+        m_iCallback: K_I_MICRO_TXN_AUTHORIZATION_RESPONSE,
+      });
+
+      this.libraryLoader.SteamAPI_RegisterCallback(
+        this.microTxnCallbackObject,
+        K_I_MICRO_TXN_AUTHORIZATION_RESPONSE
+      );
+
+      this.microTxnCallbackRegistered = true;
+    } catch (error) {
+      SteamLogger.error('[Steamworks] Failed to register MicroTxnAuthorizationResponse callback:', error);
+    }
+  }
+
+  /**
+   * Read MicroTxnAuthorizationResponse_t out of Steam's buffer by hand.
+   *
+   * koffi has no custom pack alignment, and this struct's field offsets differ
+   * between Windows and macOS/Linux -- see MICRO_TXN_SIZE_BYTES. The same
+   * approach is used for the other packed structs in SteamCallbackPoller.
+   */
+  private parseMicroTxnResponse(pvParam: any): MicroTxnAuthorizationResponseType {
+    const raw = koffi.decode(pvParam, koffi.array('uint8', SteamUserManager.MICRO_TXN_SIZE_BYTES));
+    return parseMicroTxnAuthorizationResponse(Buffer.from(raw));
+  }
+
+  /**
+   * Handle MicroTxnAuthorizationResponse_t callback from Steam
+   */
+  private handleMicroTxnAuthorizationResponse(response: MicroTxnAuthorizationResponseType): void {
+    const event: MicroTxnAuthorizationResponseEvent = {
+      appId: response.m_unAppID,
+      // Stringified deliberately: order IDs are 64-bit, and JSON.stringify
+      // throws on a bigint, so handing one out invites a crash at whatever
+      // boundary the caller serialises across.
+      orderId: response.m_ulOrderID.toString(),
+      authorized: response.m_bAuthorized,
+    };
+
+    // A throwing handler must not stop the others, and must not propagate into
+    // Steam's dispatcher: this runs on Steam's callback, not our own stack.
+    for (const handler of [...this.microTxnHandlers]) {
+      try {
+        handler(event);
+      } catch (error) {
+        SteamLogger.error('[Steamworks] Error in MicroTxnAuthorizationResponse handler:', error);
+      }
+    }
+  }
+
+  /**
+   * Subscribe to the user answering the in-game purchase dialog
+   *
+   * Steam raises this when the user authorizes or declines a microtransaction
+   * that was started server-side with the Web API's `ISteamMicroTxn/InitTxn`.
+   * It is the only in-process signal that the overlay dialog was answered.
+   *
+   * @param handler - Called with the user's answer
+   * @returns An unsubscribe function
+   *
+   * @remarks
+   * `authorized` is the user's consent, NOT a completed purchase, and it
+   * arrives from the client. Confirm with `ISteamMicroTxn/QueryTxn` and settle
+   * with `FinalizeTxn` server-side before granting anything -- treat this
+   * event as a prompt to go and ask.
+   *
+   * Steamworks SDK Callback:
+   * - `MicroTxnAuthorizationResponse_t` (k_iSteamUserCallbacks + 52)
+   */
+  public onMicroTxnAuthorizationResponse(handler: MicroTxnAuthorizationResponseHandler): () => void {
+    this.registerMicroTxnCallback();
+    this.microTxnHandlers.push(handler);
+    return () => {
+      const index = this.microTxnHandlers.indexOf(handler);
+      if (index > -1) {
+        this.microTxnHandlers.splice(index, 1);
+      }
+    };
+  }
+
+  /**
    * Handle GetTicketForWebApiResponse_t callback from Steam
    */
   private handleWebApiTicketResponse(response: GetTicketForWebApiResponseType): void {
@@ -282,6 +486,16 @@ export class SteamUserManager {
       
       // Unregister all registered callback functions
       for (const func of this.webApiCallbackFunctions) {
+        if (func) {
+          koffi.unregister(func);
+        }
+      }
+    }
+
+    if (this.microTxnCallbackObject) {
+      this.libraryLoader.SteamAPI_UnregisterCallback(this.microTxnCallbackObject);
+
+      for (const func of this.microTxnCallbackFunctions) {
         if (func) {
           koffi.unregister(func);
         }
