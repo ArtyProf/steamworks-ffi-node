@@ -161,8 +161,20 @@ export function microTxnLayout(platform: NodeJS.Platform = process.platform) {
  * Done by hand because koffi has no custom pack alignment and this struct's
  * field offsets differ between platforms -- the same approach the other packed
  * structs in SteamCallbackPoller use. Exported so the offsets can be tested
- * without a Steam client attached: getting them wrong yields a plausible-looking
- * object full of wrong numbers rather than an error.
+ * without a Steam client attached, which matters more than it first looks:
+ * getting them wrong yields a plausible-looking object rather than an error.
+ * These are real bytes from a Windows client:
+ *
+ *   de5436000f8c3601750c0a000000200001063b19ce010000
+ *
+ *   read as pack(8):  orderId 9007199255399541, authorized true   <- correct
+ *   read as pack(4):  orderId 2828446438165519, authorized false
+ *
+ * The padding at [4..7] is non-zero, so both readings look entirely reasonable.
+ * Note that the flag flips as well as the id: here an approval reads as a
+ * decline, and with different padding a decline reads as an approval. That is
+ * the case that charges someone who said no, and it is why callers must settle
+ * with QueryTxn/FinalizeTxn server-side rather than trusting this event.
  */
 export function parseMicroTxnAuthorizationResponse(
   buffer: Buffer,
