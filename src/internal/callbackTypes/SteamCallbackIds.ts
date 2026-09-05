@@ -98,5 +98,8 @@ export const K_I_MARKET_ELIGIBILITY_RESPONSE = 166; // k_iSteamUserCallbacks + 6
 /** Callback for DurationControl_t */
 export const K_I_DURATION_CONTROL = 167; // k_iSteamUserCallbacks + 67
 
+/** Callback for MicroTxnAuthorizationResponse_t */
+export const K_I_MICRO_TXN_AUTHORIZATION_RESPONSE = 152; // k_iSteamUserCallbacks + 52
+
 /** Callback for GetTicketForWebApiResponse_t */
 export const K_I_GET_TICKET_FOR_WEB_API_RESPONSE = 168; // k_iSteamUserCallbacks + 68

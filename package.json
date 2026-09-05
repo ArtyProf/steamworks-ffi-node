@@ -33,6 +33,7 @@
     "test:sockets:host:js": "node tests/js/test-networking-sockets-host.js",
     "test:sockets:join:js": "node tests/js/test-networking-sockets-join.js",
     "test:user:js": "node tests/js/test-user.js",
+    "test:microtxn:js": "node tests/js/test-microtxn.js",
     "test:restart:js": "node tests/js/test-restart-app.js",
     "test:debug:js": "node tests/js/test-debug-mode.js",
     "test:core:ts": "ts-node tests/ts/test-core-api.ts",
