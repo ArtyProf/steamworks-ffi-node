@@ -217,7 +217,7 @@ This design:
 ### User Authentication & Security System
 
 - **[User Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/USER_MANAGER.md)**
-  - **28 Functions** - Complete ISteamUser support
+  - **29 Functions** - Complete ISteamUser support
   - Session tickets (P2P and game server authentication)
   - Web API tickets (backend service authentication)
   - Auth session validation (server-side ticket verification)
@@ -228,6 +228,7 @@ This design:
   - User info (Steam level, game badges, user data folder)
   - Voice recording and playback (microphone capture, compress/decompress)
   - Market eligibility and store authentication
+  - Microtransaction authorization callback (in-game purchase approval)
 
 ### Steam Overlay Integration (Electron)
 

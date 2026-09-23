@@ -340,3 +340,39 @@ export interface StoreAuthURLResult {
   /** Error message if failed */
   error?: string;
 }
+
+/**
+ * Fired when the user authorizes or declines an in-game purchase
+ *
+ * Raised in response to a Steam microtransaction started with the Web API's
+ * `ISteamMicroTxn/InitTxn`. Steam shows the purchase in the overlay, and this
+ * event reports what the user chose. It is the only in-process signal that the
+ * dialog was answered.
+ *
+ * @remarks
+ * `authorized` being true is the user's consent, not a completed purchase.
+ * The transaction is only final once it has been settled server-side with
+ * `ISteamMicroTxn/FinalizeTxn`, and the authoritative status comes from
+ * `QueryTxn` rather than from this event -- treat it as a prompt to go and
+ * ask, not as proof of payment. Nothing here should be trusted for granting
+ * an entitlement: a client can send whatever it likes.
+ *
+ * @remarks
+ * The overlay must be available for the user to see the dialog at all, so a
+ * purchase flow depends on the Steam overlay being functional.
+ */
+export interface MicroTxnAuthorizationResponseEvent {
+  /** AppID this microtransaction was for */
+  appId: number;
+  /** Order ID supplied to InitTxn, as a string to preserve all 64 bits */
+  orderId: string;
+  /** Whether the user authorized the transaction */
+  authorized: boolean;
+}
+
+/**
+ * Event handler type for MicroTxnAuthorizationResponse events
+ */
+export type MicroTxnAuthorizationResponseHandler = (
+  event: MicroTxnAuthorizationResponseEvent,
+) => void;
