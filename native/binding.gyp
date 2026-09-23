@@ -26,6 +26,7 @@
           "sources": [ "windows-overlay.cpp" ],
           "libraries": [
             "-lopengl32",
+            "-ldwmapi",
             "-lgdi32",
             "-luser32"
           ],

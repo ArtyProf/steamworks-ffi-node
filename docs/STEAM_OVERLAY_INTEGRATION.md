@@ -104,6 +104,9 @@ Adds Steam overlay support to an Electron BrowserWindow.
   - `title?: string` - Window title (default: "Electron Steam App")
   - `fps?: number` - Frame rate (default: 60)
   - `vsync?: boolean` - Enable VSync (default: true)
+  - `transparent?: boolean` - Present an empty transparent frame for Steam to
+    draw into instead of mirroring the window (default: false). Availability
+    varies by platform - see [Transparent mode](#transparent-mode).
 
 **Returns:** `boolean` - True if overlay was successfully added
 
@@ -122,6 +125,58 @@ if (success) {
   console.log("Failed to enable overlay");
 }
 ```
+
+### isTransparent()
+
+Whether the overlay window is transparent rather than mirroring the app.
+
+**Returns:** `boolean`
+
+Only relevant if you passed `transparent: true`. Without it this always returns
+`false`, and mirroring is unchanged.
+
+Transparency is a request, not a guarantee: where the platform cannot provide
+it the overlay falls back to mirroring, and it does so silently. This is how
+you find out which one you got - most usefully so a support report can say
+whether transparency was actually in effect on the machine that hit a problem.
+
+```typescript
+steam.addElectronSteamOverlay(win, { transparent: true });
+console.log(
+  steam.overlay.isTransparent()
+    ? 'Overlay: transparent'
+    : 'Overlay: mirroring (transparency unavailable on this machine)',
+);
+```
+
+## Transparent mode
+
+By default the overlay window mirrors the app via `beginFrameSubscription`,
+which is capped at 30fps on a non-offscreen window. Because the overlay window
+sits on top, that cap is the framerate the user sees.
+
+In transparent mode nothing is captured. The window presents an empty
+transparent frame and Steam draws into it on the hooked `Present`, so the app
+shows through at its own framerate, and Steam notifications and the FPS counter
+are drawn as well.
+
+What transparency needs differs by platform:
+
+| Platform | Needs | Notes |
+| --- | --- | --- |
+| Windows | D3D11 + DirectComposition | Falls back to the WGL window, which is opaque |
+| macOS | Metal | The layer is already configured for per-pixel alpha |
+| Linux | A depth-32 ARGB visual and a running compositing manager | X11 does no blending on its own |
+
+Where those are unavailable the overlay falls back to mirroring - the same
+behaviour as not passing the option at all. `isTransparent()` reports which
+one is in effect.
+
+On Windows the transparent overlay window is also made an *owned* window
+rather than `WS_EX_TOPMOST`, so it stays above the app it belongs to instead
+of above every application on the desktop. It has to be: unlike the mirror,
+this window is on screen permanently. Nothing to configure - the owner is
+taken from the `BrowserWindow` you pass in.
 
 ### `isOverlayAvailable()`
 
