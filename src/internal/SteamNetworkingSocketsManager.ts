@@ -145,7 +145,7 @@ export class SteamNetworkingSocketsManager {
       );
 
       // Get the NetworkingUtils interface
-      const utils = this.libraryLoader.SteamAPI_SteamNetworkingUtils_SteamAPI_v004();
+      const utils = this.libraryLoader.SteamAPI_SteamNetworkingUtils_SteamAPI();
       if (!utils) {
         SteamLogger.warn('[Steamworks] NetworkingUtils interface not available for callback registration');
         return;
@@ -267,7 +267,7 @@ export class SteamNetworkingSocketsManager {
    */
   private getInterface(): any {
     if (!this.networkingSocketsInterface) {
-      this.networkingSocketsInterface = this.libraryLoader.SteamAPI_SteamNetworkingSockets_SteamAPI_v012();
+      this.networkingSocketsInterface = this.libraryLoader.SteamAPI_SteamNetworkingSockets_SteamAPI();
     }
     return this.networkingSocketsInterface;
   }
@@ -1242,7 +1242,7 @@ export class SteamNetworkingSocketsManager {
     // Unregister the global callback
     if (this.callbackRegistered) {
       try {
-        const utils = this.libraryLoader.SteamAPI_SteamNetworkingUtils_SteamAPI_v004();
+        const utils = this.libraryLoader.SteamAPI_SteamNetworkingUtils_SteamAPI();
         if (utils) {
           this.libraryLoader.SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged(utils, null);
         }

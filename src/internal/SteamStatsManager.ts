@@ -103,7 +103,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       const valueOut = koffi.alloc('int32', 1);
       
       const success = this.libraryLoader.SteamAPI_ISteamUserStats_GetStatInt32(
@@ -162,7 +162,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       const valueOut = koffi.alloc('float', 1);
       
       const success = this.libraryLoader.SteamAPI_ISteamUserStats_GetStatFloat(
@@ -227,7 +227,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       
       const success = this.libraryLoader.SteamAPI_ISteamUserStats_SetStatInt32(
         userStatsInterface,
@@ -293,7 +293,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       
       const success = this.libraryLoader.SteamAPI_ISteamUserStats_SetStatFloat(
         userStatsInterface,
@@ -361,7 +361,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       
       const success = this.libraryLoader.SteamAPI_ISteamUserStats_UpdateAvgRateStat(
         userStatsInterface,
@@ -438,7 +438,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       const steamIdBigInt = typeof steamId === 'string' ? BigInt(steamId) : steamId;
       
       const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_RequestUserStats(
@@ -500,7 +500,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       const steamIdBigInt = typeof steamId === 'string' ? BigInt(steamId) : steamId;
       const valueOut = koffi.alloc('int32', 1);
       
@@ -569,7 +569,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       const steamIdBigInt = typeof steamId === 'string' ? BigInt(steamId) : steamId;
       const valueOut = koffi.alloc('float', 1);
       
@@ -646,7 +646,7 @@ export class SteamStatsManager {
       // Limit history days to 0-60
       const days = Math.max(0, Math.min(60, historyDays));
       
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       
       const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_RequestGlobalStats(
         userStatsInterface,
@@ -704,7 +704,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       const valueOut = koffi.alloc('int64', 1);
       
       const success = this.libraryLoader.SteamAPI_ISteamUserStats_GetGlobalStatInt64(
@@ -770,7 +770,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       const valueOut = koffi.alloc('double', 1);
       
       const success = this.libraryLoader.SteamAPI_ISteamUserStats_GetGlobalStatDouble(
@@ -844,7 +844,7 @@ export class SteamStatsManager {
       // Limit to 60 days
       const numDays = Math.max(1, Math.min(60, days));
       
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       const historyOut = koffi.alloc('int64', numDays);
       
       const elementsReturned = this.libraryLoader.SteamAPI_ISteamUserStats_GetGlobalStatHistoryInt64(
@@ -924,7 +924,7 @@ export class SteamStatsManager {
       // Limit to 60 days
       const numDays = Math.max(1, Math.min(60, days));
       
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       const historyOut = koffi.alloc('double', numDays);
       
       const elementsReturned = this.libraryLoader.SteamAPI_ISteamUserStats_GetGlobalStatHistoryDouble(
@@ -1000,7 +1000,7 @@ export class SteamStatsManager {
     }
 
     try {
-      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      const userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       
       const callHandle = this.libraryLoader.SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers(
         userStatsInterface

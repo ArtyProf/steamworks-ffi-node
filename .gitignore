@@ -14,6 +14,10 @@ build/
 # Steamworks SDK (users must download separately due to licensing)
 steamworks_sdk/
 
+# SDK version-compat test fixtures (users must download separately due to licensing)
+test-sdks/*/
+!test-sdks/README.md
+
 # Environment files
 .env
 .env.local

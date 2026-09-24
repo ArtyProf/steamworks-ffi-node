@@ -87,7 +87,7 @@ export class SteamScreenshotManager {
     
     if (!this.screenshotsInterface) {
       try {
-        this.screenshotsInterface = this.libraryLoader.SteamAPI_SteamScreenshots_v003();
+        this.screenshotsInterface = this.libraryLoader.SteamAPI_SteamScreenshots();
       } catch (error) {
         SteamLogger.error('[Steamworks] Failed to get ISteamScreenshots interface:', error);
         return null;

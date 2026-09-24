@@ -161,8 +161,8 @@ export class SteamAPICore {
    * Steamworks SDK Functions:
    * - `SteamAPI_Init()` - Initialize the Steam API
    * - `SteamAPI_IsSteamRunning()` - Check if Steam client is running
-   * - `SteamAPI_SteamUserStats_v013()` - Get ISteamUserStats interface
-   * - `SteamAPI_SteamUser_v023()` - Get ISteamUser interface
+   * - `SteamAPI_SteamUserStats()` - Get ISteamUserStats interface
+   * - `SteamAPI_SteamUser()` - Get ISteamUser interface
    * - `SteamAPI_ISteamUserStats_RequestCurrentStats()` - Request current stats from Steam
    * - `SteamAPI_RunCallbacks()` - Process Steam callbacks
    */
@@ -202,46 +202,46 @@ export class SteamAPICore {
       }
 
       // Get UserStats interface
-      this.userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats_v013();
+      this.userStatsInterface = this.libraryLoader.SteamAPI_SteamUserStats();
       if (!this.userStatsInterface || this.userStatsInterface === null) {
         throw new Error('Failed to get SteamUserStats interface');
       }
 
       // Get User interface
-      this.userInterface = this.libraryLoader.SteamAPI_SteamUser_v023();
+      this.userInterface = this.libraryLoader.SteamAPI_SteamUser();
       
       // Get Utils interface
-      this.utilsInterface = this.libraryLoader.SteamAPI_SteamUtils_v010();
+      this.utilsInterface = this.libraryLoader.SteamAPI_SteamUtils();
       if (!this.utilsInterface || this.utilsInterface === null) {
         SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamUtils interface');
       }
       
       // Get Apps interface
-      this.appsInterface = this.libraryLoader.SteamAPI_SteamApps_v009();
+      this.appsInterface = this.libraryLoader.SteamAPI_SteamApps();
       if (!this.appsInterface || this.appsInterface === null) {
         SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamApps interface');
       }
       
       // Get Friends interface
-      this.friendsInterface = this.libraryLoader.SteamAPI_SteamFriends_v018();
+      this.friendsInterface = this.libraryLoader.SteamAPI_SteamFriends();
       if (!this.friendsInterface || this.friendsInterface === null) {
         SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamFriends interface');
       }
       
       // Get Remote Storage interface
-      this.remoteStorageInterface = this.libraryLoader.SteamAPI_SteamRemoteStorage_v016();
+      this.remoteStorageInterface = this.libraryLoader.SteamAPI_SteamRemoteStorage();
       if (!this.remoteStorageInterface || this.remoteStorageInterface === null) {
         SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamRemoteStorage interface');
       }
       
       // Get UGC interface
-      this.ugcInterface = this.libraryLoader.SteamAPI_SteamUGC_v021();
+      this.ugcInterface = this.libraryLoader.SteamAPI_SteamUGC();
       if (!this.ugcInterface || this.ugcInterface === null) {
         SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamUGC interface');
       }
       
       // Get Matchmaking interface
-      this.matchmakingInterface = this.libraryLoader.SteamAPI_SteamMatchmaking_v009();
+      this.matchmakingInterface = this.libraryLoader.SteamAPI_SteamMatchmaking();
       if (!this.matchmakingInterface || this.matchmakingInterface === null) {
         SteamLogger.warn('[Steamworks] WARNING: Failed to get SteamMatchmaking interface');
       }

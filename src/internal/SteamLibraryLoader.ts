@@ -5,6 +5,64 @@ import { SteamLogger } from './SteamLogger';
 
 type KoffiFunction = koffi.KoffiFunc<(...args: any[]) => any>;
 
+/**
+ * Steam's interface accessor exports all follow "<prefix>v<NNN>" (e.g.
+ * SteamAPI_SteamUtils_v010, SteamAPI_SteamUtils_v011). Rather than hardcoding which
+ * numeric versions exist -- which goes stale the moment Valve ships a new SDK -- we
+ * reflect on the loaded library itself: probe the prefix against a wide range of
+ * version numbers and bind to the highest one the library actually exports. This is
+ * the same naming convention Valve has used since the SDK's earliest releases, so
+ * only the (version-independent) prefix is hardcoded here, never a specific version.
+ *
+ * See resolveVersionedInterface() below for the probing logic, and
+ * tests/js/test-sdk-version-compat.js for a standalone check you can run against any
+ * SDK release dropped into test-sdks/ (see test-sdks/README.md).
+ */
+export const INTERFACE_ACCESSOR_PREFIXES: Record<string, string> = {
+  SteamAPI_SteamUserStats: 'SteamAPI_SteamUserStats_v',
+  SteamAPI_SteamUser: 'SteamAPI_SteamUser_v',
+  SteamAPI_SteamUtils: 'SteamAPI_SteamUtils_v',
+  SteamAPI_SteamNetworkingUtils_SteamAPI: 'SteamAPI_SteamNetworkingUtils_SteamAPI_v',
+  SteamAPI_SteamNetworkingSockets_SteamAPI: 'SteamAPI_SteamNetworkingSockets_SteamAPI_v',
+  SteamAPI_SteamFriends: 'SteamAPI_SteamFriends_v',
+  SteamAPI_SteamRemoteStorage: 'SteamAPI_SteamRemoteStorage_v',
+  SteamAPI_SteamUGC: 'SteamAPI_SteamUGC_v',
+  SteamAPI_SteamInput: 'SteamAPI_SteamInput_v',
+  SteamAPI_SteamScreenshots: 'SteamAPI_SteamScreenshots_v',
+  SteamAPI_SteamApps: 'SteamAPI_SteamApps_v',
+  SteamAPI_SteamMatchmaking: 'SteamAPI_SteamMatchmaking_v',
+};
+
+// Generous ceiling for the version probe below. The highest version number in use
+// across any interface today is 23 (SteamUser) -- this leaves decades of headroom.
+const MAX_PROBED_INTERFACE_VERSION = 100;
+
+/**
+ * Finds every symbol "<prefix>001".."<prefix>NNN" the given library actually
+ * exports and returns the highest-numbered one, or null if none exist. Pure
+ * reflection against the loaded binary -- no version number is assumed in advance.
+ */
+export function findNewestVersionedSymbol(
+  lib: Pick<koffi.LibraryHandle, 'func'>,
+  prefix: string,
+  ret: any,
+  args: any[],
+  maxVersion: number = MAX_PROBED_INTERFACE_VERSION,
+): string | null {
+  let newest: string | null = null;
+  for (let v = 1; v <= maxVersion; v++) {
+    const candidate = `${prefix}${String(v).padStart(3, '0')}`;
+    try {
+      lib.func(candidate, ret, args);
+      newest = candidate;
+    } catch {
+      // Not exported at this version -- keep scanning; Steam has occasionally
+      // skipped a number, so a single miss doesn't mean we've hit the ceiling.
+    }
+  }
+  return newest;
+}
+
 // Define callback prototype at module level
 // The callback receives a pointer to SteamNetConnectionStatusChangedCallback_t
 // Using 'void*' for the parameter since we'll decode it manually
@@ -89,9 +147,9 @@ export class SteamLibraryLoader {
   public SteamAPI_RegisterCallback!: KoffiFunction;
   public SteamAPI_UnregisterCallback!: KoffiFunction;
   
-  public SteamAPI_SteamUserStats_v013!: KoffiFunction;
-  public SteamAPI_SteamUser_v023!: KoffiFunction;
-  public SteamAPI_SteamUtils_v010!: KoffiFunction;
+  public SteamAPI_SteamUserStats!: KoffiFunction;
+  public SteamAPI_SteamUser!: KoffiFunction;
+  public SteamAPI_SteamUtils!: KoffiFunction;
   public SteamAPI_ISteamUserStats_GetNumAchievements!: KoffiFunction;
   public SteamAPI_ISteamUserStats_GetAchievementName!: KoffiFunction;
   public SteamAPI_ISteamUserStats_GetAchievementDisplayAttribute!: KoffiFunction;
@@ -229,7 +287,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamNetworkingUtils_SteamAPI_v004!: KoffiFunction;
+  public SteamAPI_SteamNetworkingUtils_SteamAPI!: KoffiFunction;
   
   // Relay network access
   public SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess!: KoffiFunction;
@@ -263,7 +321,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamNetworkingSockets_SteamAPI_v012!: KoffiFunction;
+  public SteamAPI_SteamNetworkingSockets_SteamAPI!: KoffiFunction;
   
   // P2P Listen/Connect
   public SteamAPI_ISteamNetworkingSockets_CreateListenSocketP2P!: KoffiFunction;
@@ -315,7 +373,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamFriends_v018!: KoffiFunction;
+  public SteamAPI_SteamFriends!: KoffiFunction;
   
   // User info
   public SteamAPI_ISteamFriends_GetPersonaName!: KoffiFunction;
@@ -372,7 +430,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamRemoteStorage_v016!: KoffiFunction;
+  public SteamAPI_SteamRemoteStorage!: KoffiFunction;
   
   // File operations
   public SteamAPI_ISteamRemoteStorage_FileWrite!: KoffiFunction;
@@ -402,7 +460,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamUGC_v021!: KoffiFunction;
+  public SteamAPI_SteamUGC!: KoffiFunction;
   
   // Query operations
   public SteamAPI_ISteamUGC_CreateQueryUserUGCRequest!: KoffiFunction;
@@ -463,7 +521,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamInput_v006!: KoffiFunction;
+  public SteamAPI_SteamInput!: KoffiFunction;
   
   // Initialization
   public SteamAPI_ISteamInput_Init!: KoffiFunction;
@@ -535,7 +593,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamScreenshots_v003!: KoffiFunction;
+  public SteamAPI_SteamScreenshots!: KoffiFunction;
   
   // Screenshot capture
   public SteamAPI_ISteamScreenshots_WriteScreenshot!: KoffiFunction;
@@ -557,7 +615,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamApps_v009!: KoffiFunction;
+  public SteamAPI_SteamApps!: KoffiFunction;
   
   // Ownership checks
   public SteamAPI_ISteamApps_BIsSubscribed!: KoffiFunction;
@@ -607,7 +665,7 @@ export class SteamLibraryLoader {
   // ========================================
   
   // Interface accessor
-  public SteamAPI_SteamMatchmaking_v009!: KoffiFunction;
+  public SteamAPI_SteamMatchmaking!: KoffiFunction;
   
   // Favorite servers
   public SteamAPI_ISteamMatchmaking_GetFavoriteGameCount!: KoffiFunction;
@@ -844,6 +902,25 @@ export class SteamLibraryLoader {
       return wrapper as unknown as KoffiFunction;
     };
 
+    // Same as lf(), but for versioned interface accessors: reflects on the loaded
+    // library to find the newest version it actually exports for the given prefix,
+    // instead of assuming a specific hardcoded version. See
+    // findNewestVersionedSymbol() and INTERFACE_ACCESSOR_PREFIXES above.
+    const lfVersioned = (prefix: string, ret: any, args: any[]): KoffiFunction => {
+      let fn: KoffiFunction | undefined;
+      const wrapper = (...a: any[]) => {
+        if (!fn) {
+          const name = findNewestVersionedSymbol(this.steamLib!, prefix, ret, args);
+          if (!name) {
+            throw new Error(`[Steamworks] No exported symbol found for interface accessor prefix "${prefix}"`);
+          }
+          fn = this.steamLib!.func(name, ret, args);
+        }
+        return fn(...a);
+      };
+      return wrapper as unknown as KoffiFunction;
+    };
+
     // Define function signatures using Koffi
     this.SteamAPI_Init = lf('SteamAPI_InitSafe', 'bool', []);
     this.SteamAPI_Shutdown = lf('SteamAPI_Shutdown', 'void', []);
@@ -857,9 +934,9 @@ export class SteamLibraryLoader {
     // UnregisterCallback(pCallback) -> void
     this.SteamAPI_UnregisterCallback = lf('SteamAPI_UnregisterCallback', 'void', ['void*']);
     
-    this.SteamAPI_SteamUserStats_v013 = lf('SteamAPI_SteamUserStats_v013', 'void*', []);
-    this.SteamAPI_SteamUser_v023 = lf('SteamAPI_SteamUser_v023', 'void*', []);
-    this.SteamAPI_SteamUtils_v010 = lf('SteamAPI_SteamUtils_v010', 'void*', []);
+    this.SteamAPI_SteamUserStats = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamUserStats, 'void*', []);
+    this.SteamAPI_SteamUser = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamUser, 'void*', []);
+    this.SteamAPI_SteamUtils = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamUtils, 'void*', []);
     
     this.SteamAPI_ISteamUserStats_GetNumAchievements = lf('SteamAPI_ISteamUserStats_GetNumAchievements', 'uint32', ['void*']);
     this.SteamAPI_ISteamUserStats_GetAchievementName = lf('SteamAPI_ISteamUserStats_GetAchievementName', 'str', ['void*', 'uint32']);
@@ -998,7 +1075,7 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamNetworkingUtils_SteamAPI_v004 = lf('SteamAPI_SteamNetworkingUtils_SteamAPI_v004', 'void*', []);
+    this.SteamAPI_SteamNetworkingUtils_SteamAPI = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamNetworkingUtils_SteamAPI, 'void*', []);
     
     // Relay network access
     this.SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess = lf('SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess', 'void', ['void*']);
@@ -1038,7 +1115,7 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamNetworkingSockets_SteamAPI_v012 = lf('SteamAPI_SteamNetworkingSockets_SteamAPI_v012', 'void*', []);
+    this.SteamAPI_SteamNetworkingSockets_SteamAPI = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamNetworkingSockets_SteamAPI, 'void*', []);
     
     // P2P Listen/Connect
     // CreateListenSocketP2P(nLocalVirtualPort, nOptions, pOptions) -> HSteamListenSocket
@@ -1094,7 +1171,7 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamFriends_v018 = lf('SteamAPI_SteamFriends_v018', 'void*', []);
+    this.SteamAPI_SteamFriends = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamFriends, 'void*', []);
     
     // User info
     this.SteamAPI_ISteamFriends_GetPersonaName = lf('SteamAPI_ISteamFriends_GetPersonaName', 'str', ['void*']);
@@ -1151,7 +1228,7 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamRemoteStorage_v016 = lf('SteamAPI_SteamRemoteStorage_v016', 'void*', []);
+    this.SteamAPI_SteamRemoteStorage = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamRemoteStorage, 'void*', []);
     
     // File operations
     this.SteamAPI_ISteamRemoteStorage_FileWrite = lf('SteamAPI_ISteamRemoteStorage_FileWrite', 'bool', ['void*', 'str', 'void*', 'int32']);
@@ -1181,7 +1258,7 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamUGC_v021 = lf('SteamAPI_SteamUGC_v021', 'void*', []);
+    this.SteamAPI_SteamUGC = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamUGC, 'void*', []);
     
     // Query operations
     this.SteamAPI_ISteamUGC_CreateQueryUserUGCRequest = lf('SteamAPI_ISteamUGC_CreateQueryUserUGCRequest', 'uint64', ['void*', 'uint32', 'int', 'int', 'int', 'uint32', 'uint32', 'uint32']);
@@ -1243,7 +1320,7 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamInput_v006 = lf('SteamAPI_SteamInput_v006', 'void*', []);
+    this.SteamAPI_SteamInput = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamInput, 'void*', []);
     
     // Initialization
     this.SteamAPI_ISteamInput_Init = lf('SteamAPI_ISteamInput_Init', 'bool', ['void*', 'bool']);
@@ -1315,7 +1392,7 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamScreenshots_v003 = lf('SteamAPI_SteamScreenshots_v003', 'void*', []);
+    this.SteamAPI_SteamScreenshots = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamScreenshots, 'void*', []);
     
     // Screenshot capture
     this.SteamAPI_ISteamScreenshots_WriteScreenshot = lf('SteamAPI_ISteamScreenshots_WriteScreenshot', 'uint32', ['void*', 'void*', 'uint32', 'int', 'int']);
@@ -1337,7 +1414,7 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamApps_v009 = lf('SteamAPI_SteamApps_v009', 'void*', []);
+    this.SteamAPI_SteamApps = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamApps, 'void*', []);
     
     // Ownership checks
     this.SteamAPI_ISteamApps_BIsSubscribed = lf('SteamAPI_ISteamApps_BIsSubscribed', 'bool', ['void*']);
@@ -1387,7 +1464,7 @@ export class SteamLibraryLoader {
     // ========================================
     
     // Interface accessor
-    this.SteamAPI_SteamMatchmaking_v009 = lf('SteamAPI_SteamMatchmaking_v009', 'void*', []);
+    this.SteamAPI_SteamMatchmaking = lfVersioned(INTERFACE_ACCESSOR_PREFIXES.SteamAPI_SteamMatchmaking, 'void*', []);
     
     // Favorite servers
     this.SteamAPI_ISteamMatchmaking_GetFavoriteGameCount = lf('SteamAPI_ISteamMatchmaking_GetFavoriteGameCount', 'int', ['void*']);

@@ -121,7 +121,7 @@ export class SteamNetworkingUtilsManager {
     if (!status.initialized) {
       return null;
     }
-    return this.libraryLoader.SteamAPI_SteamNetworkingUtils_SteamAPI_v004();
+    return this.libraryLoader.SteamAPI_SteamNetworkingUtils_SteamAPI();
   }
 
   // ========================================

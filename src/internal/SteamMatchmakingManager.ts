@@ -664,7 +664,7 @@ export class SteamMatchmakingManager {
    */
   getConnectLobbyIdFromCommandLine(): string | null {
     try {
-      const apps = this.libraryLoader.SteamAPI_SteamApps_v009();
+      const apps = this.libraryLoader.SteamAPI_SteamApps();
       if (!apps) return null;
 
       const cmdBuffer = Buffer.alloc(1024);

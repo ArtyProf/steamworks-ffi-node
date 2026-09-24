@@ -99,7 +99,7 @@ export class SteamInputManager {
    */
   private getSteamInputInterface(): any {
     if (!this.steamInputInterface) {
-      this.steamInputInterface = this.libraryLoader.SteamAPI_SteamInput_v006();
+      this.steamInputInterface = this.libraryLoader.SteamAPI_SteamInput();
     }
     return this.steamInputInterface;
   }

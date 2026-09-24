@@ -44,7 +44,7 @@ export class SteamAppsManager {
    * Get the ISteamApps interface pointer
    */
   private getSteamApps(): any {
-    return this.libraryLoader.SteamAPI_SteamApps_v009();
+    return this.libraryLoader.SteamAPI_SteamApps();
   }
 
   // ========================================
