@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.3] - 2026-09-24
+
+### Fixed
+- **Hardcoded Steam interface accessor versions breaking when the Steamworks SDK bumps an interface** (relates to #83) — `SteamLibraryLoader` called each of its 12 core interface accessors by an exact versioned export name (e.g. `SteamAPI_SteamUtils_v010`), baked in at whatever SDK release this project happened to be built against. Any interface differing from what's exported by the SDK a consumer actually has installed — forward *or* backward, since a redistributable can both add a newer symbol and eventually drop an ancient one — would throw at first use instead of resolving to whatever is actually available. Replaced the hardcoded names with reflection: `INTERFACE_ACCESSOR_PREFIXES` records only each interface's version-independent naming prefix (`SteamAPI_SteamUtils_v`, never a number), and `findNewestVersionedSymbol()` probes the *loaded library itself* for `<prefix>001` through `<prefix>100` (`MAX_PROBED_INTERFACE_VERSION`) and binds to the highest one it actually exports. 
+- Verified the reflection resolves correctly against real Steamworks SDK 1.64 and 1.65 redistributables side by side: exactly 3 of the 12 interfaces actually differ between those releases (`SteamUtils` v010→v011, `SteamNetworkingSockets` v012→v013, `SteamInput` v006→v007, matching #83's report) — the other 9 stayed identical, and the resolver picked the correct version on both releases for all 12, with no version number hardcoded anywhere in the fix.
+
+### Added
+- **Microtransaction authorization support** — `MicroTxnAuthorizationResponse_t` (`k_iSteamUserCallbacks + 52`), exposed as `steam.user.onMicroTxnAuthorizationResponse(handler)` (via #84, thanks [@Celant](https://github.com/Celant)). Steam raises this callback when the player answers the in-overlay purchase dialog for a microtransaction started server-side with `ISteamMicroTxn/InitTxn`; it's the only in-process signal that the dialog was actually answered, so without it a game has no choice but to poll `QueryTxn` blind while the player is still deciding.
+- **`test-sdks/` fixture folder + `npm run test:sdk-version-compat:js` / `:ts`** — a standalone check (no live Steam client required) that loads any Steamworks SDK redistributable dropped into `test-sdks/<version>/redistributable_bin/...` and reports which versioned symbol each of the 12 interfaces actually resolves to, using the exact same probing logic (`findNewestVersionedSymbol`) the library uses at runtime. Lets a new (or older) SDK release be verified before upgrading, and pinpoints exactly which interfaces changed version instead of guessing. `test-sdks/` is gitignored (same Valve redistribution restriction as `steamworks_sdk/`) aside from its `README.md`.
+- **`tests/ts/test-microtxn.ts`** — TypeScript port of `tests/js/test-microtxn.js`
+
 ## [0.11.2] - 2026-08-26
 
 ### Added
@@ -571,6 +582,7 @@ steam.init({ appId: 480 });
 
 | Version | Date | Major Features |
 |---------|------|----------------|
+| 0.11.3 | 2026-09-24 | `steam.user.onMicroTxnAuthorizationResponse()` for in-overlay purchase dialogs (#84); fix hardcoded Steam interface accessor versions breaking on SDK bumps — reflection-based resolution against the loaded library instead (relates to #83); new `test-sdks/` + `npm run test:sdk-version-compat:js`/`:ts` verification tooling |
 | 0.11.2 | 2026-08-26 | `onGameLobbyJoinRequested()` + `getConnectLobbyIdFromCommandLine()` for lobby invites; fix leaderboard callback struct packing on macOS/Linux corrupting `uploadScore()` results (#74/#75); fix `downloadLeaderboardEntriesForUsers()` Steam ID array encoding |
 | 0.11.1 | 2026-08-15 | Fix koffi 3.x breaking macOS universal (x64+arm64) Electron builds; new `npx steamworks-fetch-universal-koffi` command |
 | 0.11.0 | 2026-08-15 | **BREAKING**: minimum Node.js raised to 22; upgrade `typescript`→6.0.3, `node-gyp`→13.0.0, `koffi`→3.1.5 (fixes a koffi shutdown segfault), `@types/node`→26.0.0; committed lockfile + `npm ci` + audit gate in CI; fix Electron `asarUnpack`/`asar.unpack` docs missing koffi's native binary package |
@@ -603,6 +615,7 @@ steam.init({ appId: 480 });
 | 0.2.0 | 2025-10-10 | Achievements |
 | 0.1.1 | 2025-10-01 | Initial release, Core API |
 
+[0.11.3]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.11.3
 [0.11.2]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.11.2
 [0.11.1]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.11.1
 [0.11.0]: https://github.com/ArtyProf/steamworks-ffi-node/releases/tag/v0.11.0
