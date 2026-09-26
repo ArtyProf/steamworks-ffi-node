@@ -66,6 +66,11 @@ public:
     std::atomic<bool> isMapped{false};  // true while window is XMapRaised, false after XUnmapWindow
     std::mutex renderMutex;
 
+    // Transparent mode: present empty frames and let the game window show
+    // through, instead of mirroring it into a texture. See isTransparent().
+    bool transparentRequested = false;
+    bool hasArgbVisual = false;
+
     // Cursor warp suppression on Steam overlay close.
     // When Shift+Tab opens the overlay, Steam saves the cursor position.
     // When the overlay closes, Steam warps the cursor back to that saved position.
@@ -93,11 +98,13 @@ public:
         return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
     }
 
-    bool init(int w, int h, const char* title) {
+    bool init(int w, int h, const char* title, bool transparent = false) {
         width = w;
         height = h;
         
-        OverlayLog("Initializing Linux overlay window: %dx%d", w, h);
+        OverlayLog("Initializing Linux overlay window: %dx%d (%s)", w, h,
+                   transparent ? "transparent" : "mirroring");
+        transparentRequested = transparent;
         
         XInitThreads(); // Required for multi-threaded X11 access
         
@@ -151,8 +158,30 @@ public:
             return false;
         }
         
-        // Pick the first FBConfig
+        // Pick the first FBConfig, as before.
         fbConfig = fbConfigs[0];
+
+        // Only in transparent mode, prefer one with a depth-32 ARGB visual.
+        // GLX_ALPHA_SIZE above is a minimum on the GL drawable, not a promise
+        // about the X visual -- glXChooseFBConfig will happily return a
+        // depth-24 config first, and per-pixel window alpha needs depth 32.
+        //
+        // Deliberately not applied to the mirroring path: it does not need
+        // alpha, and changing which visual existing callers get is not this
+        // option's business.
+        if (transparent) {
+            for (int i = 0; i < fbCount; i++) {
+                XVisualInfo* candidate = glXGetVisualFromFBConfig(display, fbConfigs[i]);
+                if (!candidate) continue;
+                if (candidate->depth == 32) {
+                    fbConfig = fbConfigs[i];
+                    hasArgbVisual = true;
+                    XFree(candidate);
+                    break;
+                }
+                XFree(candidate);
+            }
+        }
         XFree(fbConfigs);
         
         // Get visual info from FBConfig
@@ -162,6 +191,14 @@ public:
             XCloseDisplay(display);
             display = nullptr;
             return false;
+        }
+        if (transparent) {
+            OverlayLog("Chose visual depth %d (ARGB: %s)",
+                       visualInfo->depth, hasArgbVisual ? "yes" : "no");
+        }
+        if (transparentRequested && !hasArgbVisual) {
+            OverlayLogError("Transparency requested but no depth-32 visual is "
+                            "available; the overlay window will be opaque");
         }
         
         // Create colormap
@@ -499,6 +536,14 @@ public:
         // Swap buffers
         glXSwapBuffers(display, window);
         
+        pumpXEvents();
+    }
+
+    // Everything renderFrame does after the swap: input forwarding, the idle
+    // refocus and the flush. Factored out so present() can share it -- in
+    // transparent mode renderFrame is never called, and without this the X
+    // event pump would stop and Shift+Tab would stop reaching Steam.
+    void pumpXEvents() {
         // Process any pending X events
         while (XPending(display)) {
             XEvent event;
@@ -581,6 +626,47 @@ public:
         glFlush();
     }
 
+    // Transparent mode: swap an empty frame so Steam's glXSwapBuffers hook
+    // fires and it can draw the overlay, without copying the game window into
+    // a texture first. The clear colour is already (0,0,0,0), so on an ARGB
+    // visual with a compositor running the real window shows through.
+    void present() {
+        if (isDestroyed) return;
+        if (!isMapped) return;
+
+        std::lock_guard<std::mutex> lock(renderMutex);
+
+        if (!display || !glContext || !window) return;
+
+        if (!glXMakeCurrent(display, window, glContext)) {
+            OverlayLogError("Failed to make context current in present");
+            return;
+        }
+
+        glClear(GL_COLOR_BUFFER_BIT);
+        glXSwapBuffers(display, window);
+
+        pumpXEvents();
+    }
+
+    // Whether this window genuinely shows through. Two things have to hold:
+    // the visual has to carry an alpha channel (a depth-32 ARGB visual, not
+    // just a GLX config that reported GLX_ALPHA_SIZE), and a compositing
+    // manager has to be running -- X11 does not blend anything on its own.
+    bool isTransparent() {
+        if (isDestroyed || !display) return false;
+        return transparentRequested && hasArgbVisual && hasCompositor();
+    }
+
+    bool hasCompositor() const {
+        if (!display) return false;
+        // The standard handshake: a compositing manager owns _NET_WM_CM_S<screen>.
+        char name[32];
+        snprintf(name, sizeof(name), "_NET_WM_CM_S%d", DefaultScreen(display));
+        Atom cmAtom = XInternAtom(display, name, False);
+        return cmAtom != None && XGetSelectionOwner(display, cmAtom) != None;
+    }
+
     void destroy() {
         if (isDestroyed.exchange(true)) return;
         
@@ -645,6 +731,12 @@ static napi_value CreateOverlayWindow(napi_env env, napi_callback_info info) {
     napi_get_named_property(env, args[0], "height", &heightVal);
     napi_get_named_property(env, args[0], "title", &titleVal);
     
+    napi_value transparentVal;
+    bool transparent = false;
+    if (napi_get_named_property(env, args[0], "transparent", &transparentVal) == napi_ok) {
+        napi_get_value_bool(env, transparentVal, &transparent);
+    }
+    
     int width, height;
     napi_get_value_int32(env, widthVal, &width);
     napi_get_value_int32(env, heightVal, &height);
@@ -655,7 +747,7 @@ static napi_value CreateOverlayWindow(napi_env env, napi_callback_info info) {
     
     // Create window
     LinuxOverlayWindow* window = new LinuxOverlayWindow();
-    if (!window->init(width, height, title)) {
+    if (!window->init(width, height, title, transparent)) {
         delete window;
         napi_throw_error(env, nullptr, "Failed to create overlay window");
         return nullptr;
@@ -666,6 +758,35 @@ static napi_value CreateOverlayWindow(napi_env env, napi_callback_info info) {
     status = napi_create_external(env, window, nullptr, nullptr, &external);
     
     return external;
+}
+
+static napi_value PresentFrame(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    LinuxOverlayWindow* window;
+    if (napi_get_value_external(env, args[0], (void**)&window) != napi_ok || !window) {
+        return nullptr;
+    }
+    window->present();
+    return nullptr;
+}
+
+static napi_value IsOverlayTransparent(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    LinuxOverlayWindow* window = nullptr;
+    napi_value result;
+    bool transparent = false;
+    if (argc >= 1 &&
+        napi_get_value_external(env, args[0], (void**)&window) == napi_ok && window) {
+        transparent = window->isTransparent();
+    }
+    napi_get_boolean(env, transparent, &result);
+    return result;
 }
 
 static napi_value ShowOverlayWindow(napi_env env, napi_callback_info info) {
@@ -856,6 +977,8 @@ static napi_value Init(napi_env env, napi_value exports) {
         { "hideOverlayWindow",        nullptr, HideOverlayWindow,        nullptr, nullptr, nullptr, napi_default, nullptr },
         { "setOverlayFrame",          nullptr, SetOverlayWindowFrame,    nullptr, nullptr, nullptr, napi_default, nullptr },
         { "renderFrame",              nullptr, RenderFrame,              nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "presentFrame",             nullptr, PresentFrame,             nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "isOverlayTransparent",     nullptr, IsOverlayTransparent,     nullptr, nullptr, nullptr, napi_default, nullptr },
         { "destroyOverlayWindow",     nullptr, DestroyOverlayWindow,     nullptr, nullptr, nullptr, napi_default, nullptr },
         { "setDebugMode",             nullptr, SetDebugMode,             nullptr, nullptr, nullptr, napi_default, nullptr },
         { "setSteamGameAtomOnWindow",  nullptr, SetSteamGameAtomOnWindow,  nullptr, nullptr, nullptr, napi_default, nullptr },
