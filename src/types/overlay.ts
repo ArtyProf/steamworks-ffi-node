@@ -73,3 +73,25 @@ export enum EActivateGameOverlayToWebPageMode {
    */
   Modal = 1,
 }
+
+/**
+ * GameOverlayActivated event data
+ *
+ * Fired when the Steam overlay opens or closes.
+ */
+export interface GameOverlayActivatedEvent {
+  /** True if the overlay just opened, false if it just closed */
+  active: boolean;
+  /**
+   * True if the user opened or closed the overlay themselves (hotkey or
+   * Steam UI); false if the game did it with an ActivateGameOverlay* call
+   */
+  userInitiated: boolean;
+  /** App ID the overlay was activated for (should always be the current game) */
+  appId: number;
+}
+
+/**
+ * Event handler type for GameOverlayActivated events
+ */
+export type GameOverlayActivatedHandler = (event: GameOverlayActivatedEvent) => void;

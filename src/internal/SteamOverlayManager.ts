@@ -1,12 +1,40 @@
 import { SteamLibraryLoader } from './SteamLibraryLoader';
 import { SteamAPICore } from './SteamAPICore';
 import { SteamLogger } from './SteamLogger';
-import { 
-  EOverlayDialog, 
-  EOverlayToUserDialog, 
-  EOverlayToStoreFlag, 
-  EActivateGameOverlayToWebPageMode 
+import { SteamPushCallback, notifyHandlers } from './SteamPushCallback';
+import { K_I_GAME_OVERLAY_ACTIVATED, GameOverlayActivatedType } from './callbackTypes';
+import {
+  EOverlayDialog,
+  EOverlayToUserDialog,
+  EOverlayToStoreFlag,
+  EActivateGameOverlayToWebPageMode,
+  GameOverlayActivatedEvent,
+  GameOverlayActivatedHandler,
 } from '../types';
+
+/**
+ * sizeof(GameOverlayActivated_t): { uint8, bool, AppId_t (uint32), uint32 }.
+ * The uint32s fall on 4-byte boundaries, so the layout is the same 12 bytes
+ * under Windows pack(8) and macOS/Linux pack(4): [0][1][pad:2-3][4-7][8-11].
+ */
+export const GAME_OVERLAY_ACTIVATED_SIZE = 12;
+
+/**
+ * Decode GameOverlayActivated_t from Steam's raw bytes
+ */
+export function parseGameOverlayActivated(buffer: Buffer): GameOverlayActivatedType {
+  if (buffer.length < GAME_OVERLAY_ACTIVATED_SIZE) {
+    throw new RangeError(
+      `GameOverlayActivated_t needs ${GAME_OVERLAY_ACTIVATED_SIZE} bytes, got ${buffer.length}`,
+    );
+  }
+  return {
+    m_bActive: buffer.readUInt8(0),
+    m_bUserInitiated: buffer.readUInt8(1) !== 0,
+    m_nAppID: buffer.readUInt32LE(4),
+    m_dwOverlayPID: buffer.readUInt32LE(8),
+  };
+}
 
 /**
  * Manager for Steam Overlay API operations
@@ -81,6 +109,12 @@ export class SteamOverlayManager {
   /** Steam API core for initialization and callback management */
   private apiCore: SteamAPICore;
 
+  /** Subscribers to GameOverlayActivated_t */
+  private overlayActivatedHandlers: GameOverlayActivatedHandler[] = [];
+
+  /** GameOverlayActivated_t push-callback registration */
+  private overlayActivatedCallback: SteamPushCallback;
+
   /**
    * Creates a new SteamOverlayManager instance
    * 
@@ -90,6 +124,14 @@ export class SteamOverlayManager {
   constructor(libraryLoader: SteamLibraryLoader, apiCore: SteamAPICore) {
     this.libraryLoader = libraryLoader;
     this.apiCore = apiCore;
+    this.overlayActivatedCallback = new SteamPushCallback(
+      libraryLoader,
+      apiCore,
+      'GameOverlayActivated',
+      K_I_GAME_OVERLAY_ACTIVATED,
+      GAME_OVERLAY_ACTIVATED_SIZE,
+      (data) => this.handleGameOverlayActivated(parseGameOverlayActivated(data)),
+    );
   }
 
   /**
@@ -570,5 +612,81 @@ export class SteamOverlayManager {
     } catch (error) {
       SteamLogger.error('[Steamworks] Error activating invite dialog with connect string:', error);
     }
+  }
+
+  /**
+   * Handle GameOverlayActivated_t callback from Steam
+   */
+  private handleGameOverlayActivated(response: GameOverlayActivatedType): void {
+    const event: GameOverlayActivatedEvent = {
+      active: response.m_bActive !== 0,
+      userInitiated: response.m_bUserInitiated,
+      appId: response.m_nAppID,
+    };
+    notifyHandlers('GameOverlayActivated', this.overlayActivatedHandlers, event);
+  }
+
+  /**
+   * Subscribe to the Steam overlay opening and closing
+   *
+   * Fires with `active: true` when the overlay opens and `active: false` when
+   * it closes, whether the user pressed the overlay hotkey or the game opened
+   * it with one of the `activateGameOverlay*()` calls. This is the signal to
+   * pause the game and mute audio while the player is in the overlay.
+   *
+   * @param handler - Called with each overlay open/close
+   * @returns An unsubscribe function
+   *
+   * @remarks
+   * Steam only raises this in a process it has injected its overlay renderer
+   * into. A plain Node.js console process never receives it; an Electron app
+   * does once `addElectronSteamOverlay()` has attached the overlay.
+   *
+   * Callbacks only arrive while `runCallbacks()` is being called.
+   *
+   * Subscribing before `init()` is fine: the handler is kept and the callback
+   * is registered with Steam as soon as `init()` succeeds.
+   *
+   * A handler that throws, or returns a promise that rejects, is logged and
+   * doesn't stop the other handlers.
+   *
+   * @example
+   * ```typescript
+   * const unsubscribe = steam.overlay.onGameOverlayActivated((event) => {
+   *   if (event.active) {
+   *     game.pause();
+   *   } else {
+   *     game.resume();
+   *   }
+   * });
+   *
+   * // Later, to stop receiving events:
+   * unsubscribe();
+   * ```
+   *
+   * Steamworks SDK Callback:
+   * - `GameOverlayActivated_t` (k_iSteamFriendsCallbacks + 31)
+   */
+  onGameOverlayActivated(handler: GameOverlayActivatedHandler): () => void {
+    this.overlayActivatedCallback.register();
+    this.overlayActivatedHandlers.push(handler);
+    return () => {
+      const index = this.overlayActivatedHandlers.indexOf(handler);
+      if (index > -1) {
+        this.overlayActivatedHandlers.splice(index, 1);
+      }
+    };
+  }
+
+  /**
+   * Unregister the GameOverlayActivated_t callback
+   *
+   * Called during SteamworksSDK.shutdown(), before SteamAPI_Shutdown() and
+   * before koffi.reset(), so Steam doesn't fire this callback into a freed
+   * koffi function pointer. Safe to call more than once.
+   */
+  cleanup(): void {
+    this.overlayActivatedCallback.unregister();
+    this.overlayActivatedHandlers = [];
   }
 }

@@ -65,6 +65,9 @@ export class SteamAPICore {
   /** Pointer to the ISteamMatchmaking interface */
   private matchmakingInterface: any = null;
 
+  /** Called each time init() succeeds */
+  private initializedListeners: Array<() => void> = [];
+
   /**
    * Creates a new SteamAPICore instance
    * 
@@ -260,7 +263,15 @@ export class SteamAPICore {
       this.initialized = true;
       SteamLogger.debug('[Steamworks] Steam API initialized successfully!');
       SteamLogger.debug(`[Steamworks] Connected to Steam for App ID: ${this.appId}`);
-      
+
+      for (const listener of this.initializedListeners) {
+        try {
+          listener();
+        } catch (error) {
+          SteamLogger.error('[Steamworks] Error in post-init listener:', error);
+        }
+      }
+
       return true;
 
     } catch (error) {
@@ -492,6 +503,19 @@ export class SteamAPICore {
    */
   isInitialized(): boolean {
     return this.initialized;
+  }
+
+  /**
+   * Run a listener each time init() succeeds
+   *
+   * Lets work requested before init (such as a push-callback subscription)
+   * complete once Steam is ready, instead of being dropped. A listener that
+   * throws is logged and doesn't fail init().
+   *
+   * @param listener - Called after initialization, with isInitialized() true
+   */
+  onInitialized(listener: () => void): void {
+    this.initializedListeners.push(listener);
   }
 
   /**

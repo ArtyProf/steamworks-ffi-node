@@ -76,12 +76,13 @@ A TypeScript/JavaScript wrapper for the Steamworks SDK using Koffi FFI, designed
   - ✅ Query friend rich presence data
   - ✅ Display custom status in friends list
   - ✅ Enable friend join functionality
-- **Overlay API**: Complete Steam overlay control (7 functions)
+- **Overlay API**: Complete Steam overlay control (8 functions)
   - ✅ Open overlay dialogs (friends, achievements, settings, etc.)
   - ✅ Open user profiles, stats, and achievements
   - ✅ Open overlay web browser to URLs
   - ✅ Open store pages with purchase options
   - ✅ Show invite dialogs for multiplayer sessions
+  - ✅ Get notified when the overlay opens or closes, to pause the game
 - **Cloud Storage API**: Complete Steam Cloud (Remote Storage) integration (17 functions)
   - ✅ File operations (write, read, delete, check existence)
   - ✅ File metadata (size, timestamp, persistence status)
@@ -593,7 +594,7 @@ Complete documentation for all APIs is available in the [docs folder](https://gi
 - **[Leaderboard Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/LEADERBOARD_MANAGER.md)** - Leaderboard operations (7 functions)
 - **[Friends Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/FRIENDS_MANAGER.md)** - Friends and social features (22 functions)
 - **[Rich Presence Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/RICH_PRESENCE_MANAGER.md)** - Custom status display and join functionality (6 functions)
-- **[Overlay Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)** - Steam overlay control (7 functions)
+- **[Overlay Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)** - Steam overlay control (8 functions)
 - **[Cloud Storage Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/CLOUD_MANAGER.md)** - Steam Cloud file operations (14 functions)
 - **[Workshop Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/WORKSHOP_MANAGER.md)** - Steam Workshop/UGC operations (38 functions)
 - **[Input Manager](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/INPUT_MANAGER.md)** - Steam Input controller support (35+ functions) ⚠️ _Virtual gamepad testing only_

@@ -63,6 +63,9 @@ export const K_I_LOBBY_CREATED = 513;
 /** Base callback ID for ISteamFriends callbacks (k_iSteamFriendsCallbacks) */
 export const K_I_STEAM_FRIENDS_CALLBACKS = 300;
 
+/** Callback for GameOverlayActivated_t */
+export const K_I_GAME_OVERLAY_ACTIVATED = 331; // k_iSteamFriendsCallbacks + 31
+
 /** Callback for GameLobbyJoinRequested_t */
 export const K_I_GAME_LOBBY_JOIN_REQUESTED = 333; // k_iSteamFriendsCallbacks + 33
 

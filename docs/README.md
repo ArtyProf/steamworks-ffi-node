@@ -104,12 +104,13 @@ This design:
 ### Overlay System
 
 - **[Overlay Manager API](https://github.com/ArtyProf/steamworks-ffi-node/blob/main/docs/OVERLAY_MANAGER.md)**
-  - **7 Functions** - Complete overlay control
+  - **8 Functions** - Complete overlay control
   - Open overlay to various dialogs (friends, achievements, etc.)
   - Open overlay to user profiles and stats
   - Open overlay browser to URLs
   - Open store pages with purchase options
   - Show invite dialogs for multiplayer
+  - Get notified when the overlay opens or closes, to pause the game
 
 ### Cloud Storage System
 
@@ -262,6 +263,8 @@ This design:
 - Run Friends Tests: `npm run test:friends:js` - Tests all 22 friends functions
 - Run Cloud Tests: `npm run test:cloud:js` - Tests all 17 cloud storage functions
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:js` - Tests 6 rich presence + 7 overlay functions
+- Run Overlay Activation Test: `npm run test:overlay-activated:js` - Subscribes to overlay open/close events against a live Steam client; passes without events, which a plain Node process never receives
+- Run Overlay Activation Offline Test: `npm run test:overlay-activated:offline:js` - No Steam client needed: drives overlay open/close events through a fake steam_api
 - Run Workshop Tests: `npm run test:workshop:js` - Tests all 34 Workshop/UGC functions
 - Run Input Tests: `npm run test:input-xbox:js` or `npm run test:input-ps4:js` - Tests 35+ input functions with virtual gamepad
 - Run Apps/DLC Tests: `npm run test:apps:js` - Tests all 28 apps/DLC functions
@@ -285,6 +288,8 @@ This design:
 - Run Friends Tests: `npm run test:friends:ts` - With type safety ✨
 - Run Cloud Tests: `npm run test:cloud:ts` - With type safety ✨
 - Run Rich Presence & Overlay Tests: `npm run test:richpresence-overlay:ts` - With type safety ✨
+- Run Overlay Activation Test: `npm run test:overlay-activated:ts` - Subscribes to overlay open/close events against a live Steam client; passes without events, which a plain Node process never receives - With type safety ✨
+- Run Overlay Activation Offline Test: `npm run test:overlay-activated:offline:ts` - No Steam client needed: drives overlay open/close events through a fake steam_api - With type safety ✨
 - Run Workshop Tests: `npm run test:workshop:ts` - With type safety ✨
 - Run Input Tests: `npm run test:input-xbox:ts` or `npm run test:input-ps4:ts` - With type safety ✨
 - Run Apps/DLC Tests: `npm run test:apps:ts` - With type safety ✨

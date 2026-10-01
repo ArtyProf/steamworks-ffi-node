@@ -20,6 +20,7 @@ The overlay appears on top of your game window and provides access to friends li
 | [`activateGameOverlayInviteDialog()`](#activategameoverlayinvitedialogsteamidlobby) | Open lobby invite dialog |
 | [`activateGameOverlayRemotePlayTogetherInviteDialog()`](#activategameoverlayremoteplaytogetherinvitedialogsteamidlobby) | Open Remote Play Together invite |
 | [`activateGameOverlayInviteDialogConnectString()`](#activategameoverlayinvitedialogconnectstringconnectstring) | Open invite dialog with connect string |
+| [`onGameOverlayActivated()`](#ongameoverlayactivatedhandler) | Subscribe to the overlay opening and closing |
 
 ---
 
@@ -429,6 +430,56 @@ steam.overlay.activateGameOverlayInviteDialogConnectString(`+join_match ${matchT
 - Session-based matchmaking
 - Private matches
 - Custom join logic
+
+---
+
+## Overlay Activation Events
+
+### `onGameOverlayActivated(handler)`
+
+Subscribes to the Steam overlay opening and closing. It fires with `active: true` when the overlay opens and `active: false` when it closes, whether the player pressed the overlay hotkey or the game opened it with one of the `activateGameOverlay*()` calls. Use it to pause the game and mute audio while the player is in the overlay.
+
+**Steamworks SDK Callback:**
+- `GameOverlayActivated_t` (`k_iSteamFriendsCallbacks + 31`)
+
+**Parameters:**
+- `handler: (event: GameOverlayActivatedEvent) => void`
+
+**Returns:** `() => void` — call to unsubscribe
+
+**`GameOverlayActivatedEvent`:**
+```typescript
+interface GameOverlayActivatedEvent {
+  active: boolean;        // true if the overlay just opened, false if it just closed
+  userInitiated: boolean; // true if the player opened/closed it; false if the game did
+  appId: number;          // should always be the current game
+}
+```
+
+**Example:**
+```typescript
+const unsubscribe = steam.overlay.onGameOverlayActivated((event) => {
+  if (event.active) {
+    game.pause();
+    audio.mute();
+  } else {
+    audio.unmute();
+    game.resume();
+  }
+});
+
+// Callbacks only arrive while the queue is being drained:
+setInterval(() => steam.runCallbacks(), 50);
+
+// Later, to stop receiving events:
+unsubscribe();
+```
+
+**Notes:**
+- Steam only raises this callback in a process it has injected its overlay renderer into. A plain Node.js console process never receives it. An Electron app does once [`addElectronSteamOverlay()`](STEAM_OVERLAY_INTEGRATION.md) has attached the overlay.
+- You can subscribe before `init()`. The handler is kept, and the callback is registered with Steam as soon as `init()` succeeds.
+- A handler that throws, or an `async` handler whose promise rejects, is caught and logged rather than propagated. It runs on Steam's callback dispatcher, so an error must not unwind into it, stop other handlers, or surface as an unhandled rejection.
+- The subscription is removed automatically by `steam.shutdown()`.
 
 ---
 

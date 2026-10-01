@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **`steam.overlay.onGameOverlayActivated(handler)`** — exposes `GameOverlayActivated_t` (`k_iSteamFriendsCallbacks + 31`), the only signal Steam gives that its overlay has opened or closed, so a game can pause and mute while the player is in it. Fires with `{ active, userInitiated, appId }` whether the player pressed the overlay hotkey or the game called one of the `activateGameOverlay*()` methods. Steam only raises it in a process it has injected its overlay renderer into: an Electron app after `addElectronSteamOverlay()`, not a plain Node.js console process. You can subscribe before `init()` (the callback registers once `init()` succeeds), and a handler that throws or returns a rejected promise is logged without stopping the others. The callback is registered through a new internal `SteamPushCallback` helper, which builds its koffi types at registration time so they stay valid after `shutdown()`'s `koffi.reset()`, and which can be unregistered more than once without throwing.
+- **`tests/js/test-overlay-activated.js` / `tests/ts/test-overlay-activated.ts`** (`npm run test:overlay-activated:js` / `:ts`) — live check against a Steam client. It asserts only what holds whether or not any event arrives (a plain Node process never gets one), and exits non-zero on failure.
+- **`tests/js/test-overlay-activated-offline.js` / `tests/ts/test-overlay-activated-offline.ts`** (`npm run test:overlay-activated:offline:js` / `:ts`) — deterministic test with no Steam client. A fake `steam_api` raises `GameOverlayActivated_t` through the vtable of the callback object the library registers, covering the struct layout, the event mapping, handler isolation (including rejected `async` handlers) and the register/unregister lifecycle.
+
+### Documentation
+- **README.md, `docs/README.md`, `docs/OVERLAY_MANAGER.md`** — overlay function count updated from 7 to 8, and `onGameOverlayActivated()` documented.
+
 ## [0.11.3] - 2026-09-24
 
 ### Fixed

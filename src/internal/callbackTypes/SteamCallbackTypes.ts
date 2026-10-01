@@ -145,6 +145,20 @@ export interface LobbyMatchListType {
 }
 
 /**
+ * GameOverlayActivated_t callback structure
+ *
+ * Pushed when the Steam overlay opens or closes, whether the user pressed the
+ * overlay hotkey or the game opened it with one of the ActivateGameOverlay*
+ * calls. Only fires in a process Steam has injected its overlay renderer into.
+ */
+export interface GameOverlayActivatedType {
+  m_bActive: number;
+  m_bUserInitiated: boolean;
+  m_nAppID: number;
+  m_dwOverlayPID: number;
+}
+
+/**
  * GameLobbyJoinRequested_t callback structure
  *
  * Pushed when the user tries to join a lobby from their friends list, an
